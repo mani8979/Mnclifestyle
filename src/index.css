@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    @apply bg-ivory text-charcoal font-sans selection:bg-beige selection:text-charcoal;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Custom luxury scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7F5F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DDD3C4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A88962;
+}
+
+/* Smooth image zoom effect for cards */
+.luxury-image-zoom {
+  transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
+}
+
+.group:hover .luxury-image-zoom {
+  transform: scale(1.04);
+}
+
+/* Subtle line accents */
+.bronze-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #A88962, transparent);
+}
