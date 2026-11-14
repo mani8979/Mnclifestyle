@@ -99,24 +99,18 @@ export default function Category() {
   const hasActiveFilters =
     selectedSubcategory !== 'all' || selectedPriceRange !== 'all' || inStockOnly || sortOption !== 'featured';
 
-  // Responsive Grid Class: centers 1 and 2 products symmetrically without giant empty voids!
-  const getGridClasses = (count) => {
-    if (count === 1) {
-      return 'grid grid-cols-1 max-w-sm sm:max-w-md mx-auto';
-    }
-    if (count === 2) {
-      return 'grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8';
-    }
-    if (count === 3) {
-      return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6';
-    }
-    return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
-  };
-
   const otherCategories = categories.filter((c) => c.id !== category.id).slice(0, 3);
   const whatsappConsultationUrl = getWhatsAppConsultationUrl(
     `Custom ${category.name} Selection & Interior Styling`
   );
+
+  // Balanced responsive grid classes depending on product count
+  const getCategoryGridClasses = (count) => {
+    if (count === 1) return 'max-w-md mx-auto';
+    if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8';
+    if (count === 3) return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-5 sm:gap-6';
+    return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6';
+  };
 
   return (
     <div className="pb-24 bg-[#F8F0E8]/40">
@@ -288,10 +282,68 @@ export default function Category() {
 
         </div>
 
+        {/* Active Filter Chips Strip */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 text-xs">
+            <span className="text-[#766B61] text-[11px] uppercase tracking-wider font-semibold mr-1">
+              Active Filters:
+            </span>
+            {selectedSubcategory !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E9D8C5] text-[#211A15] shadow-2xs">
+                <span>Subcategory: {selectedSubcategory}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubcategory('all')}
+                  className="text-[#766B61] hover:text-[#211710] font-bold"
+                  aria-label="Remove subcategory filter"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {selectedPriceRange !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E9D8C5] text-[#211A15] shadow-2xs">
+                <span>
+                  Price: {selectedPriceRange === 'under-50k' ? 'Under ₹50,000' : selectedPriceRange === '50k-100k' ? '₹50,000 – ₹1,00,000' : 'Above ₹1,00,000'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPriceRange('all')}
+                  className="text-[#766B61] hover:text-[#211710] font-bold"
+                  aria-label="Remove price filter"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {inStockOnly && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E9D8C5] text-[#211A15] shadow-2xs">
+                <span>In Stock Only</span>
+                <button
+                  type="button"
+                  onClick={() => setInStockOnly(false)}
+                  className="text-[#766B61] hover:text-[#211710] font-bold"
+                  aria-label="Remove in stock filter"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-[#D69A4B] hover:text-[#211710] font-semibold text-xs ml-1 transition-colors flex items-center gap-1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Clear All</span>
+            </button>
+          </div>
+        )}
+
         {/* 3. Product Listing Grid */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-[#E9D8C5] p-8 my-8 shadow-xs max-w-xl mx-auto">
-            <h3 className="font-serif text-2xl text-[#211A15] mb-2">
+            <h3 className="font-serif text-2xl text-[#211A15] mb-2 font-normal">
               No designs match your criteria
             </h3>
             <p className="text-xs sm:text-sm text-[#766B61] mb-5 leading-relaxed font-sans">
@@ -305,7 +357,10 @@ export default function Category() {
             </button>
           </div>
         ) : (
-          <div className={getGridClasses(filteredProducts.length)}>
+          <div
+            data-testid="category-product-grid"
+            className={getCategoryGridClasses(filteredProducts.length)}
+          >
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

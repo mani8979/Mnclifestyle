@@ -127,3 +127,4 @@ import puppeteer from 'puppeteer-core';
     process.exit(1);
   }
 })();
+

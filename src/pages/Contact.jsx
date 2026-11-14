@@ -15,20 +15,38 @@ export default function Contact() {
     message: ''
   });
 
+  const [formErrors, setFormErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [activeFaq, setActiveFaq] = useState(0);
   const [isShowroomModalOpen, setIsShowroomModalOpen] = useState(false);
   const whatsappUrl = getWhatsAppConsultationUrl('General Concierge Inquiry');
 
+  const validate = () => {
+    const errors = {};
+    if (!formData.fullName.trim()) {
+      errors.fullName = 'Please enter your full name.';
+    }
+    if (!formData.phone.trim() && !formData.email.trim()) {
+      errors.phone = 'Please provide a contact phone or WhatsApp number.';
+    }
+    if (!formData.message.trim()) {
+      errors.message = 'Please share your room dimensions or piece requirements.';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.fullName && (formData.email || formData.phone) && formData.message) {
+    if (validate()) {
       setSubmitted(true);
+      setFormErrors({});
     }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setFormErrors({});
     setFormData({
       fullName: '',
       email: '',
@@ -288,8 +306,8 @@ Please get in touch with me.`);
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
+                <form onSubmit={handleSubmit} noValidate className="space-y-4 sm:space-y-5">
+                  <div className="pb-1 border-b border-[#E9D8C5]/60">
                     <h2 className="font-serif text-2xl text-charcoal font-medium">
                       Send a Message to Our Visakhapatnam Studio
                     </h2>
@@ -298,33 +316,47 @@ Please get in touch with me.`);
                     </p>
                   </div>
 
-                  {/* Name and Email */}
+                  {/* Name and Mobile Number */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        Your Full Name *
+                        Your Full Name <span className="text-[#D69A4B] font-bold">*</span>
                       </label>
                       <input
                         type="text"
-                        required
                         value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, fullName: e.target.value });
+                          if (formErrors.fullName) setFormErrors({ ...formErrors, fullName: null });
+                        }}
                         placeholder="e.g. Rajesh Sharma"
-                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
+                        className={`w-full h-11 sm:h-12 bg-white/80 border rounded-xl px-4 text-xs sm:text-sm text-charcoal placeholder:text-warmgrey focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all ${
+                          formErrors.fullName ? 'border-red-400 bg-red-50/20' : 'border-[#E9D8C5]'
+                        }`}
                       />
+                      {formErrors.fullName && (
+                        <p className="text-[11px] text-red-600 mt-1 font-medium">{formErrors.fullName}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        WhatsApp Mobile Number *
+                        WhatsApp Mobile Number <span className="text-[#D69A4B] font-bold">*</span>
                       </label>
                       <input
                         type="tel"
-                        required
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value });
+                          if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                        }}
                         placeholder="e.g. +91 87909 43457"
-                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
+                        className={`w-full h-11 sm:h-12 bg-white/80 border rounded-xl px-4 text-xs sm:text-sm text-charcoal placeholder:text-warmgrey focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all ${
+                          formErrors.phone ? 'border-red-400 bg-red-50/20' : 'border-[#E9D8C5]'
+                        }`}
                       />
+                      {formErrors.phone && (
+                        <p className="text-[11px] text-red-600 mt-1 font-medium">{formErrors.phone}</p>
+                      )}
                     </div>
                   </div>
 
@@ -339,7 +371,7 @@ Please get in touch with me.`);
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="e.g. rajesh@example.com"
-                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
+                        className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal placeholder:text-warmgrey focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all"
                       />
                     </div>
                     <div>
@@ -349,7 +381,7 @@ Please get in touch with me.`);
                       <select
                         value={formData.inquiryType}
                         onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
-                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                        className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all cursor-pointer"
                       >
                         <option value="WhatsApp Order Inquiry">WhatsApp Order Inquiry</option>
                         <option value="Showroom Visit">Private Showroom Visit</option>
@@ -367,7 +399,7 @@ Please get in touch with me.`);
                     <select
                       value={formData.projectScope}
                       onChange={(e) => setFormData({ ...formData, projectScope: e.target.value })}
-                      className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                      className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all cursor-pointer"
                     >
                       <option value="Living Room / Sofas">Living Room (Sofas, Sectionals, Centre Tables)</option>
                       <option value="Dining Room">Dining Room (Dining Sets, Sideboards)</option>
@@ -380,27 +412,35 @@ Please get in touch with me.`);
                   {/* Message */}
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                      Your Requirements or Questions *
+                      Your Requirements or Questions <span className="text-[#D69A4B] font-bold">*</span>
                     </label>
                     <textarea
-                      required
                       rows={4}
                       value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, message: e.target.value });
+                        if (formErrors.message) setFormErrors({ ...formErrors, message: null });
+                      }}
                       placeholder="Tell us about your room dimensions, preferred wood species, or pieces you are interested in..."
-                      className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
+                      className={`w-full bg-white/80 border rounded-xl p-4 text-xs sm:text-sm text-charcoal placeholder:text-warmgrey focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all min-h-[110px] ${
+                        formErrors.message ? 'border-red-400 bg-red-50/20' : 'border-[#E9D8C5]'
+                      }`}
                     />
+                    {formErrors.message && (
+                      <p className="text-[11px] text-red-600 mt-1 font-medium">{formErrors.message}</p>
+                    )}
                   </div>
 
-                  {/* Submit Button */}
+                  {/* Submit Button — Prominent Luxury CTA */}
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="w-full py-4 bg-[#211710] text-[#F8F0E8] text-xs uppercase tracking-widest font-bold rounded-lg hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-soft"
+                      className="w-full h-12 sm:h-13 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-xs sm:text-sm uppercase tracking-[0.16em] font-bold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                     >
-                      Submit Consultation Request
+                      <Send className="w-4 h-4 shrink-0" />
+                      <span>Submit Consultation Request</span>
                     </button>
-                    <p className="text-[11px] text-warmgrey text-center mt-2.5">
+                    <p className="text-[11px] text-warmgrey text-center mt-2.5 font-sans">
                       We respect your privacy. No marketing spam.
                     </p>
                   </div>

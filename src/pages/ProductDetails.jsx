@@ -42,15 +42,19 @@ export default function ProductDetails() {
   const [openAccordion, setOpenAccordion] = useState('dimensions');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  // Helper to format title and prevent orphan single-word wrapping
+  // Helper to format title, prevent hyphen breaks (e.g. 3-Seater) and prevent orphan single-word wrapping
   const formatBalancedTitle = (title) => {
     if (!title) return '';
-    const words = title.trim().split(' ');
+    // Replace hyphens in compound words like "3-Seater", "4-Door", "6-Seater", "L-Shaped", "2-Seater" with non-breaking hyphen (\u2011)
+    let formatted = title.replace(/(\d+|[A-Za-z]+)-(Seater|Door|Drawer|Piece|Shaped|Tier|Table)/gi, '$1\u2011$2');
+    
+    // Also join the last two words with a non-breaking space to prevent orphan single words
+    const words = formatted.trim().split(' ');
     if (words.length > 2) {
       const lastTwo = words.slice(-2).join('\u00A0');
       return [...words.slice(0, -2), lastTwo].join(' ');
     }
-    return title;
+    return formatted;
   };
 
   const isSaved = isInWishlist(product.id);
@@ -107,11 +111,11 @@ export default function ProductDetails() {
   ];
 
   return (
-    <div className="py-4 sm:py-8 lg:py-12 pb-28 sm:pb-32 lg:pb-20">
+    <div className="pt-2.5 sm:pt-4 lg:pt-5 pb-28 sm:pb-32 lg:pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* 1. Compact Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-[#766B61] mb-4 sm:mb-8 overflow-x-auto whitespace-nowrap pb-1 no-scrollbar">
+        <nav aria-label="Breadcrumb" className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-[#766B61] mb-2.5 sm:mb-3.5 overflow-x-auto whitespace-nowrap pb-1 no-scrollbar">
           <Link to="/" className="hover:text-[#211710] transition-colors shrink-0">Home</Link>
           <span className="text-[#DDD3C4]">/</span>
           <Link to="/shop" className="hover:text-[#211710] transition-colors shrink-0">Furniture</Link>
@@ -124,10 +128,10 @@ export default function ProductDetails() {
         </nav>
 
         {/* Top Product Section: 2-Column Gallery + Purchasing & WhatsApp Order Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 lg:gap-14 mb-12 lg:mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 mb-10 lg:mb-14">
           
           {/* Left Column: Image Gallery (Col 7) */}
-          <div className="lg:col-span-7 space-y-3 sm:space-y-4">
+          <div className="lg:col-span-7 space-y-2.5 sm:space-y-3">
             
             {/* 2. Main Active Image — Clean without overlays obstructing furniture */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
@@ -154,12 +158,12 @@ export default function ProductDetails() {
 
             {/* 3. Product Image Thumbnails */}
             {product.images.length > 1 && (
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1 no-scrollbar">
+              <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 no-scrollbar">
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-16 h-14 sm:w-24 sm:h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                    className={`relative w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
                       activeImageIndex === idx
                         ? 'border-[#D69A4B] shadow-sm scale-102'
                         : 'border-transparent opacity-70 hover:opacity-100'
@@ -181,7 +185,7 @@ export default function ProductDetails() {
           <div className="lg:col-span-5 flex flex-col justify-start">
             
             {/* 1. Product Category and Bestseller Badge */}
-            <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+            <div className="flex items-center gap-2 mb-1 sm:mb-1.5">
               <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-[#D69A4B]">
                 {product.categoryLabel}
                 {product.subCategory && ` — ${product.subCategory}`}
@@ -193,15 +197,15 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* 2. Product Title — Balanced typography without orphan words */}
-            <h1 className="font-serif text-2xl sm:text-[28px] lg:text-[32px] xl:text-[34px] text-[#211710] font-normal tracking-tight leading-[1.2] mb-2 sm:mb-2.5 [text-wrap:balance]">
+            {/* 2. Product Title — Balanced typography without orphan words or broken hyphens */}
+            <h1 className="font-serif text-2xl sm:text-[26px] lg:text-[28px] text-[#211710] font-normal tracking-tight leading-[1.2] mb-1.5 sm:mb-2 [text-wrap:balance] hyphens-none">
               {formatBalancedTitle(product.name)}
             </h1>
 
             {/* 3. Rating and Customer Reviews */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#766B61] mb-2.5 sm:mb-3">
+            <div className="flex items-center gap-2 text-xs text-[#766B61] mb-2 sm:mb-2.5">
               <div className="flex items-center gap-1 text-[#D69A4B]">
-                <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#D69A4B]" />
+                <Star className="w-3.5 h-3.5 fill-[#D69A4B]" />
                 <span className="font-semibold text-[#211710]">{product.rating || '4.9'}</span>
               </div>
               <span className="text-[#DDD3C4]">|</span>
@@ -211,10 +215,10 @@ export default function ProductDetails() {
             </div>
 
             {/* 4. SKU and Stock Availability */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[#766B61] mb-3 sm:mb-3.5 pb-2.5 sm:pb-3 border-b border-[#E9D8C5]">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#766B61] mb-2 sm:mb-2.5 pb-2 border-b border-[#E9D8C5]">
               <div className="flex items-center gap-1.5">
                 <span className="text-[#766B61]">SKU:</span>
-                <span className="font-medium text-[#211710] font-mono text-[11px] sm:text-xs">{product.sku}</span>
+                <span className="font-medium text-[#211710] font-mono text-[11px]">{product.sku}</span>
               </div>
               <div className="inline-flex items-center gap-1.5 font-medium text-emerald-700">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse" />
@@ -223,34 +227,138 @@ export default function ProductDetails() {
             </div>
 
             {/* 5 & 6. Current Price, MRP, and Savings */}
-            <div className="mb-3 sm:mb-3.5 pb-3 sm:pb-3.5 border-b border-[#E9D8C5]">
-              <span className="text-[10px] sm:text-[11px] uppercase tracking-widest text-[#766B61] font-semibold block mb-1">
+            <div className="mb-2.5 sm:mb-3 pb-2.5 border-b border-[#E9D8C5]">
+              <span className="text-[10px] uppercase tracking-widest text-[#766B61] font-semibold block mb-0.5">
                 YOUR PRICE
               </span>
-              <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3.5">
-                <span className="font-sans font-bold tabular-nums text-3xl sm:text-4xl lg:text-[38px] text-[#211710] tracking-tight leading-none">
+              <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3">
+                <span className="font-sans font-bold tabular-nums text-2xl sm:text-3xl lg:text-[34px] text-[#211710] tracking-tight leading-none">
                   {formatINR(product.price)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-sm sm:text-base text-[#766B61] line-through font-sans tabular-nums">
+                  <span className="text-xs sm:text-sm text-[#766B61] line-through font-sans tabular-nums">
                     MRP {formatINR(product.originalPrice)}
                   </span>
                 )}
-              </div>
-              {product.originalPrice && product.originalPrice > product.price && discount && (
-                <div className="mt-1.5">
-                  <span className="inline-block px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-sans tabular-nums font-semibold">
-                    You Save {formatINR(product.originalPrice - product.price)} ({discount})
+                {product.originalPrice && product.originalPrice > product.price && discount && (
+                  <span className="inline-block px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-sans tabular-nums font-semibold">
+                    Save {formatINR(product.originalPrice - product.price)} ({discount})
                   </span>
-                </div>
-              )}
-              <p className="text-[11px] text-[#766B61] mt-1">
+                )}
+              </div>
+              <p className="text-[10.5px] text-[#766B61] mt-1">
                 Price includes applicable GST. Complimentary white-glove placement in AP.
               </p>
             </div>
 
-            {/* 7. Short Product Description with subtle 'Read More' toggle */}
-            <div className="mb-3.5 sm:mb-4 text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+            {/* 7. Finish / Fabric Selection */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="mb-3">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710]">
+                    FINISH / FABRIC: <span className="text-[#D69A4B] font-semibold">{selectedColor}</span>
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {product.colors.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => setSelectedColor(c.name)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-medium transition-all ${
+                        selectedColor === c.name
+                          ? 'border-[#D69A4B] bg-white text-[#211710] ring-2 ring-[#D69A4B] shadow-2xs'
+                          : 'border-[#E9D8C5] bg-white/70 text-[#766B61] hover:border-[#211710]/40 hover:text-[#211710]'
+                      }`}
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0 shadow-2xs"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                      <span>{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 8. Purchasing Actions: Integrated Quantity Selector + Buy Now + Add to Cart within Initial Desktop Viewport */}
+            <div className="space-y-2 mb-3.5">
+              {/* Primary High-Intent Row: Quantity Selector + Buy Now */}
+              <div className="flex items-stretch gap-2 sm:gap-2.5">
+                {/* Compact Ergonomic Quantity Selector */}
+                <div className="flex items-center border-2 border-[#E9D8C5] rounded-xl bg-white shadow-2xs shrink-0 h-11 px-1">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-8 h-full flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-lg transition-colors font-bold text-base cursor-pointer focus:outline-none"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center text-sm font-bold text-[#211710] select-none font-sans tabular-nums">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-8 h-full flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-lg transition-colors font-bold text-base cursor-pointer focus:outline-none"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Primary Buy Now Button (Direct WhatsApp Order) */}
+                <a
+                  href={whatsappOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 h-11 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] text-center"
+                  title="Order directly on WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+                  <span>BUY NOW VIA WHATSAPP</span>
+                </a>
+              </div>
+
+              {/* Secondary Purchase Action: Add to Cart */}
+              <button
+                type="button"
+                onClick={() => {
+                  addToCart(product, quantity, selectedColor);
+                  setIsCartOpen(true);
+                }}
+                className="w-full h-10 sm:h-11 bg-white hover:bg-[#211710] text-[#211710] hover:text-[#F8F0E8] border-2 border-[#211710] text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-2xs hover:shadow-soft active:scale-[0.99] cursor-pointer"
+                title="Add to shopping bag"
+              >
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span>ADD TO CART</span>
+              </button>
+
+              {/* Quick Inquiry & Showroom Links */}
+              <div className="flex gap-2 pt-0.5">
+                <a
+                  href={whatsappInquiryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-1.5 px-3 bg-[#F8F0E8] hover:bg-[#E9D8C5] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
+                  <span>Ask About Customization</span>
+                </a>
+                <Link
+                  to="/contact"
+                  className="py-1.5 px-3.5 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-medium flex items-center gap-1.5 transition-colors shrink-0"
+                >
+                  <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
+                  <span>Visit Showroom</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* 9. Short Product Description with subtle 'Read More' toggle (positioned below purchase actions) */}
+            <div className="mb-3.5 sm:mb-4 text-xs sm:text-sm text-[#38302A] leading-[1.65] font-sans p-3 bg-white/70 rounded-xl border border-[#E9D8C5]/70">
               <p className="inline">
                 {product.shortDescription || (product.fullDescription ? product.fullDescription.slice(0, 115) + '...' : '')}
               </p>
@@ -281,125 +389,12 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* 8. Finish / Fabric Selection & Quantity Selector */}
-            <div className="space-y-3 mb-4 sm:mb-5">
-              {/* Finish Swatches */}
-              {product.colors && product.colors.length > 0 && (
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710]">
-                      FINISH / FABRIC: <span className="text-[#D69A4B] font-semibold">{selectedColor}</span>
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {product.colors.map((c) => (
-                      <button
-                        key={c.name}
-                        type="button"
-                        onClick={() => setSelectedColor(c.name)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
-                          selectedColor === c.name
-                            ? 'border-[#D69A4B] bg-white text-[#211710] ring-2 ring-[#D69A4B] shadow-2xs'
-                            : 'border-[#E9D8C5] bg-white/70 text-[#766B61] hover:border-[#211710]/40 hover:text-[#211710]'
-                        }`}
-                      >
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0 shadow-2xs"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                        <span>{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity Selector */}
-              <div>
-                <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710] block mb-1.5">
-                  QUANTITY
-                </span>
-                <div className="inline-flex items-center border border-[#E9D8C5] rounded-xl bg-white shadow-xs">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-l-xl transition-colors font-bold text-base focus:outline-none"
-                    aria-label="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <span className="w-9 sm:w-11 text-center text-sm font-semibold text-[#211710] select-none font-sans tabular-nums">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-r-xl transition-colors font-bold text-base focus:outline-none"
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* 9. Purchasing Actions: Buy Now (Primary) & Add to Cart (Secondary) */}
-            <div className="space-y-2.5 mb-5 sm:mb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                {/* Add to Cart Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    addToCart(product, quantity, selectedColor);
-                    setIsCartOpen(true);
-                  }}
-                  className="w-full h-12 sm:h-[48px] bg-white hover:bg-[#211710] text-[#211710] hover:text-[#F8F0E8] border-2 border-[#211710] text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-2xs hover:shadow-soft active:scale-[0.99] cursor-pointer"
-                  title="Add to shopping bag"
-                >
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>ADD TO CART</span>
-                </button>
-
-                {/* Primary Buy Now Button (Direct WhatsApp Order) */}
-                <a
-                  href={whatsappOrderUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-12 sm:h-[48px] bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.99] text-center"
-                  title="Order directly on WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-                  <span>BUY NOW VIA WHATSAPP</span>
-                </a>
-              </div>
-
-              {/* Quick Inquiry & Showroom Links */}
-              <div className="flex gap-2 pt-0.5">
-                <a
-                  href={whatsappInquiryUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 px-3 bg-[#F8F0E8] hover:bg-[#E9D8C5] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <HelpCircle className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
-                  <span>Ask About Customization</span>
-                </a>
-                <Link
-                  to="/contact"
-                  className="py-2 px-3.5 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-medium flex items-center gap-1.5 transition-colors shrink-0"
-                >
-                  <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
-                  <span>Visit Showroom</span>
-                </Link>
-              </div>
-
-              {/* Explainer Note */}
-              <div className="p-2.5 bg-[#F8F0E8] rounded-xl border border-[#E9D8C5] text-[11px] text-[#49301F] leading-relaxed flex items-start gap-2">
-                <span className="text-sm leading-none mt-0.5">💬</span>
-                <span>
-                  <strong>Immediate WhatsApp Ordering:</strong> Direct pin code delivery scheduling, wood finish swatches, and assistance from our Visakhapatnam concierge.
-                </span>
-              </div>
+            {/* 10. Explainer Note */}
+            <div className="p-2.5 bg-[#F8F0E8] rounded-xl border border-[#E9D8C5] text-[11px] text-[#49301F] leading-relaxed flex items-start gap-2 mb-3">
+              <span className="text-sm leading-none mt-0.5">💬</span>
+              <span>
+                <strong>Immediate WhatsApp Ordering:</strong> Direct pin code delivery scheduling, wood finish swatches, and assistance from our Visakhapatnam concierge.
+              </span>
             </div>
 
             {/* 10. Product Highlights */}

@@ -81,27 +81,27 @@ export default function Footer() {
               <span className="font-serif text-2xl tracking-[0.16em] font-medium text-white uppercase block">
                 MNC <span className="font-light italic text-[#D69A4B]">LifeStyle</span>
               </span>
-              <span className="text-[10px] uppercase tracking-[0.28em] text-[#C9BBAE] font-sans block mt-1">
+              <span className="text-[11px] sm:text-xs uppercase tracking-[0.22em] text-[#E9D8C5] font-sans block mt-1">
                 FURNITURE & CONTEMPORARY LIVING
               </span>
             </div>
             
-            <p className="text-xs sm:text-[13px] text-[#C9BBAE] leading-relaxed mb-6 font-sans max-w-md">
+            <p className="text-xs sm:text-[13px] text-[#E9D8C5]/90 leading-relaxed mb-6 font-sans max-w-md">
               MNC LifeStyle curates thoughtful, minimal and enduring furniture collections for Indian homes that value quiet elegance. We balance the architectural beauty of natural materials with comfort and lived-in warmth.
             </p>
 
-            <div className="space-y-4 text-xs text-[#C9BBAE] font-sans">
+            <div className="space-y-4 text-xs sm:text-[13px] text-[#E9D8C5] font-sans">
               {/* Location Card & Maps Links */}
-              <div className="flex items-start gap-3 bg-white/5 p-3.5 rounded-xl border border-white/10">
+              <div className="flex items-start gap-3 bg-white/5 p-3.5 sm:p-4 rounded-xl border border-white/10">
                 <MapPin className="w-4 h-4 text-[#D69A4B] shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <div className="font-semibold text-white text-[13px] leading-snug">
+                  <div className="font-semibold text-white text-[13px] sm:text-sm leading-snug">
                     MNC LifeStyle Furniture
                   </div>
-                  <div className="text-xs text-[#C9BBAE]">
+                  <div className="text-xs sm:text-[13px] text-[#E9D8C5]/90">
                     Visakhapatnam, Andhra Pradesh, India.
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
                     <a
                       href="https://www.google.com/maps?q=17.80386734008789,83.2098159790039&z=17&hl=en"
                       target="_blank"
@@ -161,57 +161,57 @@ export default function Footer() {
             <h5 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D69A4B] mb-5 font-sans">
               FURNITURE CATEGORIES
             </h5>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[#C9BBAE] font-sans">
-              <div className="space-y-2.5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs sm:text-[13px] text-[#E9D8C5] font-sans">
+              <div className="space-y-1">
                 <div>
-                  <Link to="/category/sofas" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/sofas" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Sofas & Couches
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/beds" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/beds" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Solid Wood Beds
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/dining-sets" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/dining-sets" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Dining Sets & Chairs
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/centre-tables" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/centre-tables" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Centre Tables
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/recliners" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/recliners" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Motorized Recliners
                   </Link>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-1">
                 <div>
-                  <Link to="/category/study-tables" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/study-tables" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Study Tables & Desks
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/wardrobes" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/wardrobes" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Wardrobes
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/cabinets-sideboards" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/cabinets-sideboards" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Cabinets & Sideboards
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/office-furniture" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/office-furniture" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Office Furniture
                   </Link>
                 </div>
                 <div>
-                  <Link to="/category/shoe-racks" className="hover:text-[#D69A4B] transition-colors">
+                  <Link to="/category/shoe-racks" className="hover:text-[#D69A4B] transition-colors py-1 block">
                     Shoe Racks
                   </Link>
                 </div>
@@ -233,39 +233,39 @@ export default function Footer() {
             <h5 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D69A4B] mb-5 font-sans">
               ABOUT & SERVICES
             </h5>
-            <ul className="space-y-2.5 text-xs text-[#C9BBAE] font-sans">
+            <ul className="space-y-2 text-xs sm:text-[13px] text-[#E9D8C5] font-sans">
               <li>
-                <Link to="/about" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/about" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   About MNC LifeStyle
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/about" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Our Heritage & Timber
                 </Link>
               </li>
               <li>
-                <Link to="/collections" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/collections" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Curated Collections
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Visakhapatnam Experience Centre
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Interior Consultation
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Bespoke Sizing & Customization
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Contact Us
                 </Link>
               </li>

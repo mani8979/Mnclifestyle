@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle, Heart, ShoppingBag } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { businessConfig } from '../data/businessConfig';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function Header({ onOpenSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,12 +14,27 @@ export default function Header({ onOpenSearch }) {
   const hoverTimeoutRef = useRef(null);
   const location = useLocation();
 
+  const { wishlistProducts, setIsWishlistOpen } = useWishlist();
+  const { totalItems, setIsCartOpen } = useCart();
+
   // Close mobile drawer and dropdown on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsMobileShopOpen(false);
     setIsShopOpen(false);
   }, [location.pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   // Handle outside click & escape key for Shop mega menu dropdown
   useEffect(() => {
@@ -29,12 +46,15 @@ export default function Header({ onOpenSearch }) {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setIsShopOpen(false);
+        setIsMobileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
@@ -49,6 +69,11 @@ export default function Header({ onOpenSearch }) {
     hoverTimeoutRef.current = setTimeout(() => {
       setIsShopOpen(false);
     }, 150);
+  };
+
+  const closeShopDropdown = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsShopOpen(false);
   };
 
   const isHomeActive = location.pathname === '/';
@@ -113,7 +138,11 @@ export default function Header({ onOpenSearch }) {
 
         {/* Left / Center on Mobile: MNC LifeStyle Logo */}
         <div className="shrink-0">
-          <Link to="/" className="inline-flex items-center group">
+          <Link
+            to="/"
+            onMouseEnter={closeShopDropdown}
+            className="inline-flex items-center group"
+          >
             <img
               src={logoImg}
               alt="MNC LifeStyle — Furniture & Contemporary Living"
@@ -128,6 +157,7 @@ export default function Header({ onOpenSearch }) {
           {/* 1. HOME */}
           <NavLink
             to="/"
+            onMouseEnter={closeShopDropdown}
             className="relative py-2 text-sm font-semibold tracking-[0.14em] uppercase text-[#211A15] hover:text-[#D69A4B] transition-colors"
           >
             <span>HOME</span>
@@ -173,12 +203,12 @@ export default function Header({ onOpenSearch }) {
             {/* Desktop Mega Menu Dropdown */}
             {isShopOpen && (
               <div
-                className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 animate-in fade-in zoom-in-95 duration-150 before:content-[''] before:absolute before:-top-2 before:left-0 before:right-0 before:h-2"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
                 <div
-                  className="w-[560px] bg-white rounded-2xl shadow-luxury border border-[#E9D8C5] p-6 text-left"
+                  className="w-[520px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-luxury border border-[#E9D8C5] p-5 sm:p-6 text-left"
                   role="menu"
                   aria-orientation="vertical"
                 >
@@ -241,6 +271,7 @@ export default function Header({ onOpenSearch }) {
           {/* 3. ABOUT US */}
           <NavLink
             to="/about"
+            onMouseEnter={closeShopDropdown}
             className={({ isActive }) =>
               `relative py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
                 isActive ? 'text-[#211A15]' : 'text-[#211A15] hover:text-[#D69A4B]'
@@ -260,6 +291,7 @@ export default function Header({ onOpenSearch }) {
           {/* 4. CONTACT */}
           <NavLink
             to="/contact"
+            onMouseEnter={closeShopDropdown}
             className={({ isActive }) =>
               `relative py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
                 isActive ? 'text-[#211A15]' : 'text-[#211A15] hover:text-[#D69A4B]'
@@ -278,15 +310,46 @@ export default function Header({ onOpenSearch }) {
 
         </nav>
 
-        {/* Right: Search Icon ONLY */}
-        <div className="flex items-center">
+        {/* Right Actions: Search, Wishlist, Cart */}
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* 1. Search Trigger */}
           <button
             onClick={onOpenSearch}
             className="p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
             title="Search furniture pieces"
             aria-label="Search furniture"
           >
-            <Search className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2]" />
+            <Search className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+          </button>
+
+          {/* 2. Wishlist Trigger */}
+          <button
+            onClick={() => setIsWishlistOpen(true)}
+            className="relative p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            title="View saved pieces"
+            aria-label="View curated wishlist"
+          >
+            <Heart className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+            {wishlistProducts.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-[#D69A4B] text-white text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
+                {wishlistProducts.length}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Shopping Bag / Cart Trigger */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            title="View shopping bag"
+            aria-label="View shopping bag"
+          >
+            <ShoppingBag className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+            {totalItems > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-[#211710] text-white text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
+                {totalItems}
+              </span>
+            )}
           </button>
         </div>
 
@@ -294,12 +357,52 @@ export default function Header({ onOpenSearch }) {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-[80px] z-50 bg-[#211710]/60 lg:hidden backdrop-blur-xs">
-          <div className="w-4/5 max-w-sm h-full bg-[#F8F0E8] shadow-2xl p-6 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 border-r border-[#E9D8C5]">
-            <div className="mb-6 pb-4 border-b border-[#E9D8C5]">
+        <div
+          className="fixed inset-0 top-[80px] lg:top-[109px] z-50 bg-[#211710]/60 lg:hidden backdrop-blur-xs transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div
+            className="w-4/5 max-w-sm h-full bg-[#F8F0E8] shadow-2xl p-6 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 border-r border-[#E9D8C5]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 pb-3 border-b border-[#E9D8C5] flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest text-[#D69A4B] font-semibold">
                 Explore MNC LifeStyle
               </span>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1 text-[#77736D] hover:text-[#211A15]"
+                aria-label="Close menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Mobile Wishlist & Bag Row */}
+            <div className="grid grid-cols-2 gap-2 mb-4 pb-3 border-b border-[#E9D8C5]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsWishlistOpen(true);
+                }}
+                className="py-2 px-3 bg-white border border-[#E9D8C5] rounded-xl text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Heart className="w-3.5 h-3.5 text-[#D69A4B]" />
+                <span>Wishlist ({wishlistProducts.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsCartOpen(true);
+                }}
+                className="py-2 px-3 bg-white border border-[#E9D8C5] rounded-xl text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-[#211A15]" />
+                <span>Bag ({totalItems})</span>
+              </button>
             </div>
 
             {/* Mobile Navigation Links */}

@@ -42,7 +42,7 @@ export default function ProductCard({ product }) {
       <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* 2. Product Category & Subtle Badge / Wishlist */}
-          <div className="flex items-center justify-between gap-1.5 mb-1 sm:mb-1.5">
+          <div className="flex items-center justify-between gap-1.5 mb-1.5">
             <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-[#D69A4B] truncate">
               {product.categoryLabel || product.category}
             </span>
@@ -54,7 +54,7 @@ export default function ProductCard({ product }) {
               )}
               <button
                 onClick={handleWishlistClick}
-                className="p-1 text-[#77736D] hover:text-[#D69A4B] transition-colors"
+                className="p-1 text-[#77736D] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-[#F8F0E8]"
                 title={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
                 aria-label={isSaved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
               >
@@ -63,42 +63,48 @@ export default function ProductCard({ product }) {
             </div>
           </div>
 
-          {/* 3. Product Name (Playfair Display) */}
-          <h3 className="font-serif text-sm sm:text-base lg:text-[18px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-1 sm:line-clamp-2">
-            <Link to={`/product/${product.id}`} className="hover:underline">
+          {/* 3. Product Name (Playfair Display) — Standardized height to keep cards aligned */}
+          <h3 className="font-serif text-sm sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.8em] sm:min-h-[3em] flex items-start">
+            <Link to={`/product/${product.id}`} className="hover:underline" title={product.name}>
               {product.name}
             </Link>
           </h3>
 
-          {/* 4. Short Product Description */}
-          <p className="text-[11px] sm:text-xs text-[#77736D] line-clamp-1 sm:line-clamp-2 leading-relaxed mt-1 font-sans">
+          {/* 4. Short Product Description — Enhanced readability, line spacing & standardized height */}
+          <p className="text-xs sm:text-[13px] text-[#38302A] line-clamp-2 leading-[1.55] mt-1 font-sans h-[3.1em] overflow-hidden">
             {product.shortDescription}
           </p>
 
-          {/* 5. Available Finishes or Colors */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-1.5 my-2 sm:my-2.5 pt-0.5">
-              <span className="text-[9px] sm:text-[10px] text-[#77736D] font-medium uppercase tracking-wider">
-                Finishes:
+          {/* 5. Available Finishes or Colors — Consistent row height across all cards */}
+          <div className="h-6 sm:h-7 flex items-center gap-1.5 my-1.5 sm:my-2">
+            {product.colors && product.colors.length > 0 ? (
+              <>
+                <span className="text-[9px] sm:text-[10px] text-[#77736D] font-medium uppercase tracking-wider">
+                  Finishes:
+                </span>
+                <div className="flex items-center gap-1">
+                  {product.colors.map((color) => (
+                    <span
+                      key={color.name}
+                      title={color.name}
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-black/15 shadow-2xs inline-block"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <span className="text-[10px] text-[#77736D] italic">
+                {product.materials?.[0] || 'Handcrafted Timber'}
               </span>
-              <div className="flex items-center gap-1">
-                {product.colors.map((color) => (
-                  <span
-                    key={color.name}
-                    title={color.name}
-                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-black/15 shadow-2xs inline-block"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Bottom Section: Price & View Details Action */}
         <div className="mt-auto pt-2.5 sm:pt-3.5 border-t border-[#E9D8C5]/70">
           {/* Price Block: Selling Price, Original MRP & Savings */}
-          <div className="space-y-0.5 mb-2.5 sm:mb-3.5">
+          <div className="space-y-0.5 mb-2.5 sm:mb-3">
             <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-[#77736D] font-medium block">
               Selling Price
             </span>
@@ -115,20 +121,24 @@ export default function ProductCard({ product }) {
               )}
             </div>
 
-            {/* You Save Label */}
-            {hasDiscount && (
-              <div className="pt-0.5">
+            {/* You Save Label — Reserved height container so buttons remain aligned */}
+            <div className="h-5 sm:h-6 flex items-center pt-0.5">
+              {hasDiscount ? (
                 <span className="inline-block text-[10px] sm:text-[11px] font-sans font-medium text-emerald-800 bg-emerald-50/90 border border-emerald-200/80 px-1.5 sm:px-2 py-0.5 rounded truncate max-w-full">
                   Save {formatINR(savingsAmount)} ({discountPercent}% OFF)
                 </span>
-              </div>
-            )}
+              ) : (
+                <span className="text-[10px] text-[#77736D] font-sans">
+                  Direct Concierge Pricing
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* View Details Button (Primary Action) */}
+          {/* View Details Button (Primary Action) — Guaranteed vertical alignment */}
           <Link
             to={`/product/${product.id}`}
-            className="w-full min-h-[36px] sm:min-h-[42px] py-2 px-3 sm:px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-[11px] sm:text-xs uppercase tracking-wider font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs group/btn text-center"
+            className="w-full h-10 sm:h-11 py-2 px-3 sm:px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-[11px] sm:text-xs uppercase tracking-wider font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs group/btn text-center"
           >
             <span>View Details</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform shrink-0" />
