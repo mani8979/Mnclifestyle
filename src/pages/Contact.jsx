@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar, MessageCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar, MessageCircle, ArrowRight, Navigation } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
 import ShowroomModal from '../components/ShowroomModal';
 import { getWhatsAppConsultationUrl, buildWhatsAppUrl, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
@@ -114,17 +114,40 @@ Please get in touch with me.`);
                 </div>
                 <div className="flex-1">
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                    Flagship Design Gallery
+                    MNC LifeStyle Furniture
                   </h4>
                   <p className="text-xs text-warmgrey mt-1 leading-relaxed">
-                    Plot 42, VIP Road, Near Siripuram Junction<br />
-                    Visakhapatnam, Andhra Pradesh 530003<br />
+                    Visakhapatnam, Andhra Pradesh, India<br />
                     (Walk-ins & Private Appointments Welcome)
                   </p>
+                  
+                  {/* Google Maps Quick Links */}
+                  <div className="flex flex-wrap items-center gap-2.5 mt-2.5 text-xs">
+                    <a
+                      href="https://www.google.com/maps?q=17.80386734008789,83.2098159790039&z=17&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#D69A4B] hover:underline font-semibold inline-flex items-center gap-1"
+                    >
+                      <span>View on Google Maps</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </a>
+                    <span className="text-[#E9D8C5]">•</span>
+                    <a
+                      href="https://www.google.com/maps/dir/?api=1&destination=17.80386734008789,83.2098159790039"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#211710] hover:text-[#D69A4B] font-semibold inline-flex items-center gap-1"
+                    >
+                      <Navigation className="w-3 h-3 text-[#D69A4B]" />
+                      <span>Get Directions</span>
+                    </a>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => setIsShowroomModalOpen(true)}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#211710] text-white text-xs uppercase tracking-wider font-semibold rounded-lg hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-2xs"
+                    className="mt-3.5 inline-flex items-center gap-2 px-4 py-2 bg-[#211710] text-white text-xs uppercase tracking-wider font-semibold rounded-lg hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-2xs"
                   >
                     <Calendar className="w-3.5 h-3.5 text-[#D69A4B]" />
                     <span>Book Private Viewing</span>
@@ -143,12 +166,12 @@ Please get in touch with me.`);
                   <p className="text-xs text-warmgrey mt-1 leading-relaxed">
                     Chat directly with our senior furniture consultants for immediate quotes and wood samples.<br />
                     <a
-                      href={whatsappUrl}
+                      href="https://wa.me/918790943457"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#25D366] font-bold hover:underline inline-block mt-1"
                     >
-                      Chat on WhatsApp: {WHATSAPP_DISPLAY_PHONE}
+                      Chat on WhatsApp: {businessConfig.contact.displayPhone}
                     </a>
                   </p>
                 </div>
@@ -299,7 +322,7 @@ Please get in touch with me.`);
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="e.g. +91 98765 43210"
+                        placeholder="e.g. +91 87909 43457"
                         className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
                       />
                     </div>
@@ -388,6 +411,61 @@ Please get in touch with me.`);
           </div>
 
         </div>
+
+        {/* Google Maps Experience Centre Section */}
+        <section className="mb-20 sm:mb-24 max-w-7xl mx-auto">
+          <div className="bg-white rounded-3xl border border-[#E9D8C5] overflow-hidden shadow-soft">
+            
+            {/* Location Heading & Action Buttons */}
+            <div className="p-6 sm:p-8 lg:p-10 border-b border-[#E9D8C5] flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#F8F0E8]/40">
+              <div>
+                <div className="flex items-center gap-2 text-[#D69A4B] text-xs uppercase tracking-[0.2em] font-bold mb-1.5">
+                  <MapPin className="w-4 h-4" />
+                  <span>Showroom & Experience Centre</span>
+                </div>
+                <h2 className="font-serif text-2xl sm:text-3xl text-[#211710] font-normal tracking-tight">
+                  MNC LifeStyle Furniture
+                </h2>
+                <p className="text-xs sm:text-sm text-[#766B61] mt-1 font-sans">
+                  Visakhapatnam, Andhra Pradesh, India
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href="https://www.google.com/maps?q=17.80386734008789,83.2098159790039&z=17&hl=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 rounded-xl border border-[#211710] text-[#211710] hover:bg-[#211710] hover:text-white text-xs uppercase tracking-wider font-semibold transition-all duration-200 inline-flex items-center gap-2"
+                >
+                  <span>View on Google Maps</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+                <a
+                  href="https://www.google.com/maps/dir/?api=1&destination=17.80386734008789,83.2098159790039"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 rounded-xl bg-[#211710] hover:bg-[#D69A4B] hover:text-[#211710] text-white text-xs uppercase tracking-widest font-bold transition-all duration-200 inline-flex items-center gap-2 shadow-xs"
+                >
+                  <Navigation className="w-4 h-4 text-[#D69A4B]" />
+                  <span>Get Directions</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Responsive Map Container */}
+            <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] min-h-[350px] sm:min-h-[440px] bg-[#E9D8C5]/20">
+              <iframe
+                title="MNC LifeStyle Google Maps Location"
+                src="https://www.google.com/maps?q=17.80386734008789,83.2098159790039&z=17&output=embed"
+                className="w-full h-full border-0 absolute inset-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </section>
 
         {/* FAQ Accordion Section */}
         <div className="max-w-4xl mx-auto">

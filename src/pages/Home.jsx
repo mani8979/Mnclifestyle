@@ -221,7 +221,7 @@ export default function Home() {
                 className="w-full sm:w-auto px-8 py-4 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs uppercase tracking-widest font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
               >
                 <MessageCircle className="w-4 h-4 fill-current" />
-                <span>Chat on WhatsApp (+91 98765 43210)</span>
+                <span>Chat on WhatsApp (+91 87909 43457)</span>
               </a>
               <Link
                 to="/shop"

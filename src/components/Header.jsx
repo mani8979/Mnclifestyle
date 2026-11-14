@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
 import logoImg from '../assets/logo.png';
+import { businessConfig } from '../data/businessConfig';
 
 export default function Header({ onOpenSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -514,14 +515,29 @@ export default function Header({ onOpenSearch }) {
             </nav>
 
             {/* Mobile Concierge Contact Info */}
-            <div className="mt-8 pt-6 border-t border-[#E9D8C5] text-xs text-[#77736D] space-y-2">
+            <div className="mt-8 pt-6 border-t border-[#E9D8C5] text-xs text-[#77736D] space-y-2.5">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#D69A4B]" />
-                <span>+91 98765 43210</span>
+                <a href={`tel:${businessConfig.contact.phoneRaw}`} className="hover:text-[#D69A4B] font-medium text-[#211710]">
+                  {businessConfig.contact.phone}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                <a href="https://wa.me/918790943457" target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] font-medium text-[#211710]">
+                  WhatsApp: {businessConfig.contact.displayPhone}
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#D69A4B]" />
-                <span>Visakhapatnam, Andhra Pradesh</span>
+                <a
+                  href={businessConfig.location.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#D69A4B]"
+                >
+                  Visakhapatnam, Andhra Pradesh, India
+                </a>
               </div>
             </div>
           </div>

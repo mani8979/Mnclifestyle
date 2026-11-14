@@ -312,46 +312,6 @@ export default function Category() {
           </div>
         )}
 
-        {/* 4. Editorial Room Styling Guide Callout */}
-        <div className="mt-16 sm:mt-20 p-8 sm:p-12 bg-white rounded-3xl border border-[#E9D8C5] shadow-soft">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-            <div className="lg:col-span-2">
-              <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2 font-sans">
-                Designer's Perspective
-              </span>
-              <h3 className="font-serif text-2xl sm:text-3xl text-[#211A15] font-medium mb-3">
-                Styling Your {category.name} Sanctuary
-              </h3>
-              <p className="text-xs sm:text-sm text-[#766B61] leading-relaxed font-sans max-w-2xl">
-                When curating {category.name.toLowerCase()} arrangements, begin with anchoring proportions. Pair low-profile seating with organic stone centerpiece tables to maintain an open horizontal sightline. Layer textured bouclé and linen fabrics against solid quarter-sawn teakwood to balance tactile warmth with architectural poise.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#211A15] font-medium font-sans">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#D69A4B]" /> Seasoned Hardwoods & Mortise Joinery
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#D69A4B]" /> Ergonomically Tuned Proportions
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#D69A4B]" /> Scalable to Your Architectural Floorplan
-                </span>
-              </div>
-            </div>
-
-            <div className="text-left lg:text-right">
-              <a
-                href={whatsappConsultationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-4 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs uppercase tracking-widest font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
-              >
-                <MessageCircle className="w-4 h-4 fill-current" />
-                <span>Chat with Interior Designer</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
         {/* 5. Explore Other Categories */}
         <div className="mt-16 sm:mt-20">
           <SectionHeading

@@ -7,13 +7,14 @@ import {
   MapPin,
   Phone,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Navigation
 } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
-import { WHATSAPP_PHONE_NUMBER, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
+import { WHATSAPP_RAW_NUMBER } from '../utils/whatsapp';
 
 export default function Footer() {
-  const whatsappDirectUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
+  const whatsappDirectUrl = `https://wa.me/${businessConfig.contact.phoneRaw}?text=${encodeURIComponent(
     'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
   )}`;
 
@@ -89,27 +90,49 @@ export default function Footer() {
               MNC LifeStyle curates thoughtful, minimal and enduring furniture collections for Indian homes that value quiet elegance. We balance the architectural beauty of natural materials with comfort and lived-in warmth.
             </p>
 
-            <div className="space-y-3 text-xs text-[#C9BBAE] font-sans">
-              {/* Location */}
-              <div className="flex items-start gap-2.5">
+            <div className="space-y-4 text-xs text-[#C9BBAE] font-sans">
+              {/* Location Card & Maps Links */}
+              <div className="flex items-start gap-3 bg-white/5 p-3.5 rounded-xl border border-white/10">
                 <MapPin className="w-4 h-4 text-[#D69A4B] shrink-0 mt-0.5" />
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=Plot+42+VIP+Road+Siripuram+Visakhapatnam+AP+530003"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#D69A4B] transition-colors leading-relaxed"
-                  title="Open location in Google Maps"
-                >
-                  Plot 42, VIP Road, Siripuram, Visakhapatnam, AP 530003
-                </a>
+                <div className="space-y-1">
+                  <div className="font-semibold text-white text-[13px] leading-snug">
+                    MNC LifeStyle Furniture
+                  </div>
+                  <div className="text-xs text-[#C9BBAE]">
+                    Visakhapatnam, Andhra Pradesh, India.
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                    <a
+                      href="https://www.google.com/maps?q=17.80386734008789,83.2098159790039&z=17&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#D69A4B] hover:text-white font-medium inline-flex items-center gap-1 transition-colors"
+                      title="View showroom on Google Maps"
+                    >
+                      <span>View on Google Maps</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </a>
+                    <span className="text-white/20">•</span>
+                    <a
+                      href="https://www.google.com/maps/dir/?api=1&destination=17.80386734008789,83.2098159790039"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#D69A4B] hover:text-white font-medium inline-flex items-center gap-1 transition-colors"
+                      title="Get directions to showroom"
+                    >
+                      <Navigation className="w-3 h-3 text-[#D69A4B]" />
+                      <span>Get Directions</span>
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              {/* Phone */}
+              {/* Direct Telephone */}
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-[#D69A4B] shrink-0" />
                 <a
                   href={`tel:${businessConfig.contact.phoneRaw}`}
-                  className="hover:text-[#D69A4B] transition-colors"
+                  className="hover:text-[#D69A4B] transition-colors font-medium text-white"
                   title="Call MNC LifeStyle"
                 >
                   {businessConfig.contact.phone}
@@ -118,16 +141,16 @@ export default function Footer() {
 
               {/* WhatsApp Ordering */}
               <div className="flex items-center gap-2.5">
-                <MessageCircle className="w-4 h-4 text-[#D69A4B] shrink-0" />
+                <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
                 <a
-                  href={whatsappDirectUrl}
+                  href="https://wa.me/918790943457"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[#D69A4B] transition-colors font-medium text-white"
+                  className="hover:text-[#25D366] transition-colors font-medium text-white"
                   title="Message on WhatsApp"
                 >
                   WhatsApp Ordering:{' '}
-                  <span className="text-[#D69A4B] font-semibold">{WHATSAPP_DISPLAY_PHONE}</span>
+                  <span className="text-[#25D366] font-bold">{businessConfig.contact.displayPhone}</span>
                 </a>
               </div>
             </div>
@@ -253,7 +276,7 @@ export default function Footer() {
 
         {/* 3. COPYRIGHT AND LEGAL FOOTER */}
         <div className="pt-8 border-t border-white/12 flex flex-col sm:flex-row items-center justify-between text-xs text-[#C9BBAE] gap-4 font-sans">
-          <p>© 2026 MNC LifeStyle Furniture & Interiors. All rights reserved.</p>
+          <p>© 2026 MNC LifeStyle Furniture. All rights reserved.</p>
           <div className="flex items-center space-x-6 text-xs">
             <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
               Privacy Policy

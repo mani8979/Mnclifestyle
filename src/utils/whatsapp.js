@@ -1,13 +1,14 @@
 /**
  * WhatsApp Integration Utility for MNC LifeStyle
  * Generates pre-filled, professional WhatsApp links for direct ordering and customer enquiries.
- * Target Business Phone: +91 98765 43210
+ * Target Business Phone: +91 87909 43457 (Raw: 918790943457 / Display: 8790943457)
  */
 
 import { formatINR } from './currency';
 
-export const WHATSAPP_PHONE_NUMBER = '919876543210';
-export const WHATSAPP_DISPLAY_PHONE = '+91 98765 43210';
+export const WHATSAPP_PHONE_NUMBER = '918790943457';
+export const WHATSAPP_DISPLAY_PHONE = '+91 87909 43457';
+export const WHATSAPP_RAW_NUMBER = '8790943457';
 
 /**
  * Builds a direct wa.me link with encoded text message
@@ -25,21 +26,21 @@ export const getWhatsAppOrderUrl = ({ product, selectedColor, quantity = 1 }) =>
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : `https://mnclifestyle.in/product/${product.id}`;
   const price = formatINR(product.price);
+  const sku = product.sku || `MNC-${product.category?.slice(0, 3)?.toUpperCase() || 'FURN'}-${product.id.slice(-2)}`;
+  const variant = selectedColor || 'Standard';
 
   const message = `Hello MNC LifeStyle,
 
-I am interested in this product.
+I am interested in ordering the following furniture:
 
 Product: ${product.name}
-SKU: ${product.sku || 'MNC-' + product.id.toUpperCase()}
+SKU: ${sku}
 Price: ${price}
-Selected Finish: ${selectedColor || 'Standard'}
 Quantity: ${quantity}
-Product URL: ${currentUrl}
+Finish/Fabric: ${variant}
+Product Link: ${currentUrl}
 
-Please confirm product availability, delivery details and ordering information.
-
-Thank you.`;
+Please share availability and delivery details.`;
 
   return buildWhatsAppUrl(message);
 };

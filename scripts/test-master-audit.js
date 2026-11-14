@@ -121,3 +121,4 @@ const viewports = [
   await browser.close();
   console.log('\n🎉 Master Audit completed successfully!');
 })();
+
