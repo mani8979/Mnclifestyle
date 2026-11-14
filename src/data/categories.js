@@ -91,7 +91,7 @@ export const categories = [
     title: 'Artisan Wardrobes & Armoires',
     tagline: 'Intelligent Organization in Timeless Timber',
     description: 'Solid wood hinged and sliding wardrobes with customized internal compartments, soft-close hardware, and mirror accents.',
-    image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80',
     itemCount: 11,
     subtitle: '11+ Designs',
     subcategories: ['3-Door Wardrobes', '4-Door Grand Armoires', 'Sliding Door Wardrobes', 'Walk-in Closets']

@@ -21,7 +21,7 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-xs hover:shadow-luxury transition-all duration-300 h-full">
+    <div className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury transition-all duration-300 h-full">
       {/* 1. Product Image — Completely Clean, No Overlays, No Text, No Badges */}
       <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60">
         <Link
@@ -39,16 +39,16 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Product Information Container */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* 2. Product Category & Subtle Badge / Wishlist */}
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#D69A4B]">
+          <div className="flex items-center justify-between gap-1.5 mb-1 sm:mb-1.5">
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-[#D69A4B] truncate">
               {product.categoryLabel || product.category}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {product.badge && (
-                <span className="text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-[#F8F0E8] px-2 py-0.5 rounded border border-[#E9D8C5]/80">
+                <span className="hidden sm:inline-block text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-[#F8F0E8] px-1.5 py-0.5 rounded border border-[#E9D8C5]/80">
                   {product.badge}
                 </span>
               )}
@@ -58,81 +58,80 @@ export default function ProductCard({ product }) {
                 title={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
                 aria-label={isSaved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
               >
-                <Heart className={`w-4 h-4 ${isSaved ? 'fill-[#D69A4B] text-[#D69A4B]' : ''}`} />
+                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#D69A4B] text-[#D69A4B]' : ''}`} />
               </button>
             </div>
           </div>
 
           {/* 3. Product Name (Playfair Display) */}
-          <h3 className="font-serif text-lg sm:text-[19px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors">
+          <h3 className="font-serif text-sm sm:text-base lg:text-[18px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-1 sm:line-clamp-2">
             <Link to={`/product/${product.id}`} className="hover:underline">
               {product.name}
             </Link>
           </h3>
 
           {/* 4. Short Product Description */}
-          <p className="text-xs sm:text-[13px] text-[#77736D] line-clamp-2 leading-relaxed mt-1.5 font-sans">
+          <p className="text-[11px] sm:text-xs text-[#77736D] line-clamp-1 sm:line-clamp-2 leading-relaxed mt-1 font-sans">
             {product.shortDescription}
           </p>
 
           {/* 5. Available Finishes or Colors */}
           {product.colors && product.colors.length > 0 && (
-            <div className="flex items-center gap-1.5 my-3 pt-1">
-              <span className="text-[10px] sm:text-[11px] text-[#77736D] font-medium uppercase tracking-wider mr-1">
+            <div className="flex items-center gap-1.5 my-2 sm:my-2.5 pt-0.5">
+              <span className="text-[9px] sm:text-[10px] text-[#77736D] font-medium uppercase tracking-wider">
                 Finishes:
               </span>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {product.colors.map((color) => (
                   <span
                     key={color.name}
                     title={color.name}
-                    className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-2xs inline-block"
+                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-black/15 shadow-2xs inline-block"
                     style={{ backgroundColor: color.hex }}
                   />
                 ))}
               </div>
-              <span className="text-[10px] text-[#77736D]">({product.colors.length})</span>
             </div>
           )}
         </div>
 
         {/* Bottom Section: Price & View Details Action */}
-        <div className="mt-auto pt-4 border-t border-[#E9D8C5]/70">
-          {/* 6 & 7. Price Block: Selling Price, Original MRP & Savings */}
-          <div className="space-y-1 mb-4">
-            <span className="text-[10px] uppercase tracking-wider text-[#77736D] font-semibold block">
+        <div className="mt-auto pt-2.5 sm:pt-3.5 border-t border-[#E9D8C5]/70">
+          {/* Price Block: Selling Price, Original MRP & Savings */}
+          <div className="space-y-0.5 mb-2.5 sm:mb-3.5">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-[#77736D] font-medium block">
               Selling Price
             </span>
 
             {/* Selling Price (prominent) + MRP */}
-            <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
-              <span className="text-2xl sm:text-[25px] font-bold text-[#211710] font-sans tracking-tight leading-none">
+            <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
+              <span className="text-base sm:text-xl lg:text-[22px] font-bold text-[#211710] font-sans tabular-nums tracking-tight leading-none">
                 {formatINR(product.price)}
               </span>
               {hasDiscount && (
-                <span className="text-xs sm:text-sm text-[#77736D] line-through font-medium">
-                  MRP: {formatINR(product.originalPrice)}
+                <span className="text-[10px] sm:text-xs text-[#766B61] line-through font-sans tabular-nums font-normal">
+                  MRP {formatINR(product.originalPrice)}
                 </span>
               )}
             </div>
 
             {/* You Save Label */}
             {hasDiscount && (
-              <div className="pt-1">
-                <span className="inline-block text-[11px] sm:text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded">
-                  You Save: {formatINR(savingsAmount)} ({discountPercent}% OFF)
+              <div className="pt-0.5">
+                <span className="inline-block text-[10px] sm:text-[11px] font-sans font-medium text-emerald-800 bg-emerald-50/90 border border-emerald-200/80 px-1.5 sm:px-2 py-0.5 rounded truncate max-w-full">
+                  Save {formatINR(savingsAmount)} ({discountPercent}% OFF)
                 </span>
               </div>
             )}
           </div>
 
-          {/* 8. View Details Button (Primary Action) */}
+          {/* View Details Button (Primary Action) */}
           <Link
             to={`/product/${product.id}`}
-            className="w-full min-h-[44px] py-2.5 px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-xs uppercase tracking-widest font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-xs group/btn"
+            className="w-full min-h-[36px] sm:min-h-[42px] py-2 px-3 sm:px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-[11px] sm:text-xs uppercase tracking-wider font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs group/btn text-center"
           >
             <span>View Details</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform shrink-0" />
           </Link>
         </div>
       </div>

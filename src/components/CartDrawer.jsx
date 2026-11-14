@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Truck, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatINR } from '../utils/currency';
 
 export default function CartDrawer() {
   const { isCartOpen, setIsCartOpen, items, updateQuantity, removeFromCart, subtotal, clearCart } = useCart();
@@ -65,7 +66,7 @@ export default function CartDrawer() {
             <div className="bg-white p-4 rounded-xl border border-beige-300 w-full mb-6 text-left text-xs space-y-1.5 text-charcoal-700">
               <div className="flex justify-between font-medium">
                 <span>Estimated Valuation:</span>
-                <span>${subtotal.toLocaleString()}</span>
+                <span className="font-sans font-bold tabular-nums">{formatINR(subtotal)}</span>
               </div>
               <div className="flex justify-between text-warmgrey">
                 <span>Complimentary Delivery:</span>
@@ -171,8 +172,8 @@ export default function CartDrawer() {
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <span className="text-sm font-semibold text-charcoal">
-                        ${(item.product.price * item.quantity).toLocaleString()}
+                      <span className="text-sm font-sans font-bold tabular-nums text-charcoal">
+                        {formatINR(item.product.price * item.quantity)}
                       </span>
                     </div>
                   </div>
@@ -185,8 +186,8 @@ export default function CartDrawer() {
               <div className="space-y-1.5 text-xs text-warmgrey">
                 <div className="flex justify-between text-sm text-charcoal font-medium">
                   <span>Subtotal</span>
-                  <span className="text-base font-serif font-bold text-charcoal">
-                    ${subtotal.toLocaleString()}
+                  <span className="text-base font-sans font-bold tabular-nums text-charcoal">
+                    {formatINR(subtotal)}
                   </span>
                 </div>
                 <div className="flex justify-between">

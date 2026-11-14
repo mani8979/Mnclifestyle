@@ -214,18 +214,18 @@ export default function ProductDetails() {
                 YOUR PRICE
               </span>
               <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3.5">
-                <span className="font-serif text-3xl sm:text-4xl lg:text-[40px] font-bold text-[#211710] tracking-tight leading-none">
+                <span className="font-sans font-bold tabular-nums text-3xl sm:text-4xl lg:text-[40px] text-[#211710] tracking-tight leading-none">
                   {formatINR(product.price)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-sm sm:text-base text-[#766B61] line-through font-sans">
+                  <span className="text-sm sm:text-base text-[#766B61] line-through font-sans tabular-nums">
                     MRP {formatINR(product.originalPrice)}
                   </span>
                 )}
               </div>
               {product.originalPrice && product.originalPrice > product.price && discount && (
                 <div className="mt-2">
-                  <span className="inline-block px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-semibold">
+                  <span className="inline-block px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-sans tabular-nums font-semibold">
                     You Save {formatINR(product.originalPrice - product.price)} ({discount})
                   </span>
                 </div>
@@ -419,11 +419,11 @@ export default function ProductDetails() {
                         {p.name}
                       </Link>
                       <div className="flex flex-wrap items-baseline gap-1.5">
-                        <span className="font-serif text-sm sm:text-base font-bold text-[#211710]">
+                        <span className="font-sans font-bold tabular-nums text-sm sm:text-base text-[#211710]">
                           {formatINR(p.price)}
                         </span>
                         {p.originalPrice && p.originalPrice > p.price && (
-                          <span className="text-[11px] text-[#766B61] line-through font-sans">
+                          <span className="text-[11px] text-[#766B61] line-through font-sans tabular-nums">
                             {formatINR(p.originalPrice)}
                           </span>
                         )}
@@ -701,17 +701,17 @@ export default function ProductDetails() {
               Your Price
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-serif text-lg sm:text-xl font-bold text-white leading-none">
+              <span className="font-sans font-bold tabular-nums text-lg sm:text-xl text-white leading-none">
                 {formatINR(product.price)}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-[11px] text-[#C9BBAE] line-through font-sans">
+                <span className="text-[11px] text-[#C9BBAE] line-through font-sans tabular-nums">
                   {formatINR(product.originalPrice)}
                 </span>
               )}
             </div>
             {discount && (
-              <span className="text-[10px] text-emerald-400 font-medium mt-0.5">
+              <span className="text-[10px] text-emerald-400 font-medium font-sans tabular-nums mt-0.5">
                 Save {discount}
               </span>
             )}

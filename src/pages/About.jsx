@@ -27,7 +27,7 @@ export default function About() {
           <h1 className="font-serif text-4xl sm:text-6xl text-[#211A15] font-normal tracking-tight leading-[1.1] mb-6">
             Furniture Conceived for Quiet Luxury and Contemporary Indian Living.
           </h1>
-          <p className="text-base sm:text-xl text-[#77736D] font-light leading-relaxed max-w-2xl mx-auto font-sans">
+          <p className="text-base sm:text-lg text-[#38302A] font-normal leading-relaxed max-w-2xl mx-auto font-sans">
             At MNC LifeStyle, based in Visakhapatnam, Andhra Pradesh, we believe the home is a living canvas for personal calm. We design furniture that balances architectural restraint with tactile warmth.
           </p>
         </div>
@@ -51,10 +51,10 @@ export default function About() {
             <h2 className="font-serif text-3xl sm:text-4xl text-[#211A15] font-medium leading-tight">
               Bridging Architectural Discipline with Everyday Comfort.
             </h2>
-            <p className="text-sm sm:text-base text-[#77736D] leading-relaxed font-sans">
+            <p className="text-[15px] sm:text-base text-[#38302A] leading-relaxed font-sans">
               Founded on the belief that everyday living deserves intentional, enduring beauty, MNC LifeStyle originated as a specialized interior woodcraft atelier. While mass manufacturing pursued disposable particleboard convenience, we chose the disciplined path of seasoned Indian Teakwood, legal Sheesham, Roman travertine stone, and slow craftsmanship.
             </p>
-            <p className="text-sm sm:text-base text-[#77736D] leading-relaxed font-sans">
+            <p className="text-[15px] sm:text-base text-[#38302A] leading-relaxed font-sans">
               Our designs reject arbitrary ornamentation in favor of unpretentious lines, traditional mortise-and-tenon joinery, and tactile surfaces that awaken the senses. Each sofa, credenza, and dining table is crafted to age with dignity, gathering memories alongside the families who live with them.
             </p>
           </div>

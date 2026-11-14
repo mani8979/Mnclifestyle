@@ -112,11 +112,11 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
               </h3>
 
               <div className="flex items-baseline gap-2.5 mb-4">
-                <span className="font-serif text-2xl font-bold text-charcoal">
+                <span className="font-sans font-bold tabular-nums text-2xl text-charcoal">
                   {formatINR(product.price)}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-xs text-warmgrey line-through">
+                  <span className="text-xs text-warmgrey line-through font-sans tabular-nums">
                     {formatINR(product.originalPrice)}
                   </span>
                 )}

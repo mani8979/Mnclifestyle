@@ -20,6 +20,15 @@
   }
 }
 
+@layer components {
+  /* High-legibility tabular price numbers using Inter */
+  .font-price {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: "tnum" 1, "cv05" 1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 /* Custom luxury scrollbar */
 ::-webkit-scrollbar {
   width: 7px;

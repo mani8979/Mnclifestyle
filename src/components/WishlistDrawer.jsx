@@ -93,7 +93,7 @@ export default function WishlistDrawer() {
                     >
                       {prod.name}
                     </h4>
-                    <p className="text-xs font-semibold text-[#211A15] mt-1">
+                    <p className="text-xs font-sans font-bold tabular-nums text-[#211A15] mt-1">
                       {formatINR(prod.price)}
                     </p>
                     

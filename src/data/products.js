@@ -605,8 +605,8 @@ export const products = [
       { name: 'Smoked Walnut Finish', hex: '#423225', inStock: true }
     ],
     images: [
-      'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=1200&q=80'
+      'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1558882224-dda166733046?auto=format&fit=crop&w=1200&q=80'
     ],
     leadTime: 'White-Glove In-Home Installation (5–9 Days)',
     warranty: '10-Year Termite & Structural Warranty',

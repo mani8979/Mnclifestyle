@@ -154,7 +154,7 @@ export default function SearchModal({ isOpen, onClose }) {
                   <p className="text-xs text-warmgrey truncate">{prod.shortDescription}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <span className="text-sm font-semibold text-charcoal">{formatINR(prod.price)}</span>
+                  <span className="text-sm font-sans font-bold tabular-nums text-charcoal">{formatINR(prod.price)}</span>
                   <div className="flex items-center text-xs text-[#D69A4B] font-medium justify-end mt-1 group-hover:translate-x-1 transition-transform">
                     <span>View</span>
                     <ArrowRight className="w-3 h-3 ml-1" />

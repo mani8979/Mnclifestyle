@@ -15,17 +15,14 @@ export default function CategoryCard({ category }) {
           alt={category.name}
           className="w-full h-full object-cover luxury-image-zoom brightness-[0.92] group-hover:brightness-100 transition-all duration-500"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80';
+          }}
         />
 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/30 to-transparent transition-opacity duration-300" />
-
-        {/* Items Pill Badge */}
-        <div className="absolute top-4 right-4">
-          <span className="text-[10px] uppercase tracking-widest font-medium bg-ivory/90 backdrop-blur-sm text-charcoal px-2.5 py-1 rounded-full shadow-sm">
-            {category.itemCount} Designs
-          </span>
-        </div>
 
         {/* Text Content */}
         <div className="absolute bottom-0 inset-x-0 p-6 flex flex-col justify-end text-white">

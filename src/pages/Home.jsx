@@ -96,7 +96,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               Thoughtful Proportion
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               Every curve, bevel, and dimension is tuned for Indian homes, creating harmonious spaces that feel open, welcoming, and uncluttered.
             </p>
           </div>
@@ -108,7 +108,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               Solid Hardwood Integrity
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               Seasoned CP Teakwood, Indian Sheesham, and European White Oak treated against coastal humidity and termites for decades of durability.
             </p>
           </div>
@@ -120,7 +120,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               White-Glove In-Home Placement
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               Complimentary scheduled delivery across Andhra Pradesh & Telangana with two-person placement, leveling, and packaging removal.
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               Timeless Aesthetics
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               We reject fast furniture fads. Our pieces age with grace, acquiring a warm, rich patina that enriches your home for generations.
             </p>
           </div>
@@ -144,7 +144,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               WhatsApp Concierge Service
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               Order directly via WhatsApp with a senior design consultant to verify pin code delivery, customize fabric options, or scale dimensions.
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function Home() {
             <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
               10-Year Craftsmanship Guarantee
             </h3>
-            <p className="text-xs sm:text-sm text-[#77736D] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
               Covers traditional mortise-and-tenon structural joints, termite protection, and internal suspension under normal residential use.
             </p>
           </div>

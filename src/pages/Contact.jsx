@@ -420,7 +420,7 @@ Please get in touch with me.`);
                     )}
                   </button>
                   {isOpen && (
-                    <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-warmgrey leading-relaxed border-t border-[#E9D8C5]/40 pt-4 font-sans">
+                    <div className="px-5 sm:px-6 pb-6 text-sm sm:text-[15px] text-[#38302A] leading-relaxed border-t border-[#E9D8C5]/40 pt-4 font-sans">
                       {faq.a}
                     </div>
                   )}

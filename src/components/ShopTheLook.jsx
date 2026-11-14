@@ -77,11 +77,11 @@ export default function ShopTheLook() {
                   {activeProduct.name}
                 </h4>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className="font-serif text-base font-bold text-charcoal">
+                  <span className="font-sans font-bold tabular-nums text-base text-charcoal">
                     {formatINR(activeProduct.price)}
                   </span>
                   {activeProduct.originalPrice && (
-                    <span className="text-xs text-warmgrey line-through">
+                    <span className="text-xs text-warmgrey line-through font-sans tabular-nums">
                       {formatINR(activeProduct.originalPrice)}
                     </span>
                   )}
