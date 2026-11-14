@@ -374,8 +374,8 @@ export default function Shop() {
           </div>
         ) : (
           <div data-testid="shop-product-grid" className={getShopGridClasses(filteredProducts.length)}>
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {filteredProducts.map((product, idx) => (
+              <ProductCard key={product.id} product={product} index={idx} />
             ))}
           </div>
         )}

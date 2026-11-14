@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
+import ScrollReveal from '../components/ScrollReveal';
 import {
   Heart,
   Star,
@@ -414,7 +415,7 @@ export default function ProductDetails() {
 
         {/* 15. Recommended Products: Moved Higher ("Explore Similar Furniture") */}
         {relatedProducts.length > 0 && (
-          <section className="mb-10 sm:mb-14 pt-4 sm:pt-6 border-t border-[#E9D8C5]">
+          <ScrollReveal as="section" className="mb-10 sm:mb-14 pt-4 sm:pt-6 border-t border-[#E9D8C5]">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div>
                 <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#D69A4B] font-bold block mb-1">
@@ -435,59 +436,62 @@ export default function ProductDetails() {
 
             {/* 2-Column Mobile Grid / 4-Column Desktop Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              {relatedProducts.map((p) => (
-                <div
+              {relatedProducts.map((p, idx) => (
+                <ScrollReveal
                   key={p.id}
-                  className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury transition-all duration-300 flex flex-col justify-between group"
+                  staggerIndex={idx}
+                  className="h-full"
                 >
-                  <div>
-                    <Link to={`/product/${p.id}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
-                      <img
-                        src={p.images[0]}
-                        alt={p.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    </Link>
-                    <div className="p-3 sm:p-4">
-                      <span className="text-[10px] uppercase tracking-wider text-[#D69A4B] font-semibold block mb-0.5 truncate">
-                        {p.categoryLabel}
-                      </span>
-                      <Link
-                        to={`/product/${p.id}`}
-                        className="font-serif text-xs sm:text-sm font-medium text-[#211710] hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
-                        title={p.name}
-                      >
-                        {p.name}
+                  <div className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury transition-all duration-300 flex flex-col justify-between group h-full">
+                    <div>
+                      <Link to={`/product/${p.id}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
+                        <img
+                          src={p.images[0]}
+                          alt={p.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
                       </Link>
-                      <div className="flex flex-wrap items-baseline gap-1.5">
-                        <span className="font-sans font-bold tabular-nums text-sm sm:text-base text-[#211710]">
-                          {formatINR(p.price)}
+                      <div className="p-3 sm:p-4">
+                        <span className="text-[10px] uppercase tracking-wider text-[#D69A4B] font-semibold block mb-0.5 truncate">
+                          {p.categoryLabel}
                         </span>
-                        {p.originalPrice && p.originalPrice > p.price && (
-                          <span className="text-[11px] text-[#766B61] line-through font-sans tabular-nums">
-                            {formatINR(p.originalPrice)}
+                        <Link
+                          to={`/product/${p.id}`}
+                          className="font-serif text-xs sm:text-sm font-medium text-[#211710] hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
+                          title={p.name}
+                        >
+                          {p.name}
+                        </Link>
+                        <div className="flex flex-wrap items-baseline gap-1.5">
+                          <span className="font-sans font-bold tabular-nums text-sm sm:text-base text-[#211710]">
+                            {formatINR(p.price)}
                           </span>
-                        )}
+                          {p.originalPrice && p.originalPrice > p.price && (
+                            <span className="text-[11px] text-[#766B61] line-through font-sans tabular-nums">
+                              {formatINR(p.originalPrice)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="p-3 sm:p-4 pt-0">
+                      <Link
+                        to={`/product/${p.id}`}
+                        className="w-full py-1.5 sm:py-2 bg-[#F8F0E8] hover:bg-[#211710] text-[#211710] hover:text-white rounded-lg text-[11px] sm:text-xs font-semibold text-center block transition-colors border border-[#E9D8C5]"
+                      >
+                        View Details
+                      </Link>
+                    </div>
                   </div>
-                  <div className="p-3 sm:p-4 pt-0">
-                    <Link
-                      to={`/product/${p.id}`}
-                      className="w-full py-1.5 sm:py-2 bg-[#F8F0E8] hover:bg-[#211710] text-[#211710] hover:text-white rounded-lg text-[11px] sm:text-xs font-semibold text-center block transition-colors border border-[#E9D8C5]"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
+                </ScrollReveal>
               ))}
             </div>
-          </section>
+          </ScrollReveal>
         )}
 
         {/* 16. Detailed Specifications & Craftsmanship in Expandable Accordions */}
-        <div className="max-w-4xl mx-auto mb-12 sm:mb-16 bg-white rounded-2xl border border-[#E9D8C5] p-5 sm:p-8 lg:p-10 shadow-soft">
+        <ScrollReveal className="max-w-4xl mx-auto mb-12 sm:mb-16 bg-white rounded-2xl border border-[#E9D8C5] p-5 sm:p-8 lg:p-10 shadow-soft">
           <div className="text-center mb-6">
             <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#D69A4B] font-bold block mb-1">
               ARCHITECTURAL INTEGRITY
@@ -653,10 +657,10 @@ export default function ProductDetails() {
             </div>
 
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* 17. Delivery & Warranty Information Reassurance Card */}
-        <div className="max-w-4xl mx-auto mb-12 sm:mb-16 p-4 sm:p-6 rounded-2xl bg-[#F8F0E8] border border-[#E9D8C5] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <ScrollReveal className="max-w-4xl mx-auto mb-12 sm:mb-16 p-4 sm:p-6 rounded-2xl bg-[#F8F0E8] border border-[#E9D8C5] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#D69A4B] shrink-0 border border-[#E9D8C5]">
               <Truck className="w-5 h-5" />
@@ -678,10 +682,10 @@ export default function ProductDetails() {
           >
             Check Pin Code Delivery
           </a>
-        </div>
+        </ScrollReveal>
 
         {/* 18. Customer Reviews Section */}
-        <section id="customer-reviews" className="max-w-4xl mx-auto">
+        <ScrollReveal as="section" id="customer-reviews" className="max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#E9D8C5]">
             <div>
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#D69A4B] font-bold block mb-1">
@@ -729,7 +733,7 @@ export default function ProductDetails() {
               </div>
             ))}
           </div>
-        </section>
+        </ScrollReveal>
 
       </div>
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import ScrollReveal from '../components/ScrollReveal';
 import { collections } from '../data/collections';
 import { products } from '../data/products';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
@@ -21,7 +22,7 @@ export default function Collections() {
         </div>
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-24">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16 sm:mb-24" delay={50}>
           <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
             Harmonious Living
           </span>
@@ -31,7 +32,7 @@ export default function Collections() {
           <p className="text-sm sm:text-base text-warmgrey leading-relaxed">
             Thoughtfully assembled furniture suites engineered to eliminate spatial friction. Each collection combines shared architectural proportions, seasoned solid hardwoods, and refined silhouettes.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Collections Stack */}
         <div className="space-y-24 sm:space-y-36 max-w-7xl mx-auto">
@@ -43,7 +44,7 @@ export default function Collections() {
             const isReversed = index % 2 === 1;
 
             return (
-              <section key={col.id} className="scroll-mt-20" id={col.id}>
+              <ScrollReveal as="section" key={col.id} className="scroll-mt-20" id={col.id} delay={index === 0 ? 80 : 0}>
                 {/* Hero Feature */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-12">
                   
@@ -114,19 +115,19 @@ export default function Collections() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {featuredItems.map((prod) => (
-                        <ProductCard key={prod.id} product={prod} />
+                      {featuredItems.map((prod, idx) => (
+                        <ProductCard key={prod.id} product={prod} index={idx} />
                       ))}
                     </div>
                   </div>
                 )}
-              </section>
+              </ScrollReveal>
             );
           })}
         </div>
 
         {/* Bespoke Collection Consultation Banner */}
-        <div className="mt-28 bg-[#211710] text-[#F8F0E8] rounded-3xl p-8 sm:p-14 text-center shadow-elevated max-w-4xl mx-auto">
+        <ScrollReveal className="mt-28 bg-[#211710] text-[#F8F0E8] rounded-3xl p-8 sm:p-14 text-center shadow-elevated max-w-4xl mx-auto" delay={100}>
           <div className="max-w-2xl mx-auto">
             <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
               Private Specification
@@ -147,7 +148,7 @@ export default function Collections() {
               <span>Discuss Custom Suite on WhatsApp</span>
             </a>
           </div>
-        </div>
+        </ScrollReveal>
 
       </div>
     </div>

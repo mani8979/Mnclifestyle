@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Navigation
 } from 'lucide-react';
+import ScrollReveal from './ScrollReveal';
 import { businessConfig } from '../data/businessConfig';
 import { WHATSAPP_RAW_NUMBER } from '../utils/whatsapp';
 
@@ -23,7 +24,7 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
         
         {/* 1. TOP TRUST FEATURES STRIP */}
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/12 pb-10 mb-12 border-b border-white/12">
+        <ScrollReveal className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/12 pb-10 mb-12 border-b border-white/12" delay={50}>
           
           {/* Feature 1: Bespoke Architectural Quality */}
           <div className="flex items-start gap-4 py-4 md:py-0 md:pr-8">
@@ -70,10 +71,10 @@ export default function Footer() {
             </div>
           </div>
 
-        </div>
+        </ScrollReveal>
 
         {/* 2. MAIN FOOTER LAYOUT — 3 BALANCED COLUMNS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-12 pb-12">
+        <ScrollReveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-12 pb-12" delay={100}>
           
           {/* COLUMN 1 – BRAND & SHOWROOM CONTACT (5 COLS) */}
           <div className="lg:col-span-5 pr-0 lg:pr-8">
@@ -272,7 +273,7 @@ export default function Footer() {
             </ul>
           </div>
 
-        </div>
+        </ScrollReveal>
 
         {/* 3. COPYRIGHT AND LEGAL FOOTER */}
         <div className="pt-8 border-t border-white/12 flex flex-col sm:flex-row items-center justify-between text-xs text-[#C9BBAE] gap-4 font-sans">

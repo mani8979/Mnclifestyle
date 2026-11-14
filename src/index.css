@@ -62,3 +62,29 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, #A88962, transparent);
 }
+
+/* 
+ * Premium Scroll-Triggered Fade-In-Up Animations
+ * Hardware-accelerated with cubic-bezier(0.22, 1, 0.36, 1) luxury easing
+ */
+.reveal-wrapper {
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Accessibility: Full reduced-motion override */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-wrapper,
+  .reveal-wrapper.is-hidden,
+  .reveal-wrapper.is-revealed {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* No-JS or fallback safeguard: Ensure visibility if scripts fail */
+.no-js .reveal-wrapper {
+  opacity: 1 !important;
+  transform: none !important;
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, ArrowRight, Sparkles, ShieldCheck, Truck, Sofa, Headphones } from 'lucide-react';
+import ScrollReveal from './ScrollReveal';
 import heroBg from '../assets/hero-bg.webp';
 
 export default function Hero() {
@@ -19,19 +20,13 @@ export default function Hero() {
             fetchPriority="high"
           />
 
-          {/* Desktop Left Split Subtle Gradient Overlay for Text Readability:
-              - Left: dark espresso brown contrast for text
-              - Center: smoothly transitions to transparent
-              - Right: retains original brightness and natural sunny colors */}
+          {/* Desktop Left Split Subtle Gradient Overlay for Text Readability */}
           <div 
             className="absolute inset-y-0 left-0 w-full lg:w-[46%] bg-gradient-to-r from-[#211710]/80 via-[#211710]/35 to-transparent pointer-events-none hidden md:block"
             aria-hidden="true"
           />
 
-          {/* Mobile Dark Gradient Overlay for Maximum Text Readability:
-              - Deep espresso background behind text area (top 75%)
-              - Smoothly tapers out toward the coffee table and sofa base so the furniture remains visible and glowing
-              - Eliminates background painting clutter and bright patches behind typography */}
+          {/* Mobile Dark Gradient Overlay for Maximum Text Readability */}
           <div 
             className="absolute inset-0 bg-gradient-to-b from-[#18100A]/95 via-[#211710]/85 via-[58%] to-[#211710]/25 md:hidden pointer-events-none"
             aria-hidden="true"
@@ -44,8 +39,11 @@ export default function Hero() {
 
         {/* Hero Editorial Content (max width approx 650px, aligned left, vertically centered) */}
         <div className="relative z-10 max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] w-full flex items-center">
-          <div className="max-w-xl lg:max-w-[650px] py-8 sm:py-10 lg:py-0 w-full">
-            
+          <ScrollReveal
+            className="max-w-xl lg:max-w-[650px] py-8 sm:py-10 lg:py-0 w-full"
+            delay={100}
+            duration={800}
+          >
             {/* Small Outlined Gold Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full border border-[#D99B45] text-[#D99B45] bg-[#211710]/70 backdrop-blur-xs mb-3.5 sm:mb-7 shadow-xs">
               <Home className="w-3.5 h-3.5 text-[#D99B45] stroke-[2] shrink-0" />
@@ -54,12 +52,7 @@ export default function Hero() {
               </span>
             </div>
 
-            {/* Main Editorial Serif Heading:
-                - Responsive mobile size: 32px (360px), 34px (375px), 36px (390px), 38px (414px+)
-                - Desktop size: lg:text-[62px] xl:text-[66px]
-                - Line 1 in crisp White: "Elevate Your Space."
-                - Line 2 on separate line in Warm Gold (#D99B45): "Define Your Lifestyle."
-                - Drop shadow for zero collision / high contrast */}
+            {/* Main Editorial Serif Heading */}
             <h1 className="font-serif text-[32px] min-[375px]:text-[34px] min-[390px]:text-[36px] min-[414px]:text-[38px] sm:text-5xl lg:text-[62px] xl:text-[66px] font-normal text-white leading-[1.12] sm:leading-[1.08] tracking-tight mb-3 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
               <span className="block text-white">
                 Elevate Your Space.
@@ -108,12 +101,17 @@ export default function Hero() {
               </div>
             </div>
 
-          </div>
+          </ScrollReveal>
         </div>
       </div>
 
       {/* 2. Bottom Benefits Strip Directly Below Hero */}
-      <div className="bg-[#F8F0E8] border-b border-[#E9D8C5] min-h-[90px] lg:h-[109px] flex items-center py-5 lg:py-0">
+      <ScrollReveal
+        as="div"
+        className="bg-[#F8F0E8] border-b border-[#E9D8C5] min-h-[90px] lg:h-[109px] flex items-center py-5 lg:py-0"
+        delay={180}
+        duration={750}
+      >
         <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] w-full">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 lg:gap-0 items-center">
             
@@ -179,7 +177,7 @@ export default function Hero() {
 
           </div>
         </div>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

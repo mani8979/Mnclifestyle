@@ -3,9 +3,22 @@ import { Link } from 'react-router-dom';
 import { Heart, ArrowRight } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { formatINR } from '../utils/currency';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, index }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
+
+  // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
+  const staggerDelay = typeof index === 'number' ? (index % 4) * 80 : 0;
+
+  const { ref, isVisible, style: revealStyle } = useScrollReveal({
+    threshold: 0.08,
+    rootMargin: '0px 0px -30px 0px',
+    delay: staggerDelay,
+    duration: 700,
+    distance: 20,
+    once: true
+  });
 
   const isSaved = isInWishlist(product.id);
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price);
@@ -21,7 +34,14 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury transition-all duration-300 h-full">
+    <div
+      ref={ref}
+      style={revealStyle}
+      data-revealed={isVisible}
+      className={`group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-shadow duration-300 h-full ${
+        isVisible ? 'is-revealed' : 'is-hidden'
+      }`}
+    >
       {/* 1. Product Image — Completely Clean, No Overlays, No Text, No Badges */}
       <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60">
         <Link

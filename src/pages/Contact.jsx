@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar, MessageCircle, ArrowRight, Navigation } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
 import ShowroomModal from '../components/ShowroomModal';
+import ScrollReveal from '../components/ScrollReveal';
 import { getWhatsAppConsultationUrl, buildWhatsAppUrl, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
 
 export default function Contact() {
@@ -104,7 +105,7 @@ Please get in touch with me.`);
         </div>
 
         {/* Page Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-16" delay={50}>
           <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
             Client Concierge & Experience Centre
           </span>
@@ -114,13 +115,13 @@ Please get in touch with me.`);
           <p className="text-sm sm:text-base text-warmgrey leading-relaxed">
             Whether you are furnishing a new apartment, requesting timber swatches, or ordering furniture pieces via WhatsApp, our dedicated Visakhapatnam advisors are here to assist.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* 2-Column: Left Contact Info & Hours / Right Inquiry Form */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 mb-24 max-w-7xl mx-auto">
           
           {/* Left Column: Studio & Showroom Info */}
-          <div className="lg:col-span-5 space-y-6">
+          <ScrollReveal className="lg:col-span-5 space-y-6" delay={100}>
             <div className="bg-white p-8 rounded-3xl border border-[#E9D8C5] shadow-soft space-y-6">
               <h2 className="font-serif text-2xl text-charcoal font-medium border-b border-[#E9D8C5]/60 pb-4">
                 Visakhapatnam Experience Centre
@@ -263,10 +264,10 @@ Please get in touch with me.`);
                 <span>Register via WhatsApp Concierge &rarr;</span>
               </a>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Right Column: Inquiry Form */}
-          <div className="lg:col-span-7">
+          <ScrollReveal className="lg:col-span-7" delay={150}>
             <div className="bg-white p-8 sm:p-10 rounded-3xl border border-[#E9D8C5] shadow-soft">
               
               {submitted ? (
@@ -448,12 +449,12 @@ Please get in touch with me.`);
               )}
 
             </div>
-          </div>
+          </ScrollReveal>
 
         </div>
 
         {/* Google Maps Experience Centre Section */}
-        <section className="mb-20 sm:mb-24 max-w-7xl mx-auto">
+        <ScrollReveal as="section" className="mb-20 sm:mb-24 max-w-7xl mx-auto" delay={80}>
           <div className="bg-white rounded-3xl border border-[#E9D8C5] overflow-hidden shadow-soft">
             
             {/* Location Heading & Action Buttons */}
@@ -505,10 +506,10 @@ Please get in touch with me.`);
               />
             </div>
           </div>
-        </section>
+        </ScrollReveal>
 
         {/* FAQ Accordion Section */}
-        <div className="max-w-4xl mx-auto">
+        <ScrollReveal className="max-w-4xl mx-auto" delay={100}>
           <div className="text-center mb-10">
             <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
               Frequently Asked Questions
@@ -546,7 +547,7 @@ Please get in touch with me.`);
               );
             })}
           </div>
-        </div>
+        </ScrollReveal>
 
       </div>
 

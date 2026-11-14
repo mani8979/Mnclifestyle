@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../components/SectionHeading';
+import ScrollReveal from '../components/ScrollReveal';
 import { businessConfig } from '../data/businessConfig';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
 import { ShieldCheck, Compass, Sparkles, Check, ArrowRight, Award, Heart, MessageCircle } from 'lucide-react';
@@ -11,7 +12,7 @@ export default function About() {
   return (
     <div className="py-8 sm:py-14 pb-20">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-[50px]">
-        
+
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 text-xs text-[#766B61] mb-4 sm:mb-6">
           <Link to="/" className="hover:text-[#211710] transition-colors">Home</Link>
@@ -20,7 +21,7 @@ export default function About() {
         </div>
 
         {/* Hero Editorial Narrative */}
-        <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-14">
+        <ScrollReveal className="max-w-4xl mx-auto text-center mb-10 sm:mb-14" delay={50}>
           <span className="text-[11px] sm:text-xs uppercase tracking-[0.3em] font-semibold text-[#D69A4B] block mb-2.5">
             Our Heritage & Craftsmanship
           </span>
@@ -30,20 +31,20 @@ export default function About() {
           <p className="text-sm sm:text-base text-[#38302A] font-normal leading-relaxed max-w-2xl mx-auto font-sans">
             At MNC LifeStyle, based in Visakhapatnam, Andhra Pradesh, we believe the home is a living canvas for personal calm. We design furniture that balances architectural restraint with tactile warmth.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Editorial Photo Spread */}
-        <div className="relative rounded-3xl overflow-hidden shadow-luxury mb-12 sm:mb-16 aspect-[16/9] sm:aspect-[21/9] bg-[#E9D8C5] max-w-5xl mx-auto border border-[#E9D8C5]">
+        <ScrollReveal className="relative rounded-3xl overflow-hidden shadow-luxury mb-12 sm:mb-16 aspect-[16/9] sm:aspect-[21/9] bg-[#E9D8C5] max-w-5xl mx-auto border border-[#E9D8C5]" delay={100}>
           <img
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1800&q=85"
             alt="MNC LifeStyle Studio & Showroom"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-[#211710]/15" />
-        </div>
+        </ScrollReveal>
 
         {/* Brand Story 2-Column */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center mb-14 sm:mb-18 max-w-5xl mx-auto">
+        <ScrollReveal className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center mb-14 sm:mb-18 max-w-5xl mx-auto">
           <div className="lg:col-span-6 space-y-4 sm:space-y-5">
             <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block">
               The Journey
@@ -62,7 +63,7 @@ export default function About() {
           <div className="lg:col-span-6">
             <div className="bg-[#E9D8C5]/30 p-6 sm:p-9 rounded-3xl border border-[#E9D8C5] space-y-5">
               <h3 className="font-serif text-xl sm:text-2xl text-[#211A15] font-medium">Core Brand Pillars</h3>
-              
+
               <div className="space-y-4">
                 <div className="flex gap-3.5">
                   <div className="w-8 h-8 rounded-full bg-[#D69A4B]/20 text-[#D69A4B] flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -102,7 +103,7 @@ export default function About() {
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Transition Divider */}
         <div className="max-w-5xl mx-auto my-8 sm:my-10">
@@ -110,7 +111,7 @@ export default function About() {
         </div>
 
         {/* Artisan Workshop Section (Dark Section with Balanced Transition) */}
-        <div className="bg-[#211710] text-[#F8F0E8] rounded-3xl p-6 sm:p-12 lg:p-14 mb-14 sm:mb-18 shadow-elevated max-w-5xl mx-auto border border-[#49301F]">
+        <ScrollReveal className="bg-[#211710] text-[#F8F0E8] rounded-3xl p-6 sm:p-12 lg:p-14 mb-14 sm:mb-18 shadow-elevated max-w-5xl mx-auto border border-[#49301F]">
           <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-10">
             <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
               Our Master Craftspeople
@@ -140,10 +141,10 @@ export default function About() {
               <p className="text-[11px] text-[#E9D8C5]/70 mt-1">Only authentic structural timbers and honed geological stones</p>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Call to Action */}
-        <div className="text-center max-w-2xl mx-auto">
+        <ScrollReveal className="text-center max-w-2xl mx-auto">
           <h3 className="font-serif text-2xl sm:text-3xl text-[#211A15] font-medium mb-3">
             Experience MNC LifeStyle in Person
           </h3>
@@ -167,7 +168,7 @@ export default function About() {
               Explore Full Collection
             </Link>
           </div>
-        </div>
+        </ScrollReveal>
 
       </div>
     </div>

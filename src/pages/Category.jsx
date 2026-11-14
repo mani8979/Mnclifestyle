@@ -361,8 +361,8 @@ export default function Category() {
             data-testid="category-product-grid"
             className={getCategoryGridClasses(filteredProducts.length)}
           >
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {filteredProducts.map((product, idx) => (
+              <ProductCard key={product.id} product={product} index={idx} />
             ))}
           </div>
         )}

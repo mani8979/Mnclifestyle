@@ -4,6 +4,7 @@ import Hero from '../components/Hero';
 import CategoryGrid from '../components/CategoryGrid';
 import SectionHeading from '../components/SectionHeading';
 import ProductCard from '../components/ProductCard';
+import ScrollReveal from '../components/ScrollReveal';
 import { products } from '../data/products';
 import { businessConfig } from '../data/businessConfig';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
@@ -73,8 +74,8 @@ export default function Home() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {bestsellers.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {bestsellers.map((product, idx) => (
+            <ProductCard key={product.id} product={product} index={idx} />
           ))}
         </div>
       </section>
@@ -89,77 +90,89 @@ export default function Home() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <Compass className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={0} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <Compass className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                Thoughtful Proportion
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                Every curve, bevel, and dimension is tuned for Indian homes, creating harmonious spaces that feel open, welcoming, and uncluttered.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              Thoughtful Proportion
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              Every curve, bevel, and dimension is tuned for Indian homes, creating harmonious spaces that feel open, welcoming, and uncluttered.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <LayoutGrid className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={1} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <LayoutGrid className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                Solid Hardwood Integrity
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                Seasoned CP Teakwood, Indian Sheesham, and European White Oak treated against coastal humidity and termites for decades of durability.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              Solid Hardwood Integrity
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              Seasoned CP Teakwood, Indian Sheesham, and European White Oak treated against coastal humidity and termites for decades of durability.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <Truck className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={2} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <Truck className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                White-Glove In-Home Placement
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                Complimentary scheduled delivery across Andhra Pradesh & Telangana with two-person placement, leveling, and packaging removal.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              White-Glove In-Home Placement
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              Complimentary scheduled delivery across Andhra Pradesh & Telangana with two-person placement, leveling, and packaging removal.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <Hourglass className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={3} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <Hourglass className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                Timeless Aesthetics
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                We reject fast furniture fads. Our pieces age with grace, acquiring a warm, rich patina that enriches your home for generations.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              Timeless Aesthetics
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              We reject fast furniture fads. Our pieces age with grace, acquiring a warm, rich patina that enriches your home for generations.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <Sliders className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={4} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <Sliders className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                WhatsApp Concierge Service
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                Order directly via WhatsApp with a senior design consultant to verify pin code delivery, customize fabric options, or scale dimensions.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              WhatsApp Concierge Service
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              Order directly via WhatsApp with a senior design consultant to verify pin code delivery, customize fabric options, or scale dimensions.
-            </p>
-          </div>
+          </ScrollReveal>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
-              <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
+          <ScrollReveal staggerIndex={5} className="h-full">
+            <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full">
+              <div className="w-12 h-12 rounded-xl bg-[#F8F0E8] flex items-center justify-center text-[#D69A4B] mb-5">
+                <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
+              </div>
+              <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
+                10-Year Craftsmanship Guarantee
+              </h3>
+              <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+                Covers traditional mortise-and-tenon structural joints, termite protection, and internal suspension under normal residential use.
+              </p>
             </div>
-            <h3 className="font-serif text-xl font-medium text-[#211A15] mb-2.5">
-              10-Year Craftsmanship Guarantee
-            </h3>
-            <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-              Covers traditional mortise-and-tenon structural joints, termite protection, and internal suspension under normal residential use.
-            </p>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -175,33 +188,36 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {testimonials.map((t, idx) => (
-              <div
+              <ScrollReveal
                 key={idx}
-                className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft flex flex-col justify-between"
+                staggerIndex={idx}
+                className="h-full"
               >
-                <div>
-                  <div className="flex items-center gap-1 text-[#D69A4B] mb-4">
-                    {[...Array(t.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-[#D69A4B]" />
-                    ))}
+                <div className="bg-white p-8 rounded-2xl border border-[#E9D8C5] shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="flex items-center gap-1 text-[#D69A4B] mb-4">
+                      {[...Array(t.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-[#D69A4B]" />
+                      ))}
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#211A15] leading-relaxed mb-6 font-sans italic">
+                      "{t.comment}"
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-[#211A15] leading-relaxed mb-6 font-sans italic">
-                    "{t.comment}"
-                  </p>
+                  <div className="pt-4 border-t border-[#E9D8C5]/60">
+                    <h4 className="font-serif text-base font-semibold text-[#211A15]">{t.name}</h4>
+                    <p className="text-xs text-[#D69A4B] font-medium">{t.location}</p>
+                    <p className="text-[11px] text-[#77736D] mt-1">Purchased: {t.piece}</p>
+                  </div>
                 </div>
-                <div className="pt-4 border-t border-[#E9D8C5]/60">
-                  <h4 className="font-serif text-base font-semibold text-[#211A15]">{t.name}</h4>
-                  <p className="text-xs text-[#D69A4B] font-medium">{t.location}</p>
-                  <p className="text-[11px] text-[#77736D] mt-1">Purchased: {t.piece}</p>
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* 9. Direct Call to Action with WhatsApp Consultation */}
-      <section className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px]">
+      <ScrollReveal as="section" className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px]">
         <div className="relative rounded-3xl overflow-hidden bg-[#211710] text-[#F8F0E8] p-8 sm:p-14 lg:p-20 text-center shadow-luxury">
           <div className="max-w-3xl mx-auto">
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D69A4B] mb-3 block">
@@ -232,7 +248,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
       </div>
     </div>
   );

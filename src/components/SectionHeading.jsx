@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import ScrollReveal from './ScrollReveal';
 
 export default function SectionHeading({
   subtitle,
@@ -14,7 +15,11 @@ export default function SectionHeading({
   const isCenter = align === 'center';
 
   return (
-    <div className={`mb-6 sm:mb-8 md:mb-10 ${isCenter ? 'text-center max-w-3xl mx-auto' : 'flex flex-col md:flex-row md:items-end justify-between gap-6'}`}>
+    <ScrollReveal
+      className={`mb-6 sm:mb-8 md:mb-10 ${isCenter ? 'text-center max-w-3xl mx-auto' : 'flex flex-col md:flex-row md:items-end justify-between gap-6'}`}
+      threshold={0.1}
+      duration={650}
+    >
       <div className={isCenter ? '' : 'max-w-2xl'}>
         {subtitle && (
           <span className={`text-[11px] md:text-xs font-semibold uppercase tracking-[0.25em] block mb-2.5 ${
@@ -52,7 +57,7 @@ export default function SectionHeading({
           </Link>
         </div>
       )}
-    </div>
+    </ScrollReveal>
   );
 }
 
