@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { products } from '../data/products';
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import {
@@ -18,12 +19,14 @@ import {
   ChevronUp,
   ArrowRight,
   Palette,
-  CheckCircle2
+  CheckCircle2,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addToCart, setIsCartOpen } = useCart();
 
   const product = products.find((p) => p.id === id);
 
@@ -38,6 +41,17 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState('dimensions');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Helper to format title and prevent orphan single-word wrapping
+  const formatBalancedTitle = (title) => {
+    if (!title) return '';
+    const words = title.trim().split(' ');
+    if (words.length > 2) {
+      const lastTwo = words.slice(-2).join('\u00A0');
+      return [...words.slice(0, -2), lastTwo].join(' ');
+    }
+    return title;
+  };
 
   const isSaved = isInWishlist(product.id);
   const discount = calculateDiscount(product.price, product.originalPrice);
@@ -163,11 +177,11 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Right Column: Purchasing & WhatsApp Ordering (Col 5) */}
+          {/* Right Column: Purchasing & Information (Col 5) */}
           <div className="lg:col-span-5 flex flex-col justify-start">
             
-            {/* 4. Product Category and Bestseller Badge */}
-            <div className="flex items-center gap-2 mb-2">
+            {/* 1. Product Category and Bestseller Badge */}
+            <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
               <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-[#D69A4B]">
                 {product.categoryLabel}
                 {product.subCategory && ` — ${product.subCategory}`}
@@ -179,13 +193,13 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* 5. Product Name */}
-            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#211710] font-normal tracking-tight leading-snug sm:leading-tight mb-2 sm:mb-2.5">
-              {product.name}
+            {/* 2. Product Title — Balanced typography without orphan words */}
+            <h1 className="font-serif text-2xl sm:text-[28px] lg:text-[32px] xl:text-[34px] text-[#211710] font-normal tracking-tight leading-[1.2] mb-2 sm:mb-2.5 [text-wrap:balance]">
+              {formatBalancedTitle(product.name)}
             </h1>
 
-            {/* 6. Rating and Reviews */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#766B61] mb-3 sm:mb-4">
+            {/* 3. Rating and Customer Reviews */}
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#766B61] mb-2.5 sm:mb-3">
               <div className="flex items-center gap-1 text-[#D69A4B]">
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#D69A4B]" />
                 <span className="font-semibold text-[#211710]">{product.rating || '4.9'}</span>
@@ -196,8 +210,8 @@ export default function ProductDetails() {
               </a>
             </div>
 
-            {/* 7. SKU and Availability */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[#766B61] mb-4 sm:mb-5 pb-3 sm:pb-4 border-b border-[#E9D8C5]">
+            {/* 4. SKU and Stock Availability */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-[#766B61] mb-3 sm:mb-3.5 pb-2.5 sm:pb-3 border-b border-[#E9D8C5]">
               <div className="flex items-center gap-1.5">
                 <span className="text-[#766B61]">SKU:</span>
                 <span className="font-medium text-[#211710] font-mono text-[11px] sm:text-xs">{product.sku}</span>
@@ -208,13 +222,13 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* 8 & 9. Selling Price, MRP, and Savings */}
-            <div className="mb-4 sm:mb-5 pb-4 sm:pb-5 border-b border-[#E9D8C5]">
+            {/* 5 & 6. Current Price, MRP, and Savings */}
+            <div className="mb-3 sm:mb-3.5 pb-3 sm:pb-3.5 border-b border-[#E9D8C5]">
               <span className="text-[10px] sm:text-[11px] uppercase tracking-widest text-[#766B61] font-semibold block mb-1">
                 YOUR PRICE
               </span>
               <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3.5">
-                <span className="font-sans font-bold tabular-nums text-3xl sm:text-4xl lg:text-[40px] text-[#211710] tracking-tight leading-none">
+                <span className="font-sans font-bold tabular-nums text-3xl sm:text-4xl lg:text-[38px] text-[#211710] tracking-tight leading-none">
                   {formatINR(product.price)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
@@ -224,139 +238,172 @@ export default function ProductDetails() {
                 )}
               </div>
               {product.originalPrice && product.originalPrice > product.price && discount && (
-                <div className="mt-2">
+                <div className="mt-1.5">
                   <span className="inline-block px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-sans tabular-nums font-semibold">
                     You Save {formatINR(product.originalPrice - product.price)} ({discount})
                   </span>
                 </div>
               )}
-              <p className="text-[11px] text-[#766B61] mt-1.5">
+              <p className="text-[11px] text-[#766B61] mt-1">
                 Price includes applicable GST. Complimentary white-glove placement in AP.
               </p>
             </div>
 
-            {/* 10. Short Product Description with 'Read More' */}
-            <div className="mb-5 sm:mb-6">
-              <p className={`text-xs sm:text-sm md:text-base text-[#49301F] leading-relaxed font-sans ${!isDescriptionExpanded ? 'line-clamp-3 sm:line-clamp-none' : ''}`}>
-                {product.fullDescription || product.shortDescription}
+            {/* 7. Short Product Description with subtle 'Read More' toggle */}
+            <div className="mb-3.5 sm:mb-4 text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
+              <p className="inline">
+                {product.shortDescription || (product.fullDescription ? product.fullDescription.slice(0, 115) + '...' : '')}
               </p>
-              {product.fullDescription && product.fullDescription.length > 120 && (
-                <button
-                  type="button"
-                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                  className="mt-1 text-xs font-semibold text-[#D69A4B] hover:text-[#211710] transition-colors inline-flex items-center gap-1 sm:hidden"
-                >
-                  <span>{isDescriptionExpanded ? 'Read Less' : 'Read More'}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDescriptionExpanded ? 'rotate-180' : ''}`} />
-                </button>
+              {product.fullDescription && product.fullDescription !== product.shortDescription && (
+                <span className="inline">
+                  {' '}
+                  {!isDescriptionExpanded ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsDescriptionExpanded(true)}
+                      className="text-xs font-semibold text-[#D69A4B] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer"
+                    >
+                      Read More
+                    </button>
+                  ) : (
+                    <span className="block mt-2 pt-2 border-t border-[#E9D8C5]/50 animate-in fade-in duration-200">
+                      <span>{product.fullDescription}</span>{' '}
+                      <button
+                        type="button"
+                        onClick={() => setIsDescriptionExpanded(false)}
+                        className="text-xs font-semibold text-[#D69A4B] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer ml-1"
+                      >
+                        Show Less
+                      </button>
+                    </span>
+                  )}
+                </span>
               )}
             </div>
 
-            {/* 11. Finish / Fabric Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mb-5 sm:mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs uppercase tracking-widest font-bold text-[#211710]">
-                    SELECT FINISH / FABRIC
-                  </span>
-                  <span className="text-xs font-semibold text-[#D69A4B]">
-                    {selectedColor}
-                  </span>
+            {/* 8. Finish / Fabric Selection & Quantity Selector */}
+            <div className="space-y-3 mb-4 sm:mb-5">
+              {/* Finish Swatches */}
+              {product.colors && product.colors.length > 0 && (
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710]">
+                      FINISH / FABRIC: <span className="text-[#D69A4B] font-semibold">{selectedColor}</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {product.colors.map((c) => (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => setSelectedColor(c.name)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                          selectedColor === c.name
+                            ? 'border-[#D69A4B] bg-white text-[#211710] ring-2 ring-[#D69A4B] shadow-2xs'
+                            : 'border-[#E9D8C5] bg-white/70 text-[#766B61] hover:border-[#211710]/40 hover:text-[#211710]'
+                        }`}
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0 shadow-2xs"
+                          style={{ backgroundColor: c.hex }}
+                        />
+                        <span>{c.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 sm:gap-2.5">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={() => setSelectedColor(c.name)}
-                      className={`flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border text-xs font-medium transition-all min-h-[38px] ${
-                        selectedColor === c.name
-                          ? 'border-[#D69A4B] bg-white text-[#211710] ring-2 ring-[#D69A4B] shadow-xs'
-                          : 'border-[#E9D8C5] bg-white/70 text-[#766B61] hover:border-[#211710]/40 hover:text-[#211710]'
-                      }`}
-                    >
-                      <span
-                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-black/20 shrink-0 shadow-2xs"
-                        style={{ backgroundColor: c.hex }}
-                      />
-                      <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* 12. Quantity Selector */}
-            <div className="mb-5 sm:mb-6">
-              <label className="text-xs uppercase tracking-widest font-bold text-[#211710] block mb-2">
-                QUANTITY
-              </label>
-              <div className="inline-flex items-center border border-[#E9D8C5] rounded-xl bg-white shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-l-xl transition-colors font-bold text-lg focus:outline-none"
-                  aria-label="Decrease quantity"
-                >
-                  −
-                </button>
-                <span className="w-10 sm:w-12 text-center text-sm font-semibold text-[#211710] select-none">
-                  {quantity}
+              {/* Quantity Selector */}
+              <div>
+                <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710] block mb-1.5">
+                  QUANTITY
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-r-xl transition-colors font-bold text-lg focus:outline-none"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
+                <div className="inline-flex items-center border border-[#E9D8C5] rounded-xl bg-white shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-l-xl transition-colors font-bold text-base focus:outline-none"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="w-9 sm:w-11 text-center text-sm font-semibold text-[#211710] select-none font-sans tabular-nums">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] rounded-r-xl transition-colors font-bold text-base focus:outline-none"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* 13. Main WhatsApp Ordering Button */}
-            <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
-              <a
-                href={whatsappOrderUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full h-12 sm:h-14 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs sm:text-sm uppercase tracking-widest font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg active:scale-[0.99]"
-              >
-                <MessageCircle className="w-5 h-5 fill-current" />
-                <span>ORDER THROUGH WHATSAPP</span>
-              </a>
+            {/* 9. Purchasing Actions: Buy Now (Primary) & Add to Cart (Secondary) */}
+            <div className="space-y-2.5 mb-5 sm:mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {/* Add to Cart Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart(product, quantity, selectedColor);
+                    setIsCartOpen(true);
+                  }}
+                  className="w-full h-12 sm:h-[48px] bg-white hover:bg-[#211710] text-[#211710] hover:text-[#F8F0E8] border-2 border-[#211710] text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-2xs hover:shadow-soft active:scale-[0.99] cursor-pointer"
+                  title="Add to shopping bag"
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
+                  <span>ADD TO CART</span>
+                </button>
 
-              <div className="flex gap-2 sm:gap-2.5">
+                {/* Primary Buy Now Button (Direct WhatsApp Order) */}
+                <a
+                  href={whatsappOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 sm:h-[48px] bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.99] text-center"
+                  title="Order directly on WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+                  <span>BUY NOW VIA WHATSAPP</span>
+                </a>
+              </div>
+
+              {/* Quick Inquiry & Showroom Links */}
+              <div className="flex gap-2 pt-0.5">
                 <a
                   href={whatsappInquiryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-2 sm:py-2.5 px-3 bg-white border border-[#E9D8C5] text-[#211A15] hover:bg-[#F8F0E8] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2 px-3 bg-[#F8F0E8] hover:bg-[#E9D8C5] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D69A4B]" />
-                  <span>Ask About This Product</span>
+                  <HelpCircle className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
+                  <span>Ask About Customization</span>
                 </a>
                 <Link
                   to="/contact"
-                  className="py-2 sm:py-2.5 px-3.5 sm:px-4 bg-white border border-[#E9D8C5] text-[#211A15] hover:bg-[#F8F0E8] rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap"
-                  title="Schedule Private Showroom Viewing"
+                  className="py-2 px-3.5 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-[11px] font-medium flex items-center gap-1.5 transition-colors shrink-0"
                 >
-                  <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B]" />
+                  <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B] shrink-0" />
                   <span>Visit Showroom</span>
                 </Link>
               </div>
 
               {/* Explainer Note */}
-              <div className="p-3 bg-[#F8F0E8] rounded-xl border border-[#E9D8C5] text-[11px] text-[#49301F] leading-relaxed flex items-start gap-2">
-                <span className="text-base leading-none">💬</span>
+              <div className="p-2.5 bg-[#F8F0E8] rounded-xl border border-[#E9D8C5] text-[11px] text-[#49301F] leading-relaxed flex items-start gap-2">
+                <span className="text-sm leading-none mt-0.5">💬</span>
                 <span>
-                  <strong>WhatsApp-Only Order Desk:</strong> Our Visakhapatnam concierge coordinates verified pin code dispatch, custom wood finishes, and delivery scheduling directly on WhatsApp.
+                  <strong>Immediate WhatsApp Ordering:</strong> Direct pin code delivery scheduling, wood finish swatches, and assistance from our Visakhapatnam concierge.
                 </span>
               </div>
             </div>
 
-            {/* 14. Product Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-3 sm:pt-4 border-t border-[#E9D8C5] text-xs text-[#766B61]">
+            {/* 10. Product Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 pt-3 border-t border-[#E9D8C5] text-xs text-[#766B61]">
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-[#D69A4B] shrink-0" />
                 <span>Pan-India Insured White-Glove Transit</span>
@@ -696,7 +743,7 @@ export default function ProductDetails() {
         <div className="max-w-md mx-auto flex items-center justify-between gap-3">
           
           {/* Price & Savings Display */}
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-[#C9BBAE] font-medium leading-none mb-1">
               Your Price
             </span>
@@ -711,23 +758,38 @@ export default function ProductDetails() {
               )}
             </div>
             {discount && (
-              <span className="text-[10px] text-emerald-400 font-medium font-sans tabular-nums mt-0.5">
+              <span className="text-[10px] text-emerald-400 font-medium font-sans tabular-nums mt-0.5 truncate">
                 Save {discount}
               </span>
             )}
           </div>
 
-          {/* Sticky WhatsApp Order CTA Button */}
-          <a
-            href={whatsappOrderUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0"
-            aria-label={`Order ${product.name} on WhatsApp`}
-          >
-            <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-            <span>Order on WhatsApp</span>
-          </a>
+          {/* Mobile Actions: Add to Cart & Buy Now */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                addToCart(product, quantity, selectedColor);
+                setIsCartOpen(true);
+              }}
+              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer"
+              title="Add to Cart"
+              aria-label="Add to cart"
+            >
+              <ShoppingBag className="w-4 h-4 text-white" />
+            </button>
+
+            <a
+              href={whatsappOrderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0"
+              aria-label={`Buy ${product.name} on WhatsApp`}
+            >
+              <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+              <span>Buy Now</span>
+            </a>
+          </div>
 
         </div>
       </div>

@@ -46,3 +46,4 @@ import puppeteer from 'puppeteer-core';
     console.log('✅ SUCCESS: Shop by Collection was successfully removed from desktop view!');
   }
 })();
+
