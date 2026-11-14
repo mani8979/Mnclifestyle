@@ -178,89 +178,43 @@ export default function Header({ onOpenSearch }) {
                 onMouseLeave={handleMouseLeave}
               >
                 <div
-                  className="w-[740px] bg-white rounded-2xl shadow-luxury border border-[#E9D8C5] p-6 text-left"
+                  className="w-[560px] bg-white rounded-2xl shadow-luxury border border-[#E9D8C5] p-6 text-left"
                   role="menu"
                   aria-orientation="vertical"
                 >
-                  <div className="grid grid-cols-12 gap-6">
-                    
-                    {/* Section 1: Shop by Category (7 cols) */}
-                    <div className="col-span-7 pr-4 border-r border-[#E9D8C5]/70">
-                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#E9D8C5]/60">
-                        <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
-                          Shop by Category
+                  {/* Shop by Category Header */}
+                  <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-[#E9D8C5]/60">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
+                      Shop by Category
+                    </span>
+                    <Link
+                      to="/shop"
+                      onClick={() => setIsShopOpen(false)}
+                      className="text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>Explore All Categories</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+
+                  {/* 2-Column Category Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {shopCategories.map((item) => (
+                      <Link
+                        key={item.label}
+                        to={item.path}
+                        onClick={() => setIsShopOpen(false)}
+                        role="menuitem"
+                        className="px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#211A15] hover:bg-[#F8F0E8] hover:text-[#D69A4B] transition-all group/item block border border-transparent hover:border-[#E9D8C5]/60"
+                      >
+                        <span className="font-semibold block text-[#211A15] group-hover/item:text-[#D69A4B] transition-colors text-[13px]">
+                          {item.label}
                         </span>
-                        <Link
-                          to="/shop"
-                          onClick={() => setIsShopOpen(false)}
-                          className="text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors"
-                        >
-                          All Categories &rarr;
-                        </Link>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {shopCategories.map((item) => (
-                          <Link
-                            key={item.label}
-                            to={item.path}
-                            onClick={() => setIsShopOpen(false)}
-                            role="menuitem"
-                            className="px-3 py-2 rounded-xl text-xs font-medium text-[#211A15] hover:bg-[#F8F0E8] hover:text-[#D69A4B] transition-colors group/item block"
-                          >
-                            <span className="font-semibold block text-[#211A15] group-hover/item:text-[#D69A4B] transition-colors">
-                              {item.label}
-                            </span>
-                            <span className="text-[10px] text-[#77736D] truncate block mt-0.5">
-                              {item.desc}
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Section 2: Shop by Collection (5 cols) */}
-                    <div className="col-span-5 pl-2 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#E9D8C5]/60">
-                          <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
-                            Shop by Collection
-                          </span>
-                          <Link
-                            to="/collections"
-                            onClick={() => setIsShopOpen(false)}
-                            className="text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors"
-                          >
-                            Suites &rarr;
-                          </Link>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          {shopCollections.map((col) => (
-                            <Link
-                              key={col.title}
-                              to={col.path}
-                              onClick={() => setIsShopOpen(false)}
-                              role="menuitem"
-                              className="px-3 py-2 rounded-xl text-xs font-medium text-[#211A15] hover:bg-[#F8F0E8] hover:text-[#D69A4B] transition-colors group/col block border border-transparent hover:border-[#E9D8C5]/60"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-semibold text-[#211A15] group-hover/col:text-[#D69A4B] transition-colors">
-                                  {col.title}
-                                </span>
-                                <span className="text-[9px] uppercase tracking-wider text-[#D69A4B] font-semibold bg-[#F8F0E8] px-1.5 py-0.5 rounded">
-                                  {col.tag}
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-[#77736D] block mt-0.5 line-clamp-1">
-                                {col.desc}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
+                        <span className="text-[11px] text-[#77736D] truncate block mt-0.5 font-sans">
+                          {item.desc}
+                        </span>
+                      </Link>
+                    ))}
                   </div>
 
                   {/* Mega Menu Bottom Bar */}
@@ -272,9 +226,9 @@ export default function Header({ onOpenSearch }) {
                       to="/shop"
                       onClick={() => setIsShopOpen(false)}
                       role="menuitem"
-                      className="px-4 py-2 bg-[#211710] text-[#F8F0E8] rounded-xl text-xs uppercase tracking-wider font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors flex items-center gap-1.5 shadow-xs"
+                      className="px-4 py-2 bg-[#211710] text-[#F8F0E8] rounded-xl text-xs uppercase tracking-wider font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
                     >
-                      <span>Explore Complete Catalog</span>
+                      <span>Complete Catalog</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
