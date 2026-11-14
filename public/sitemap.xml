@@ -53,9 +53,13 @@
   <url><loc>https://mnclifestyle.in/product/mnc-din-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-din-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-stu-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-stu-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-cen-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-cen-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-rec-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-rec-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-sec-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-sec-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-war-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-sto-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://mnclifestyle.in/product/mnc-off-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>

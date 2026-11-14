@@ -15,12 +15,27 @@ export default function MainLayout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { wishlistToast } = useWishlist();
   const { notification } = useCart();
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
-  // Scroll to top on route change
+  // Scroll to top on route change or to hash anchor (with retry for lazy-loaded route chunks)
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (hash) {
+      const id = hash.replace('#', '');
+      let attempts = 0;
+      const interval = setInterval(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          clearInterval(interval);
+        } else if (++attempts >= 20) {
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F0E8] text-[#211A15]">

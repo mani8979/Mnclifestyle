@@ -320,10 +320,12 @@ Please get in touch with me.`);
                   {/* Name and Mobile Number */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        Your Full Name <span className="text-[#D69A4B] font-bold">*</span>
+                      <label htmlFor="contact-full-name" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                        Your Full Name <span className="text-[#855214] font-bold">*</span>
                       </label>
                       <input
+                        id="contact-full-name"
+                        name="fullName"
                         type="text"
                         value={formData.fullName}
                         onChange={(e) => {
@@ -340,10 +342,12 @@ Please get in touch with me.`);
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        WhatsApp Mobile Number <span className="text-[#D69A4B] font-bold">*</span>
+                      <label htmlFor="contact-phone" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                        WhatsApp Mobile Number <span className="text-[#855214] font-bold">*</span>
                       </label>
                       <input
+                        id="contact-phone"
+                        name="phone"
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => {
@@ -364,10 +368,12 @@ Please get in touch with me.`);
                   {/* Email & Inquiry Type */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                      <label htmlFor="contact-email" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                         Email Address (Optional)
                       </label>
                       <input
+                        id="contact-email"
+                        name="email"
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -376,10 +382,12 @@ Please get in touch with me.`);
                       />
                     </div>
                     <div>
-                      <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                      <label htmlFor="contact-inquiry-type" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                         Inquiry Nature
                       </label>
                       <select
+                        id="contact-inquiry-type"
+                        name="inquiryType"
                         value={formData.inquiryType}
                         onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
                         className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all cursor-pointer"
@@ -394,10 +402,12 @@ Please get in touch with me.`);
 
                   {/* Project Scope */}
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                    <label htmlFor="contact-project-scope" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                       Room / Furniture Category
                     </label>
                     <select
+                      id="contact-project-scope"
+                      name="projectScope"
                       value={formData.projectScope}
                       onChange={(e) => setFormData({ ...formData, projectScope: e.target.value })}
                       className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all cursor-pointer"
@@ -412,10 +422,12 @@ Please get in touch with me.`);
 
                   {/* Message */}
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                      Your Requirements or Questions <span className="text-[#D69A4B] font-bold">*</span>
+                    <label htmlFor="contact-message" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                      Your Requirements or Questions <span className="text-[#855214] font-bold">*</span>
                     </label>
                     <textarea
+                      id="contact-message"
+                      name="message"
                       rows={4}
                       value={formData.message}
                       onChange={(e) => {

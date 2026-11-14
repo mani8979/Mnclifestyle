@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Truck, CheckCircle2 } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Truck, CheckCircle2, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatINR } from '../utils/currency';
+import { getWhatsAppCartOrderUrl } from '../utils/whatsapp';
 
 export default function CartDrawer() {
   const { isCartOpen, setIsCartOpen, items, updateQuantity, removeFromCart, subtotal, clearCart } = useCart();
   const [checkoutRequested, setCheckoutRequested] = useState(false);
   const navigate = useNavigate();
+
+  const whatsappCartOrderUrl = getWhatsAppCartOrderUrl(items, subtotal);
 
   if (!isCartOpen) return null;
 
@@ -78,19 +81,28 @@ export default function CartDrawer() {
               </div>
             </div>
             <div className="flex flex-col gap-2 w-full">
+              <a
+                href={whatsappCartOrderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs uppercase tracking-widest font-bold hover:shadow-md transition-all rounded-xl flex items-center justify-center gap-2 text-center"
+              >
+                <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+                <span>Send Order via WhatsApp</span>
+              </a>
               <button
                 onClick={() => {
                   setIsCartOpen(false);
                   setCheckoutRequested(false);
                   navigate('/contact');
                 }}
-                className="w-full py-3 bg-charcoal text-white text-xs uppercase tracking-widest font-medium hover:bg-bronze transition-colors rounded-lg"
+                className="w-full py-2.5 bg-[#211710] text-white text-xs uppercase tracking-widest font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors rounded-xl"
               >
                 Connect With a Design Specialist
               </button>
               <button
                 onClick={() => setCheckoutRequested(false)}
-                className="w-full py-2.5 text-xs text-warmgrey hover:text-charcoal font-medium"
+                className="w-full py-2 text-xs text-warmgrey hover:text-charcoal font-medium"
               >
                 Back to Selection
               </button>
@@ -201,19 +213,32 @@ export default function CartDrawer() {
               </div>
 
               <div className="pt-2 flex flex-col gap-2">
-                <button
-                  onClick={handleCheckoutDemo}
-                  className="w-full py-3.5 bg-espresso text-white rounded-lg text-xs font-medium uppercase tracking-widest hover:bg-bronze transition-colors flex items-center justify-center gap-2 shadow-sm"
+                <a
+                  href={whatsappCartOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] text-center"
+                  title="Order Selection on WhatsApp"
                 >
-                  <span>Request White-Glove Order</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+                  <span>ORDER VIA WHATSAPP ({formatINR(subtotal)})</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigate('/contact');
+                  }}
+                  className="w-full py-2.5 bg-white hover:bg-[#F8F0E8] text-[#211710] border border-[#E9D8C5] rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors text-center"
+                >
+                  Request Showroom Consultation
                 </button>
                 <button
                   onClick={() => {
                     setIsCartOpen(false);
                     navigate('/shop');
                   }}
-                  className="w-full py-2 text-center text-xs text-warmgrey hover:text-charcoal font-medium"
+                  className="w-full py-1 text-center text-xs text-warmgrey hover:text-charcoal font-medium"
                 >
                   Continue Browsing Collections
                 </button>

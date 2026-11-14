@@ -63,7 +63,7 @@ export default function ProductCard({ product, index }) {
         <div>
           {/* 2. Product Category & Subtle Badge / Wishlist */}
           <div className="flex items-center justify-between gap-1.5 mb-1.5">
-            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-[#D69A4B] truncate">
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-[#855214] truncate">
               {product.categoryLabel || product.category}
             </span>
             <div className="flex items-center gap-1.5 shrink-0">

@@ -23,7 +23,7 @@ export default function Collections() {
 
         {/* Header */}
         <ScrollReveal className="text-center max-w-3xl mx-auto mb-16 sm:mb-24" delay={50}>
-          <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-[#855214] font-semibold block mb-2">
             Harmonious Living
           </span>
           <h1 className="font-serif text-4xl sm:text-6xl text-[#211A15] font-normal tracking-tight mb-4">
@@ -129,7 +129,7 @@ export default function Collections() {
         {/* Bespoke Collection Consultation Banner */}
         <ScrollReveal className="mt-28 bg-[#211710] text-[#F8F0E8] rounded-3xl p-8 sm:p-14 text-center shadow-elevated max-w-4xl mx-auto" delay={100}>
           <div className="max-w-2xl mx-auto">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#855214] font-semibold block mb-2">
               Private Specification
             </span>
             <h3 className="font-serif text-3xl sm:text-4xl text-white font-normal mb-4">

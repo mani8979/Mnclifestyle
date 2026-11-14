@@ -10,7 +10,7 @@ export default function CategoryGrid() {
       {/* Section Header */}
       <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8 pb-3 border-b border-[#E9D8C5]">
         <div>
-          <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-bold block mb-2">
+          <span className="text-xs uppercase tracking-[0.25em] text-[#855214] font-bold block mb-2">
             Curated For Indian Homes
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#211A15] font-normal tracking-tight">

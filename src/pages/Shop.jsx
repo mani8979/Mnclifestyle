@@ -163,7 +163,7 @@ export default function Shop() {
 
         {/* 2. Compact Page Header */}
         <div className="mb-2.5 sm:mb-3 text-center max-w-xl mx-auto">
-          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-[#D69A4B] font-bold block mb-0.5">
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-[#855214] font-bold block mb-0.5">
             THE MNC COLLECTION
           </span>
           <h1 className="font-serif text-2xl sm:text-[28px] text-[#211710] font-normal tracking-tight leading-tight mb-0.5">

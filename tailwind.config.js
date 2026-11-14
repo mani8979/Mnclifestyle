@@ -47,10 +47,10 @@ export default {
         },
         bronze: {
           light: '#D69A4B',
-          DEFAULT: '#D69A4B', // Champagne Gold
+          DEFAULT: '#855214', // Accessible rich bronze (WCAG 2.2 AA compliant >= 5.8:1 on light surfaces)
           accent: '#D69A4B',
-          dark: '#B87E34',
-          hover: '#C2873B',
+          dark: '#68400E',
+          hover: '#94601A',
         },
         espresso: {
           DEFAULT: '#211710',

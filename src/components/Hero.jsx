@@ -9,7 +9,7 @@ export default function Hero() {
     <section className="relative w-full overflow-hidden">
       {/* 1. Main Hero Desktop Section (Height approx 650px on desktop) */}
       <div className="relative min-h-[520px] sm:min-h-[580px] lg:h-[650px] flex items-center justify-start overflow-hidden">
-        
+
         {/* Full-width Realistic Interior Photograph Background */}
         <div className="absolute inset-0 w-full h-full">
           <img
@@ -21,17 +21,17 @@ export default function Hero() {
           />
 
           {/* Desktop Left Split Subtle Gradient Overlay for Text Readability */}
-          <div 
+          <div
             className="absolute inset-y-0 left-0 w-full lg:w-[46%] bg-gradient-to-r from-[#211710]/80 via-[#211710]/35 to-transparent pointer-events-none hidden md:block"
             aria-hidden="true"
           />
 
           {/* Mobile Dark Gradient Overlay for Maximum Text Readability */}
-          <div 
+          <div
             className="absolute inset-0 bg-gradient-to-b from-[#18100A]/95 via-[#211710]/85 via-[58%] to-[#211710]/25 md:hidden pointer-events-none"
             aria-hidden="true"
           />
-          <div 
+          <div
             className="absolute inset-x-0 top-0 h-[70%] bg-gradient-to-b from-black/40 via-black/20 to-transparent md:hidden pointer-events-none"
             aria-hidden="true"
           />
@@ -114,7 +114,7 @@ export default function Hero() {
       >
         <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] w-full">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4 lg:gap-0 items-center">
-            
+
             {/* Column 1: Premium Quality Furniture */}
             <div className="col-span-1 lg:pr-8 flex items-center gap-3.5">
               <div className="shrink-0">

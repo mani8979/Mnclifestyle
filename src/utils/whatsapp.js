@@ -85,3 +85,41 @@ Thank you!`;
   return buildWhatsAppUrl(message);
 };
 
+/**
+ * Pre-filled message when a customer places an order from their shopping bag / cart
+ */
+export const getWhatsAppCartOrderUrl = (items = [], subtotal = 0) => {
+  if (!items || items.length === 0) {
+    return `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
+      'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
+    )}`;
+  }
+
+  const itemsList = items
+    .map(
+      (item, idx) =>
+        `${idx + 1}. ${item.product.name} (${item.product.sku || 'MNC-FURN'})
+   • Finish/Fabric: ${item.selectedColor || 'Standard'}
+   • Quantity: ${item.quantity}
+   • Price: ${formatINR(item.product.price * item.quantity)}`
+    )
+    .join('\n\n');
+
+  const message = `Hello MNC LifeStyle,
+
+I would like to place an order for the following curated furniture selection:
+
+${itemsList}
+
+----------------------------------------
+Estimated Subtotal: ${formatINR(subtotal)}
+(Includes GST & Complimentary White-Glove Placement in Andhra Pradesh)
+
+Please confirm piece availability, delivery lead time for my pin code, and payment options.
+
+Thank you!`;
+
+  return buildWhatsAppUrl(message);
+};
+
+

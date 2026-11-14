@@ -187,7 +187,7 @@ export default function ProductDetails() {
             
             {/* 1. Product Category and Bestseller Badge */}
             <div className="flex items-center gap-2 mb-1 sm:mb-1.5">
-              <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-[#D69A4B]">
+              <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-[#855214]">
                 {product.categoryLabel}
                 {product.subCategory && ` — ${product.subCategory}`}
               </span>
@@ -326,6 +326,7 @@ export default function ProductDetails() {
               {/* Secondary Purchase Action: Add to Cart */}
               <button
                 type="button"
+                aria-label="Add to cart"
                 onClick={() => {
                   addToCart(product, quantity, selectedColor);
                   setIsCartOpen(true);
@@ -370,7 +371,7 @@ export default function ProductDetails() {
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className="text-xs font-semibold text-[#D69A4B] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-[#855214] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer"
                     >
                       Read More
                     </button>
@@ -380,7 +381,7 @@ export default function ProductDetails() {
                       <button
                         type="button"
                         onClick={() => setIsDescriptionExpanded(false)}
-                        className="text-xs font-semibold text-[#D69A4B] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer ml-1"
+                        className="text-xs font-semibold text-[#855214] hover:text-[#211710] underline underline-offset-2 transition-colors cursor-pointer ml-1"
                       >
                         Show Less
                       </button>

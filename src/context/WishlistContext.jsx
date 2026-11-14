@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { products } from '../data/products';
 
 const WishlistContext = createContext();
@@ -7,14 +7,20 @@ export function WishlistProvider({ children }) {
   const [wishlistIds, setWishlistIds] = useState(() => {
     try {
       const saved = localStorage.getItem('mnc_lifestyle_wishlist');
-      return saved ? JSON.parse(saved) : ['mnc-liv-01', 'mnc-cof-01'];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Filter out any stale non-existent legacy IDs
+        return parsed.filter(id => products.some(p => p.id === id));
+      }
+      return [];
     } catch {
-      return ['mnc-liv-01', 'mnc-cof-01'];
+      return [];
     }
   });
 
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [wishlistToast, setWishlistToast] = useState(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -23,6 +29,12 @@ export function WishlistProvider({ children }) {
       console.error('Failed to save wishlist', e);
     }
   }, [wishlistIds]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const toggleWishlist = (productId) => {
     const isCurrentlySaved = wishlistIds.includes(productId);
@@ -42,7 +54,8 @@ export function WishlistProvider({ children }) {
       });
     }
 
-    setTimeout(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
       setWishlistToast(null);
     }, 3500);
   };

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CartContext = createContext();
 
@@ -14,6 +14,7 @@ export function CartProvider({ children }) {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [notification, setNotification] = useState(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -22,6 +23,12 @@ export function CartProvider({ children }) {
       console.error('Failed to save cart to localStorage', e);
     }
   }, [items]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const addToCart = (product, quantity = 1, selectedColor = null) => {
     const color = selectedColor || product.colors?.[0]?.name || 'Standard';
@@ -49,7 +56,9 @@ export function CartProvider({ children }) {
       message: `${product.name} (${color}) added to your shopping bag.`,
       image: product.images?.[0]
     });
-    setTimeout(() => {
+
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
       setNotification(null);
     }, 4000);
   };

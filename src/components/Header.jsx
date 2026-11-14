@@ -123,30 +123,30 @@ export default function Header({ onOpenSearch }) {
 
   return (
     <header className="sticky top-0 z-40 bg-[#F8F0E8] border-b border-[#E9D8C5] shadow-xs">
-      <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] h-[80px] lg:h-[109px] flex items-center justify-between">
+      <div className="max-w-[1672px] mx-auto px-3 sm:px-8 lg:px-[50px] h-[72px] sm:h-[80px] lg:h-[109px] flex items-center justify-between gap-2 sm:gap-4 overflow-hidden lg:overflow-visible">
         
         {/* Mobile Menu Button (Left on Mobile) */}
-        <div className="flex items-center lg:hidden">
+        <div className="flex items-center shrink-0 lg:hidden">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 -ml-2 text-[#211A15] hover:text-[#D69A4B] focus:outline-none transition-colors"
+            className="p-1.5 sm:p-2 -ml-1 text-[#211A15] hover:text-[#D69A4B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D69A4B] rounded-lg transition-colors"
             aria-label="Toggle navigation menu"
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
           </button>
         </div>
 
         {/* Left / Center on Mobile: MNC LifeStyle Logo */}
-        <div className="shrink-0">
+        <div className="shrink min-w-0 flex items-center">
           <Link
             to="/"
             onMouseEnter={closeShopDropdown}
-            className="inline-flex items-center group"
+            className="inline-flex items-center group max-w-full"
           >
             <img
               src={logoImg}
               alt="MNC LifeStyle — Furniture & Contemporary Living"
-              className="h-11 sm:h-13 lg:h-[66px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
+              className="h-8 min-[375px]:h-9 sm:h-11 lg:h-[66px] max-w-[140px] min-[375px]:max-w-[185px] sm:max-w-none w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
             />
           </Link>
         </div>
@@ -214,7 +214,7 @@ export default function Header({ onOpenSearch }) {
                 >
                   {/* Shop by Category Header */}
                   <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-[#E9D8C5]/60">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[#855214] font-bold">
                       Shop by Category
                     </span>
                     <Link
@@ -311,27 +311,27 @@ export default function Header({ onOpenSearch }) {
         </nav>
 
         {/* Right Actions: Search, Wishlist, Cart */}
-        <div className="flex items-center space-x-1 sm:space-x-2">
+        <div className="flex items-center gap-0.5 min-[375px]:gap-1 sm:gap-2 shrink-0">
           {/* 1. Search Trigger */}
           <button
             onClick={onOpenSearch}
-            className="p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            className="p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
             title="Search furniture pieces"
             aria-label="Search furniture"
           >
-            <Search className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+            <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
           </button>
 
           {/* 2. Wishlist Trigger */}
           <button
             onClick={() => setIsWishlistOpen(true)}
-            className="relative p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            className="relative p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
             title="View saved pieces"
             aria-label="View curated wishlist"
           >
-            <Heart className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+            <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
             {wishlistProducts.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-[#D69A4B] text-white text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
+              <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#D69A4B] text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
                 {wishlistProducts.length}
               </span>
             )}
@@ -340,13 +340,13 @@ export default function Header({ onOpenSearch }) {
           {/* 3. Shopping Bag / Cart Trigger */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            className="relative p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
             title="View shopping bag"
             aria-label="View shopping bag"
           >
-            <ShoppingBag className="w-5 h-5 sm:w-5 sm:h-5 stroke-[2]" />
+            <ShoppingBag className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
             {totalItems > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-[#211710] text-white text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
+              <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#211710] text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
                 {totalItems}
               </span>
             )}
@@ -455,7 +455,7 @@ export default function Header({ onOpenSearch }) {
                     {/* Section 1: Shop by Category */}
                     <div>
                       <div className="px-3 py-1 mb-1">
-                        <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-bold">
+                        <span className="text-[10px] uppercase tracking-widest text-[#855214] font-bold">
                           Shop by Category
                         </span>
                       </div>
@@ -480,7 +480,7 @@ export default function Header({ onOpenSearch }) {
                     {/* Section 2: Shop by Collection */}
                     <div className="pt-2 border-t border-[#E9D8C5]/50">
                       <div className="px-3 py-1 mb-1">
-                        <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-bold">
+                        <span className="text-[10px] uppercase tracking-widest text-[#855214] font-bold">
                           Shop by Collection
                         </span>
                       </div>

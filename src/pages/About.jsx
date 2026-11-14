@@ -22,7 +22,7 @@ export default function About() {
 
         {/* Hero Editorial Narrative */}
         <ScrollReveal className="max-w-4xl mx-auto text-center mb-10 sm:mb-14" delay={50}>
-          <span className="text-[11px] sm:text-xs uppercase tracking-[0.3em] font-semibold text-[#D69A4B] block mb-2.5">
+          <span className="text-[11px] sm:text-xs uppercase tracking-[0.3em] font-semibold text-[#855214] block mb-2.5">
             Our Heritage & Craftsmanship
           </span>
           <h1 className="font-serif text-3xl sm:text-5xl lg:text-[54px] text-[#211A15] font-normal tracking-tight leading-[1.15] mb-4 sm:mb-5">
@@ -46,7 +46,7 @@ export default function About() {
         {/* Brand Story 2-Column */}
         <ScrollReveal className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center mb-14 sm:mb-18 max-w-5xl mx-auto">
           <div className="lg:col-span-6 space-y-4 sm:space-y-5">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#855214] font-semibold block">
               The Journey
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-[34px] text-[#211A15] font-medium leading-tight">

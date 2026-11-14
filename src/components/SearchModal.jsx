@@ -67,9 +67,12 @@ export default function SearchModal({ isOpen, onClose }) {
         {/* Search Input Bar */}
         <div className="flex items-center px-6 py-5 border-b border-[#E9D8C5] bg-white">
           <Search className="w-5 h-5 text-[#D69A4B] mr-4 flex-shrink-0" />
+          <label htmlFor="search-furniture-input" className="sr-only">Search furniture pieces</label>
           <input
+            id="search-furniture-input"
             ref={inputRef}
             type="text"
+            aria-label="Search luxury sofas, teak dining tables, beds, recliners"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search luxury sofas, teak dining tables, beds, recliners..."

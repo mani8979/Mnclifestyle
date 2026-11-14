@@ -171,10 +171,12 @@ Please confirm my appointment. Thank you!`);
             {/* Date & Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                <label htmlFor="showroom-date" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                   2. Select Date
                 </label>
                 <input
+                  id="showroom-date"
+                  name="showroomDate"
                   type="date"
                   required
                   value={formData.date}
@@ -184,10 +186,12 @@ Please confirm my appointment. Thank you!`);
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                <label htmlFor="showroom-timeslot" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                   3. Select Time Window
                 </label>
                 <select
+                  id="showroom-timeslot"
+                  name="showroomTimeSlot"
                   value={formData.timeSlot}
                   onChange={(e) => setFormData({ ...formData, timeSlot: e.target.value })}
                   className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
@@ -201,10 +205,12 @@ Please confirm my appointment. Thank you!`);
 
             {/* Consultation Type */}
             <div>
-              <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+              <label htmlFor="showroom-consultation-type" className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
                 4. Focus of Consultation
               </label>
               <select
+                id="showroom-consultation-type"
+                name="showroomConsultationType"
                 value={formData.consultationType}
                 onChange={(e) => setFormData({ ...formData, consultationType: e.target.value })}
                 className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
@@ -217,34 +223,52 @@ Please confirm my appointment. Thank you!`);
 
             {/* Guest Details */}
             <div className="space-y-3 pt-2 border-t border-[#E9D8C5]">
-              <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold">
+              <span className="block text-xs uppercase tracking-wider text-charcoal font-semibold">
                 5. Guest Information
-              </label>
+              </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="showroom-name" className="sr-only">Full Name</label>
+                  <input
+                    id="showroom-name"
+                    name="name"
+                    type="text"
+                    required
+                    placeholder="Full Name *"
+                    aria-label="Full Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="showroom-phone" className="sr-only">WhatsApp Mobile Number</label>
+                  <input
+                    id="showroom-phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    placeholder="WhatsApp Mobile Number *"
+                    aria-label="WhatsApp Mobile Number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="showroom-email" className="sr-only">Email Address</label>
                 <input
-                  type="text"
-                  required
-                  placeholder="Full Name *"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
-                />
-                <input
-                  type="tel"
-                  required
-                  placeholder="WhatsApp Mobile Number *"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  id="showroom-email"
+                  name="email"
+                  type="email"
+                  placeholder="Email Address"
+                  aria-label="Email Address"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
                 />
               </div>
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
-              />
             </div>
 
             {/* Submit CTA */}
