@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { X, Calendar, Clock, MapPin, CheckCircle2, Sparkles, User, Mail, Phone } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, CheckCircle2, Sparkles, User, Mail, Phone, MessageCircle } from 'lucide-react';
+import { businessConfig } from '../data/businessConfig';
+import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 export default function ShowroomModal({ isOpen, onClose }) {
+  const showrooms = businessConfig.concierge.showrooms;
+
   const [formData, setFormData] = useState({
-    showroom: 'Flagship Design District Gallery',
-    date: '2026-11-15',
+    showroom: showrooms[0]?.name || 'Visakhapatnam Flagship Experience Centre',
+    date: '2026-11-16',
     timeSlot: '2:30 PM — 4:00 PM',
     consultationType: 'Living Room Architecture & Styling',
     name: '',
@@ -17,29 +21,24 @@ export default function ShowroomModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const showrooms = [
-    { name: 'Flagship Design District Gallery', city: 'Design District Suite 400', leadTime: 'Private viewing by appointment' },
-    { name: 'Mayfair Studio & Atelier', city: 'Central Square Pavilions', leadTime: 'Dedicated Senior Designer assigned' },
-    { name: 'Beverly Hills Salon', city: 'Wilshire Boulevard Gallery', leadTime: 'Complimentary Valet & Material Concierge' },
-  ];
-
   const timeSlots = [
     '10:30 AM — 12:00 PM',
     '1:00 PM — 2:30 PM',
     '2:30 PM — 4:00 PM',
     '4:30 PM — 6:00 PM',
+    '6:30 PM — 8:00 PM',
   ];
 
   const consultationTypes = [
     'Living Room Architecture & Styling',
     'Complete Residence Curation',
-    'Custom Timber & Fabric Specification',
+    'Custom Teakwood & Fabric Specification',
     'Trade / Architect Project Review',
   ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.name && formData.email) {
+    if (formData.name && (formData.email || formData.phone)) {
       setIsSubmitted(true);
     }
   };
@@ -49,29 +48,42 @@ export default function ShowroomModal({ isOpen, onClose }) {
     onClose();
   };
 
+  const whatsappConfirmUrl = buildWhatsAppUrl(`Hello MNC LifeStyle Concierge,
+
+I would like to book a private showroom visit:
+• Location: ${formData.showroom}
+• Preferred Date: ${formData.date}
+• Time Slot: ${formData.timeSlot}
+• Consultation Type: ${formData.consultationType}
+• Name: ${formData.name}
+• Phone: ${formData.phone || 'N/A'}
+• Email: ${formData.email || 'N/A'}
+
+Please confirm my appointment. Thank you!`);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-charcoal/70 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-[#211710]/70 backdrop-blur-sm transition-opacity" 
         onClick={handleClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-2xl bg-ivory-100 rounded-3xl shadow-elevated border border-beige-300 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-2xl bg-[#F8F0E8] rounded-3xl shadow-elevated border border-[#E9D8C5] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="p-6 sm:p-8 border-b border-beige-300 bg-white flex items-center justify-between">
+        <div className="p-6 sm:p-8 border-b border-[#E9D8C5] bg-white flex items-center justify-between">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-bronze text-xs font-semibold uppercase tracking-widest mb-1">
+            <div className="inline-flex items-center gap-1.5 text-[#D69A4B] text-xs font-semibold uppercase tracking-widest mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Private Consultation</span>
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-charcoal">
-              Book a Private Showroom Visit
+              Book a Private Experience Centre Visit
             </h2>
             <p className="text-xs text-warmgrey mt-1">
-              Experience the craftsmanship, textures, and scale of MNC Lifestyle furniture with a dedicated design specialist.
+              Experience the craftsmanship, textures, and scale of MNC LifeStyle furniture at our Visakhapatnam centre with a dedicated design specialist.
             </p>
           </div>
           <button
@@ -85,7 +97,7 @@ export default function ShowroomModal({ isOpen, onClose }) {
 
         {isSubmitted ? (
           <div className="p-8 sm:p-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-bronze/10 text-bronze flex items-center justify-center mx-auto mb-2">
+            <div className="w-16 h-16 rounded-full bg-[#D69A4B]/20 text-[#D69A4B] flex items-center justify-center mx-auto mb-2">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="font-serif text-3xl text-charcoal font-medium">
@@ -100,99 +112,102 @@ export default function ShowroomModal({ isOpen, onClose }) {
                 <span className="font-semibold">{formData.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-warmgrey">Consultation Focus:</span>
-                <span className="font-semibold">{formData.consultationType}</span>
+                <span className="text-warmgrey">Centre Location:</span>
+                <span className="font-semibold">{formData.showroom}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-warmgrey">Concierge Service:</span>
-                <span className="text-emerald-700 font-semibold">Complimentary Swatch Presentation Included</span>
+                <span className="text-warmgrey">Service:</span>
+                <span className="font-semibold">{formData.consultationType}</span>
               </div>
             </div>
-            <div className="pt-2">
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href={whatsappConfirmUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-6 py-3 bg-[#25D366] text-white rounded-lg text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2 hover:bg-[#20ba5a] transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>Confirm on WhatsApp</span>
+              </a>
               <button
                 onClick={handleClose}
-                className="px-8 py-3 bg-charcoal text-white text-xs uppercase tracking-widest font-semibold rounded-lg hover:bg-bronze transition-colors shadow-xs"
+                className="w-full sm:w-auto px-6 py-3 bg-[#211710] text-white rounded-lg text-xs uppercase tracking-widest font-semibold hover:bg-bronze transition-colors"
               >
-                Return to Website
+                Done
               </button>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
-            
             {/* Showroom Selection */}
             <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold text-charcoal mb-2">
-                1. Select Showroom Gallery
+              <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-2">
+                1. Select Experience Centre
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {showrooms.map((s) => {
-                  const isSelected = formData.showroom === s.name;
-                  return (
-                    <div
-                      key={s.name}
-                      onClick={() => setFormData({ ...formData, showroom: s.name })}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-bronze bg-white ring-1 ring-bronze shadow-xs'
-                          : 'border-beige-300 bg-white hover:border-charcoal/40'
-                      }`}
-                    >
-                      <MapPin className={`w-4 h-4 mb-2 ${isSelected ? 'text-bronze' : 'text-warmgrey'}`} />
-                      <p className="text-xs font-semibold text-charcoal leading-snug">{s.name}</p>
-                      <span className="text-[10px] text-warmgrey mt-1 block">{s.city}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {showrooms.map((sh) => (
+                  <button
+                    key={sh.name}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, showroom: sh.name })}
+                    className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                      formData.showroom === sh.name
+                        ? 'border-[#D69A4B] bg-white ring-2 ring-[#D69A4B]/20 shadow-sm'
+                        : 'border-[#E9D8C5] bg-[#F8F0E8]/50 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 text-[#D69A4B] text-xs font-semibold mb-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{sh.name}</span>
                     </div>
-                  );
-                })}
+                    <p className="text-[11px] text-[#77736D] leading-tight">{sh.location}</p>
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Date & Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs uppercase tracking-wider font-semibold text-charcoal mb-2">
-                  2. Preferred Date
+                <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                  2. Select Date
                 </label>
-                <div className="relative">
-                  <Calendar className="w-4 h-4 text-warmgrey absolute left-3 top-3" />
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-white border border-beige-300 rounded-lg pl-9 pr-3 py-2.5 text-xs text-charcoal focus:outline-none focus:border-bronze"
-                  />
-                </div>
+                <input
+                  type="date"
+                  required
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                />
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider font-semibold text-charcoal mb-2">
-                  Time Window
+                <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                  3. Select Time Window
                 </label>
-                <div className="relative">
-                  <Clock className="w-4 h-4 text-warmgrey absolute left-3 top-3" />
-                  <select
-                    value={formData.timeSlot}
-                    onChange={(e) => setFormData({ ...formData, timeSlot: e.target.value })}
-                    className="w-full bg-white border border-beige-300 rounded-lg pl-9 pr-3 py-2.5 text-xs text-charcoal focus:outline-none focus:border-bronze"
-                  >
-                    {timeSlots.map((ts) => (
-                      <option key={ts} value={ts}>{ts}</option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  value={formData.timeSlot}
+                  onChange={(e) => setFormData({ ...formData, timeSlot: e.target.value })}
+                  className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
+                >
+                  {timeSlots.map((ts) => (
+                    <option key={ts} value={ts}>{ts}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
             {/* Consultation Type */}
             <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold text-charcoal mb-2">
-                3. Consultation Scope
+              <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
+                4. Focus of Consultation
               </label>
               <select
                 value={formData.consultationType}
                 onChange={(e) => setFormData({ ...formData, consultationType: e.target.value })}
-                className="w-full bg-white border border-beige-300 rounded-lg px-3 py-2.5 text-xs text-charcoal focus:outline-none focus:border-bronze"
+                className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
               >
                 {consultationTypes.map((ct) => (
                   <option key={ct} value={ct}>{ct}</option>
@@ -201,34 +216,34 @@ export default function ShowroomModal({ isOpen, onClose }) {
             </div>
 
             {/* Guest Details */}
-            <div className="space-y-4 pt-4 border-t border-beige-300">
-              <span className="text-xs uppercase tracking-wider font-semibold text-charcoal block">
-                4. Guest Information
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-3 pt-2 border-t border-[#E9D8C5]">
+              <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold">
+                5. Guest Information
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   required
                   placeholder="Full Name *"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-white border border-beige-300 rounded-lg p-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                  className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
                 />
                 <input
-                  type="email"
+                  type="tel"
                   required
-                  placeholder="Email Address *"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-white border border-beige-300 rounded-lg p-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                  placeholder="WhatsApp Mobile Number *"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
                 />
               </div>
               <input
-                type="tel"
-                placeholder="Mobile Telephone (for appointment confirmation SMS)"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-white border border-beige-300 rounded-lg p-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                type="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full bg-white border border-[#E9D8C5] rounded-xl px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
               />
             </div>
 
@@ -236,13 +251,17 @@ export default function ShowroomModal({ isOpen, onClose }) {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-4 bg-espresso text-white rounded-lg text-xs font-semibold uppercase tracking-widest hover:bg-bronze transition-colors shadow-soft"
+                className="w-full py-4 bg-[#211710] text-[#F8F0E8] text-xs uppercase tracking-widest font-bold rounded-xl hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-soft"
               >
                 Confirm Private Appointment
               </button>
+              <p className="text-[11px] text-warmgrey text-center mt-2">
+                Our Visakhapatnam concierge will contact you on WhatsApp to confirm parking and design materials.
+              </p>
             </div>
           </form>
         )}
+
       </div>
     </div>
   );

@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 screenshots
+scripts/*.png
+*.png
+!src/assets/*.png
+!public/*.png
 *.local
 
 # Editor directories and files

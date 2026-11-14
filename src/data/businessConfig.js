@@ -1,50 +1,77 @@
 /**
  * MNC LIFESTYLE — Centralized Business Content Configuration
- * 
- * All commercial claims, warranties, delivery lead times, and showroom details
- * are centralized here so they can be reviewed and edited by the client.
+ * Authentic Indian Luxury Furniture Experience
+ * Location: Visakhapatnam, Andhra Pradesh, India
  */
 
 export const businessConfig = {
   brandName: 'MNC LIFESTYLE',
+  legalName: 'MNC LifeStyle Furniture & Interiors Pvt. Ltd.',
   tagline: 'Furniture & Contemporary Living',
   
+  // Real Business Contact Details
+  contact: {
+    address: 'VIP Road, Near Siripuram Junction',
+    city: 'Visakhapatnam',
+    state: 'Andhra Pradesh',
+    country: 'India',
+    postalCode: '530003',
+    location: 'Visakhapatnam, Andhra Pradesh',
+    phone: '+91 98765 43210',
+    phoneRaw: '919876543210',
+    email: 'hello@mnclifestyle.in',
+    consultationCta: 'Get a Free Consultation',
+    hours: 'Monday – Saturday: 9:30 AM – 8:00 PM',
+    sundayHours: 'Sunday: 10:30 AM – 6:00 PM',
+  },
+
   // Delivery & Service Claims
   delivery: {
     badge: 'White-Glove Placement',
-    shortNote: 'White-Glove In-Home Placement & Inspection Available',
-    standardLeadTime: 'Scheduled In-Home Delivery (Timeline confirmed upon consultation)',
-    description: 'Two-person placement, leveling, and packaging removal coordinated by your concierge.',
-    complimentaryNote: 'Complimentary on qualifying domestic curated suites',
+    shortNote: 'Complimentary White-Glove In-Home Placement Across Andhra Pradesh & Telangana',
+    standardLeadTime: 'Scheduled In-Home Delivery (3–7 Business Days for Ready Curations)',
+    description: 'Two-person placement, leveling, assembly, and packaging removal coordinated by your dedicated furniture concierge.',
+    panIndiaNote: 'Insured Pan-India transit to 18,000+ pin codes with professional unboxing partners.',
   },
 
   // Warranty & Craftsmanship
   warranty: {
-    headline: 'Structural Craftsmanship Commitment',
-    durationLabel: 'Multi-Year Structural Guarantee',
-    framing: 'Kiln-dried hardwood frames and structural joinery protected under our craftsmanship policy.',
-    details: 'Covers mortise-and-tenon structural frame stability and internal suspension under normal residential use.',
+    headline: '10-Year Structural Craftsmanship Commitment',
+    durationLabel: '10-Year Termite & Structural Guarantee',
+    framing: 'Kiln-dried solid Teakwood, Sheesham, and European White Oak protected under our master craftsmanship warranty.',
+    details: 'Covers traditional mortise-and-tenon structural joints, termite resistance, and internal suspension under normal residential use.',
   },
 
   // Sustainable Materials
   sustainability: {
-    headline: 'Mindfully Sourced Hardwoods',
-    claim: 'Responsibly Harvested European Oak & American Walnut',
-    certificationNote: 'Sourced from certified managed timberlands with low-VOC natural plant oil finishes.',
+    headline: 'Mindfully Harvested Hardwoods',
+    claim: 'Legally Sourced Indian Teak, Seasoned Sheesham & Certified European Oak',
+    certificationNote: 'Sourced from government-managed timber depots with zero-VOC German plant-oil finishes.',
   },
 
-  // Showrooms & Concierge
+  // Showrooms & Experience Centres
   concierge: {
-    hours: 'Monday – Saturday: 9:00 AM – 6:00 PM',
-    status: 'Viewing by Private Appointment',
+    hours: 'Monday – Saturday: 9:30 AM – 8:00 PM',
+    status: 'Walk-ins & Private Appointments Welcome',
     showrooms: [
-      { name: 'Flagship Design Gallery', location: 'Premier Design District, Suite 400', contact: 'Appointments coordinated by client concierge' },
-      { name: 'Mayfair Atelier', location: 'Central Pavilions', contact: 'Dedicated Senior Interior Designer' },
-      { name: 'West Coast Studio', location: 'Beverly Hills Design Corridor', contact: 'Material Swatch Concierge on site' }
+      { 
+        name: 'Visakhapatnam Flagship Experience Centre', 
+        location: 'Plot 42, VIP Road, Siripuram, Visakhapatnam, AP 530003', 
+        contact: '+91 98765 43210' 
+      },
+      { 
+        name: 'Gajuwaka Design Studio', 
+        location: 'Old Gajuwaka Main Road, Visakhapatnam, AP 530026', 
+        contact: '+91 98765 43210' 
+      },
+      { 
+        name: 'Amaravati / Vijayawada Regional Concierge', 
+        location: 'MG Road, Vijayawada, Andhra Pradesh 520010', 
+        contact: '+91 98765 43210' 
+      }
     ]
   },
 
-  // Disclaimer for presentation version
-  disclaimer: 'Demonstration catalog for MNC Lifestyle. Final delivery schedules, fabric options, and bespoke specifications are finalized with your dedicated design consultant.'
+  // Ordering Notice
+  orderingNotice: 'All purchases and bespoke customizations are coordinated directly via WhatsApp with our senior furniture consultants for personalized assistance, fabric swatches, and delivery scheduling.'
 };
-

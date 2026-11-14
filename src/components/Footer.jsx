@@ -1,220 +1,269 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Check, ArrowRight, ShieldCheck, Clock, Compass, Phone } from 'lucide-react';
+import {
+  ShieldCheck,
+  Compass,
+  Clock,
+  MapPin,
+  Phone,
+  MessageCircle,
+  ArrowRight
+} from 'lucide-react';
+import { businessConfig } from '../data/businessConfig';
+import { WHATSAPP_PHONE_NUMBER, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
-    }
-  };
+  const whatsappDirectUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
+    'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
+  )}`;
 
   return (
-    <footer className="bg-espresso text-ivory-100 pt-16 pb-12 border-t border-espresso-dark">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-[#211710] text-[#F8F0E8] pt-14 lg:pt-16 pb-10 border-t border-[#49301F]">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
         
-        {/* Value Proposition Banners */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12 border-b border-white/10 mb-12">
-          <div className="flex items-start space-x-4">
-            <div className="p-3 rounded-full bg-white/5 border border-white/10 text-bronze-light flex-shrink-0">
-              <ShieldCheck className="w-6 h-6" />
+        {/* 1. TOP TRUST FEATURES STRIP */}
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/12 pb-10 mb-12 border-b border-white/12">
+          
+          {/* Feature 1: Bespoke Architectural Quality */}
+          <div className="flex items-start gap-4 py-4 md:py-0 md:pr-8">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-[#D69A4B]/40 flex items-center justify-center text-[#D69A4B] shrink-0">
+              <ShieldCheck className="w-5 h-5 stroke-[1.5]" />
             </div>
             <div>
-              <h4 className="font-serif text-base text-white font-medium">Bespoke Architectural Quality</h4>
-              <p className="text-xs text-warmgrey-light mt-1 leading-relaxed">
-                FSC-certified timber, Roman travertine, and Belgian bouclé crafted by multi-generational artisans.
+              <h4 className="font-serif text-sm sm:text-base text-white font-medium">
+                Bespoke Architectural Quality
+              </h4>
+              <p className="text-xs text-[#C9BBAE] mt-1.5 leading-relaxed font-sans">
+                Kiln-dried solid Teakwood, Indian Sheesham, Roman travertine, and Belgian bouclé crafted by master artisans.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start space-x-4">
-            <div className="p-3 rounded-full bg-white/5 border border-white/10 text-bronze-light flex-shrink-0">
-              <Compass className="w-6 h-6" />
+          {/* Feature 2: White-Glove Placement in AP */}
+          <div className="flex items-start gap-4 py-4 md:py-0 md:px-8">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-[#D69A4B]/40 flex items-center justify-center text-[#D69A4B] shrink-0">
+              <Compass className="w-5 h-5 stroke-[1.5]" />
             </div>
             <div>
-              <h4 className="font-serif text-base text-white font-medium">Complimentary In-Home Placement</h4>
-              <p className="text-xs text-warmgrey-light mt-1 leading-relaxed">
-                White-glove uncrating, room-of-choice positioning, and eco-conscious packaging removal on every order.
+              <h4 className="font-serif text-sm sm:text-base text-white font-medium">
+                White-Glove Placement in AP
+              </h4>
+              <p className="text-xs text-[#C9BBAE] mt-1.5 leading-relaxed font-sans">
+                Complimentary room-of-choice positioning, leveling, assembly, and packaging removal across Andhra Pradesh.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start space-x-4">
-            <div className="p-3 rounded-full bg-white/5 border border-white/10 text-bronze-light flex-shrink-0">
-              <Clock className="w-6 h-6" />
+          {/* Feature 3: Ten-Year Structural Warranty */}
+          <div className="flex items-start gap-4 py-4 md:py-0 md:pl-8">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-[#D69A4B]/40 flex items-center justify-center text-[#D69A4B] shrink-0">
+              <Clock className="w-5 h-5 stroke-[1.5]" />
             </div>
             <div>
-              <h4 className="font-serif text-base text-white font-medium">Ten-Year Structural Warranty</h4>
-              <p className="text-xs text-warmgrey-light mt-1 leading-relaxed">
-                Comprehensive long-term structural guarantees designed for enduring domestic tranquility.
+              <h4 className="font-serif text-sm sm:text-base text-white font-medium">
+                Ten-Year Structural Warranty
+              </h4>
+              <p className="text-xs text-[#C9BBAE] mt-1.5 leading-relaxed font-sans">
+                Comprehensive long-term structural and termite guarantees designed for enduring domestic tranquility.
               </p>
             </div>
           </div>
+
         </div>
 
-        {/* Main Footer Links Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
+        {/* 2. MAIN FOOTER LAYOUT — 3 BALANCED COLUMNS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-12 pb-12">
           
-          {/* Brand Bio */}
-          <div className="lg:col-span-2 pr-0 lg:pr-8">
+          {/* COLUMN 1 – BRAND & SHOWROOM CONTACT (5 COLS) */}
+          <div className="lg:col-span-5 pr-0 lg:pr-8">
             <div className="mb-4">
-              <span className="font-serif text-2xl tracking-[0.16em] font-medium text-white uppercase">
-                MNC <span className="font-light italic text-bronze-light">Lifestyle</span>
+              <span className="font-serif text-2xl tracking-[0.16em] font-medium text-white uppercase block">
+                MNC <span className="font-light italic text-[#D69A4B]">LifeStyle</span>
               </span>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-warmgrey-light font-sans mt-0.5">
-                Furniture & Contemporary Living
-              </p>
+              <span className="text-[10px] uppercase tracking-[0.28em] text-[#C9BBAE] font-sans block mt-1">
+                FURNITURE & CONTEMPORARY LIVING
+              </span>
             </div>
-            <p className="text-xs text-warmgrey-light leading-relaxed mb-6 max-w-sm">
-              MNC Lifestyle curates thoughtful, minimal, and enduring furniture collections for homes that value quiet elegance. We balance the architectural beauty of raw natural materials with comfortable, lived-in warmth.
+            
+            <p className="text-xs sm:text-[13px] text-[#C9BBAE] leading-relaxed mb-6 font-sans max-w-md">
+              MNC LifeStyle curates thoughtful, minimal and enduring furniture collections for Indian homes that value quiet elegance. We balance the architectural beauty of natural materials with comfort and lived-in warmth.
             </p>
-            <div className="text-xs text-warmgrey-light space-y-1">
-              <p><strong className="text-white">Design Concierge:</strong> Available for residential & commercial specifications.</p>
-              <p><strong className="text-white">Showrooms:</strong> Viewing by appointment in flagship design capitals.</p>
+
+            <div className="space-y-3 text-xs text-[#C9BBAE] font-sans">
+              {/* Location */}
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-[#D69A4B] shrink-0 mt-0.5" />
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Plot+42+VIP+Road+Siripuram+Visakhapatnam+AP+530003"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#D69A4B] transition-colors leading-relaxed"
+                  title="Open location in Google Maps"
+                >
+                  Plot 42, VIP Road, Siripuram, Visakhapatnam, AP 530003
+                </a>
+              </div>
+
+              {/* Phone */}
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-[#D69A4B] shrink-0" />
+                <a
+                  href={`tel:${businessConfig.contact.phoneRaw}`}
+                  className="hover:text-[#D69A4B] transition-colors"
+                  title="Call MNC LifeStyle"
+                >
+                  {businessConfig.contact.phone}
+                </a>
+              </div>
+
+              {/* WhatsApp Ordering */}
+              <div className="flex items-center gap-2.5">
+                <MessageCircle className="w-4 h-4 text-[#D69A4B] shrink-0" />
+                <a
+                  href={whatsappDirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#D69A4B] transition-colors font-medium text-white"
+                  title="Message on WhatsApp"
+                >
+                  WhatsApp Ordering:{' '}
+                  <span className="text-[#D69A4B] font-semibold">{WHATSAPP_DISPLAY_PHONE}</span>
+                </a>
+              </div>
             </div>
           </div>
 
-          {/* Categories */}
-          <div>
-            <h5 className="text-xs font-semibold uppercase tracking-widest text-bronze-light mb-4 font-sans">
-              Furniture Collections
+          {/* COLUMN 2 – FURNITURE CATEGORIES (4 COLS) */}
+          <div className="lg:col-span-4">
+            <h5 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D69A4B] mb-5 font-sans">
+              FURNITURE CATEGORIES
             </h5>
-            <ul className="space-y-2.5 text-xs text-warmgrey-light">
-              <li>
-                <Link to="/category/living-room" className="hover:text-white transition-colors">
-                  Living Room
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/bedroom" className="hover:text-white transition-colors">
-                  Bedroom Suites
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/dining" className="hover:text-white transition-colors">
-                  Dining Tables & Chairs
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/office" className="hover:text-white transition-colors">
-                  Executive Workspaces
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/coffee-tables" className="hover:text-white transition-colors">
-                  Coffee Tables
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/storage" className="hover:text-white transition-colors">
-                  Storage & Credenzas
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop" className="text-bronze-light hover:underline font-medium">
-                  View Full Catalog &rarr;
-                </Link>
-              </li>
-            </ul>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[#C9BBAE] font-sans">
+              <div className="space-y-2.5">
+                <div>
+                  <Link to="/category/sofas" className="hover:text-[#D69A4B] transition-colors">
+                    Sofas & Couches
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/beds" className="hover:text-[#D69A4B] transition-colors">
+                    Solid Wood Beds
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/dining-sets" className="hover:text-[#D69A4B] transition-colors">
+                    Dining Sets & Chairs
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/centre-tables" className="hover:text-[#D69A4B] transition-colors">
+                    Centre Tables
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/recliners" className="hover:text-[#D69A4B] transition-colors">
+                    Motorized Recliners
+                  </Link>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                <div>
+                  <Link to="/category/study-tables" className="hover:text-[#D69A4B] transition-colors">
+                    Study Tables & Desks
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/wardrobes" className="hover:text-[#D69A4B] transition-colors">
+                    Wardrobes
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/cabinets-sideboards" className="hover:text-[#D69A4B] transition-colors">
+                    Cabinets & Sideboards
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/office-furniture" className="hover:text-[#D69A4B] transition-colors">
+                    Office Furniture
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/category/shoe-racks" className="hover:text-[#D69A4B] transition-colors">
+                    Shoe Racks
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className="pt-3">
+              <Link
+                to="/shop"
+                className="text-[#D69A4B] hover:text-white transition-colors text-xs font-semibold inline-flex items-center gap-1.5"
+              >
+                <span>View All Categories</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
 
-          {/* Brand & Services */}
-          <div>
-            <h5 className="text-xs font-semibold uppercase tracking-widest text-bronze-light mb-4 font-sans">
-              About & Studio
+          {/* COLUMN 3 – ABOUT & SERVICES (3 COLS) */}
+          <div className="lg:col-span-3">
+            <h5 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D69A4B] mb-5 font-sans">
+              ABOUT & SERVICES
             </h5>
-            <ul className="space-y-2.5 text-xs text-warmgrey-light">
+            <ul className="space-y-2.5 text-xs text-[#C9BBAE] font-sans">
               <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  Our Philosophy
+                <Link to="/about" className="hover:text-[#D69A4B] transition-colors">
+                  About MNC LifeStyle
                 </Link>
               </li>
               <li>
-                <Link to="/collections" className="hover:text-white transition-colors">
+                <Link to="/about" className="hover:text-[#D69A4B] transition-colors">
+                  Our Heritage & Timber
+                </Link>
+              </li>
+              <li>
+                <Link to="/collections" className="hover:text-[#D69A4B] transition-colors">
                   Curated Collections
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  Artisan Woodcraft
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                  Visakhapatnam Experience Centre
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-white transition-colors">
-                  Interior Design Consultation
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                  Interior Consultation
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-white transition-colors">
-                  Private Showroom Visits
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                  Bespoke Sizing & Customization
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-white transition-colors">
-                  Trade & Architect Inquiries
+                <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
+                  Contact Us
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Newsletter Signup */}
-          <div>
-            <h5 className="text-xs font-semibold uppercase tracking-widest text-bronze-light mb-4 font-sans">
-              The MNC Lifestyle Circle
-            </h5>
-            <p className="text-xs text-warmgrey-light mb-3 leading-relaxed">
-              Receive private lookbooks, new material previews, and invitations to showroom exhibitions.
-            </p>
-            {subscribed ? (
-              <div className="p-3 bg-white/10 rounded border border-bronze text-xs text-white flex items-center gap-2">
-                <Check className="w-4 h-4 text-bronze-light flex-shrink-0" />
-                <span>Thank you for joining our private circle.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleSubscribe} className="space-y-2">
-                <div className="flex flex-col sm:relative sm:block gap-2 sm:gap-0">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2.5 sm:py-2 text-xs text-white placeholder:text-warmgrey-light focus:outline-none focus:border-bronze sm:pr-20"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto sm:absolute sm:right-1 sm:top-1 sm:bottom-1 px-4 py-2 sm:py-0 bg-bronze text-white text-[11px] uppercase tracking-wider rounded-lg font-medium hover:bg-bronze-light transition-colors min-h-[38px] sm:min-h-0 flex items-center justify-center"
-                  >
-                    Join
-                  </button>
-                </div>
-                <span className="text-[10px] text-warmgrey-light block">
-                  We respect your privacy. Unsubscribe anytime.
-                </span>
-              </form>
-            )}
-          </div>
         </div>
 
-        {/* Bottom Credits & Copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-warmgrey-light gap-4">
-          <p>© 2026 MNC LIFESTYLE. All rights reserved.</p>
+        {/* 3. COPYRIGHT AND LEGAL FOOTER */}
+        <div className="pt-8 border-t border-white/12 flex flex-col sm:flex-row items-center justify-between text-xs text-[#C9BBAE] gap-4 font-sans">
+          <p>© 2026 MNC LifeStyle Furniture & Interiors. All rights reserved.</p>
           <div className="flex items-center space-x-6 text-xs">
-            <Link to="/contact" className="hover:text-white transition-colors">
+            <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
               Privacy Policy
             </Link>
             <span className="text-white/20">|</span>
-            <Link to="/contact" className="hover:text-white transition-colors">
+            <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
               Terms & Conditions
             </Link>
             <span className="text-white/20">|</span>
-            <Link to="/contact" className="hover:text-white transition-colors">
+            <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
               Care & Maintenance
             </Link>
           </div>
@@ -224,4 +273,3 @@ export default function Footer() {
     </footer>
   );
 }
-

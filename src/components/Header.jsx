@@ -1,43 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, Menu, X, ArrowRight, Phone, MapPin, ChevronDown } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
-import { categories } from '../data/categories';
+import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 export default function Header({ onOpenSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isRoomsOpen, setIsRoomsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileShopOpen, setIsMobileShopOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const { totalItems, setIsCartOpen } = useCart();
-  const { wishlistCount, setIsWishlistOpen } = useWishlist();
+  const hoverTimeoutRef = useRef(null);
   const location = useLocation();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Close mobile drawer and dropdown on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
-    setIsRoomsOpen(false);
+    setIsMobileShopOpen(false);
+    setIsShopOpen(false);
   }, [location.pathname]);
 
-  // Handle outside click & escape key for Rooms dropdown
+  // Handle outside click & escape key for Shop mega menu dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsRoomsOpen(false);
+        setIsShopOpen(false);
       }
     };
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        setIsRoomsOpen(false);
+        setIsShopOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -45,275 +35,478 @@ export default function Header({ onOpenSearch }) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, []);
 
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Collections', path: '/collections' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsShopOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsShopOpen(false);
+    }, 150);
+  };
+
+  const isHomeActive = location.pathname === '/';
+  const isShopActive =
+    location.pathname === '/shop' ||
+    location.pathname.startsWith('/category') ||
+    location.pathname === '/collections';
+
+  // Mega Menu Links
+  const shopCategories = [
+    { label: 'Living Room', path: '/category/sofas', desc: 'Curved Bouclé & Solid Teak' },
+    { label: 'Bedroom', path: '/category/beds', desc: 'Platform Beds & Armoires' },
+    { label: 'Dining Room', path: '/category/dining-sets', desc: 'Hardwood Tables & Chairs' },
+    { label: 'Study & Office', path: '/category/study-tables', desc: 'Executive Desks & Workspaces' },
+    { label: 'Sofas', path: '/category/sofas', desc: '3-Seaters, Sectionals & Loungers' },
+    { label: 'Beds', path: '/category/beds', desc: 'Solid Teak & Hydraulic Storage' },
+    { label: 'Dining Sets', path: '/category/dining-sets', desc: '6 & 8-Seater Hardwood Suites' },
+    { label: 'Tables & Storage', path: '/category/centre-tables', desc: 'Travertine Coffee & Side Tables' },
   ];
 
-  const mobileNavLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Living Room', path: '/category/living-room' },
-    { name: 'Bedroom', path: '/category/bedroom' },
-    { name: 'Dining', path: '/category/dining' },
-    { name: 'Office Furniture', path: '/category/office' },
-    { name: 'Coffee Tables', path: '/category/coffee-tables' },
-    { name: 'Storage & Cabinets', path: '/category/storage' },
-    { name: 'Curated Collections', path: '/collections' },
-    { name: 'About MNC Lifestyle', path: '/about' },
-    { name: 'Contact & Concierge', path: '/contact' },
+  const shopCollections = [
+    {
+      title: 'Signature Collection',
+      path: '/collections',
+      desc: 'Bespoke Architectural Teak & Travertine Suites',
+      tag: 'Iconic Pieces'
+    },
+    {
+      title: 'Modern Collection',
+      path: '/collections#modern-living',
+      desc: 'Tactile Bouclé & Organic Minimalist Contours',
+      tag: 'Contemporary'
+    },
+    {
+      title: 'Premium Teak Collection',
+      path: '/collections#contemporary-bedroom',
+      desc: 'Kiln-Dried CP Teakwood Hand-Finished Joinery',
+      tag: 'Heritage Solid Wood'
+    },
+    {
+      title: 'New Arrivals',
+      path: '/shop',
+      desc: 'Latest Handcrafted Pieces for Indian Residences',
+      tag: '2026 Season'
+    },
   ];
 
   return (
-    <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-ivory/95 backdrop-blur-md shadow-sm border-b border-beige-300 py-3.5'
-          : 'bg-ivory/90 backdrop-blur-sm border-b border-beige-200/60 py-5'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-[#F8F0E8] border-b border-[#E9D8C5] shadow-xs">
+      <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] h-[80px] lg:h-[109px] flex items-center justify-between">
+        
+        {/* Mobile Menu Button (Left on Mobile) */}
+        <div className="flex items-center lg:hidden">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 -ml-2 text-[#211A15] hover:text-[#D69A4B] focus:outline-none transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* Left / Center on Mobile: MNC LifeStyle Logo */}
+        <div className="shrink-0">
+          <Link to="/" className="inline-flex items-center group">
+            <img
+              src={logoImg}
+              alt="MNC LifeStyle — Furniture & Contemporary Living"
+              className="h-11 sm:h-13 lg:h-[66px] w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
+            />
+          </Link>
+        </div>
+
+        {/* Center: Desktop Navigation Links (HOME, SHOP, ABOUT US, CONTACT) */}
+        <nav className="hidden lg:flex items-center space-x-9 xl:space-x-12">
           
-          {/* Mobile Menu Button */}
-          <div className="flex items-center lg:hidden">
+          {/* 1. HOME */}
+          <NavLink
+            to="/"
+            className="relative py-2 text-sm font-semibold tracking-[0.14em] uppercase text-[#211A15] hover:text-[#D69A4B] transition-colors"
+          >
+            <span>HOME</span>
+            {isHomeActive && (
+              <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#D69A4B] rounded-full" />
+            )}
+          </NavLink>
+
+          {/* 2. SHOP with Unified Mega Menu Dropdown */}
+          <div
+            ref={dropdownRef}
+            className="relative"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 -ml-2 text-charcoal hover:text-bronze focus:outline-none transition-colors"
-              aria-label="Toggle navigation menu"
+              type="button"
+              data-testid="desktop-shop-button"
+              onClick={() => setIsShopOpen(!isShopOpen)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsShopOpen(!isShopOpen);
+                }
+              }}
+              aria-expanded={isShopOpen}
+              aria-haspopup="true"
+              className={`relative flex items-center gap-1.5 py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
+                isShopActive ? 'text-[#211A15]' : 'text-[#211A15] hover:text-[#D69A4B]'
+              }`}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-            <button
-              onClick={onOpenSearch}
-              className="p-2 text-charcoal hover:text-bronze focus:outline-none ml-1"
-              aria-label="Open search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Brand Logo */}
-          <div className="text-center lg:text-left flex-shrink-0">
-            <Link to="/" className="inline-block group">
-              <div className="flex flex-col items-center lg:items-start">
-                <span className="font-serif text-xl sm:text-2xl lg:text-3xl tracking-[0.18em] font-medium text-charcoal uppercase group-hover:text-bronze transition-colors">
-                  MNC <span className="font-light italic">Lifestyle</span>
-                </span>
-                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.35em] text-warmgrey font-sans -mt-1 group-hover:text-charcoal transition-colors">
-                  Furniture & Contemporary Living
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-7 xl:space-x-8">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `text-xs tracking-wider uppercase transition-colors duration-200 py-1 border-b-2 font-medium ${
-                  isActive
-                    ? 'text-charcoal border-bronze font-semibold'
-                    : 'text-charcoal/80 border-transparent hover:text-bronze hover:border-bronze/40'
-                }`
-              }
-            >
-              Home
-            </NavLink>
-
-            {/* Furniture & Rooms Dropdown */}
-            <div
-              ref={dropdownRef}
-              className="relative group"
-              onMouseEnter={() => setIsRoomsOpen(true)}
-              onMouseLeave={() => setIsRoomsOpen(false)}
-            >
-              <button
-                onClick={() => setIsRoomsOpen(!isRoomsOpen)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setIsRoomsOpen(!isRoomsOpen);
-                  }
-                }}
-                aria-expanded={isRoomsOpen}
-                aria-haspopup="true"
-                className={`flex items-center gap-1.5 text-xs tracking-wider uppercase transition-colors duration-200 py-1 border-b-2 font-medium ${
-                  location.pathname.startsWith('/category') || location.pathname === '/shop'
-                    ? 'text-charcoal border-bronze font-semibold'
-                    : 'text-charcoal/80 border-transparent hover:text-bronze hover:border-bronze/40'
+              <span>SHOP</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isShopOpen ? 'rotate-180 text-[#D69A4B]' : 'text-[#211A15]'
                 }`}
-              >
-                <span>Rooms</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isRoomsOpen ? 'rotate-180 text-bronze' : ''}`} />
-              </button>
+              />
+              {isShopActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#D69A4B] rounded-full" />
+              )}
+            </button>
 
-              {/* Luxury Dropdown Menu */}
-              {isRoomsOpen && (
-                <div 
-                  className="absolute top-full left-0 w-80 bg-white rounded-2xl shadow-luxury border border-beige-300 p-4 mt-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+            {/* Desktop Mega Menu Dropdown */}
+            {isShopOpen && (
+              <div
+                className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                <div
+                  className="w-[740px] bg-white rounded-2xl shadow-luxury border border-[#E9D8C5] p-6 text-left"
                   role="menu"
                   aria-orientation="vertical"
                 >
-                  <div className="px-3 py-2 border-b border-beige-200 mb-2">
-                    <span className="text-[10px] uppercase tracking-widest text-bronze font-semibold">
-                      Explore By Room
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.id}
-                        to={`/category/${cat.id}`}
-                        onClick={() => setIsRoomsOpen(false)}
-                        role="menuitem"
-                        className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-charcoal hover:bg-beige-100 hover:text-bronze transition-colors group/item"
-                      >
-                        <span>{cat.name}</span>
-                        <span className="text-[10px] text-warmgrey group-hover/item:text-bronze transition-colors">
-                          {cat.itemCount} Designs &rarr;
+                  <div className="grid grid-cols-12 gap-6">
+                    
+                    {/* Section 1: Shop by Category (7 cols) */}
+                    <div className="col-span-7 pr-4 border-r border-[#E9D8C5]/70">
+                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#E9D8C5]/60">
+                        <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
+                          Shop by Category
                         </span>
-                      </Link>
-                    ))}
+                        <Link
+                          to="/shop"
+                          onClick={() => setIsShopOpen(false)}
+                          className="text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors"
+                        >
+                          All Categories &rarr;
+                        </Link>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {shopCategories.map((item) => (
+                          <Link
+                            key={item.label}
+                            to={item.path}
+                            onClick={() => setIsShopOpen(false)}
+                            role="menuitem"
+                            className="px-3 py-2 rounded-xl text-xs font-medium text-[#211A15] hover:bg-[#F8F0E8] hover:text-[#D69A4B] transition-colors group/item block"
+                          >
+                            <span className="font-semibold block text-[#211A15] group-hover/item:text-[#D69A4B] transition-colors">
+                              {item.label}
+                            </span>
+                            <span className="text-[10px] text-[#77736D] truncate block mt-0.5">
+                              {item.desc}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Section 2: Shop by Collection (5 cols) */}
+                    <div className="col-span-5 pl-2 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#E9D8C5]/60">
+                          <span className="text-[11px] uppercase tracking-[0.2em] text-[#D69A4B] font-bold">
+                            Shop by Collection
+                          </span>
+                          <Link
+                            to="/collections"
+                            onClick={() => setIsShopOpen(false)}
+                            className="text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors"
+                          >
+                            Suites &rarr;
+                          </Link>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {shopCollections.map((col) => (
+                            <Link
+                              key={col.title}
+                              to={col.path}
+                              onClick={() => setIsShopOpen(false)}
+                              role="menuitem"
+                              className="px-3 py-2 rounded-xl text-xs font-medium text-[#211A15] hover:bg-[#F8F0E8] hover:text-[#D69A4B] transition-colors group/col block border border-transparent hover:border-[#E9D8C5]/60"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-[#211A15] group-hover/col:text-[#D69A4B] transition-colors">
+                                  {col.title}
+                                </span>
+                                <span className="text-[9px] uppercase tracking-wider text-[#D69A4B] font-semibold bg-[#F8F0E8] px-1.5 py-0.5 rounded">
+                                  {col.tag}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-[#77736D] block mt-0.5 line-clamp-1">
+                                {col.desc}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
-                  <div className="mt-3 pt-3 border-t border-beige-200">
+
+                  {/* Mega Menu Bottom Bar */}
+                  <div className="mt-4 pt-3.5 border-t border-[#E9D8C5]/60 flex items-center justify-between">
+                    <span className="text-[11px] text-[#77736D] font-sans">
+                      Handcrafted solid wood & stone furniture tailored for Indian homes.
+                    </span>
                     <Link
                       to="/shop"
-                      onClick={() => setIsRoomsOpen(false)}
+                      onClick={() => setIsShopOpen(false)}
                       role="menuitem"
-                      className="block text-center py-2 bg-espresso text-white rounded text-[11px] uppercase tracking-wider font-semibold hover:bg-bronze transition-colors"
+                      className="px-4 py-2 bg-[#211710] text-[#F8F0E8] rounded-xl text-xs uppercase tracking-wider font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors flex items-center gap-1.5 shadow-xs"
                     >
-                      View All Furniture
+                      <span>Explore Complete Catalog</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
+
                 </div>
-              )}
-            </div>
-
-            <NavLink
-              to="/collections"
-              className={({ isActive }) =>
-                `text-xs tracking-wider uppercase transition-colors duration-200 py-1 border-b-2 font-medium ${
-                  isActive
-                    ? 'text-charcoal border-bronze font-semibold'
-                    : 'text-charcoal/80 border-transparent hover:text-bronze hover:border-bronze/40'
-                }`
-              }
-            >
-              Collections
-            </NavLink>
-
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `text-xs tracking-wider uppercase transition-colors duration-200 py-1 border-b-2 font-medium ${
-                  isActive
-                    ? 'text-charcoal border-bronze font-semibold'
-                    : 'text-charcoal/80 border-transparent hover:text-bronze hover:border-bronze/40'
-                }`
-              }
-            >
-              About Us
-            </NavLink>
-
-            <NavLink
-              to="/contact"
-              className={({ isActive }) =>
-                `text-xs tracking-wider uppercase transition-colors duration-200 py-1 border-b-2 font-medium ${
-                  isActive
-                    ? 'text-charcoal border-bronze font-semibold'
-                    : 'text-charcoal/80 border-transparent hover:text-bronze hover:border-bronze/40'
-                }`
-              }
-            >
-              Contact
-            </NavLink>
-          </nav>
-
-          {/* Right Action Icons */}
-          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-            {/* Desktop Search Button */}
-            <button
-              onClick={onOpenSearch}
-              className="hidden lg:flex items-center text-charcoal/80 hover:text-bronze transition-colors p-2 rounded-full hover:bg-beige-100/60"
-              title="Search furniture pieces"
-              aria-label="Search furniture"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Wishlist Button */}
-            <button
-              onClick={() => setIsWishlistOpen(true)}
-              className="relative p-2 text-charcoal/80 hover:text-bronze transition-colors rounded-full hover:bg-beige-100/60"
-              title="View Wishlist"
-              aria-label="View Wishlist"
-            >
-              <Heart className="w-5 h-5" />
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-bronze text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-in zoom-in">
-                  {wishlistCount}
-                </span>
-              )}
-            </button>
-
-            {/* Cart Button */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-charcoal/80 hover:text-bronze transition-colors rounded-full hover:bg-beige-100/60 flex items-center gap-1.5"
-              title="View Shopping Bag"
-              aria-label="View Shopping Bag"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-espresso text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+              </div>
+            )}
           </div>
+
+          {/* 3. ABOUT US */}
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              `relative py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
+                isActive ? 'text-[#211A15]' : 'text-[#211A15] hover:text-[#D69A4B]'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span>ABOUT US</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#D69A4B] rounded-full" />
+                )}
+              </>
+            )}
+          </NavLink>
+
+          {/* 4. CONTACT */}
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              `relative py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
+                isActive ? 'text-[#211A15]' : 'text-[#211A15] hover:text-[#D69A4B]'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span>CONTACT</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#D69A4B] rounded-full" />
+                )}
+              </>
+            )}
+          </NavLink>
+
+        </nav>
+
+        {/* Right: Search Icon ONLY */}
+        <div className="flex items-center">
+          <button
+            onClick={onOpenSearch}
+            className="p-2 text-[#211A15] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
+            title="Search furniture pieces"
+            aria-label="Search furniture"
+          >
+            <Search className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2]" />
+          </button>
         </div>
+
       </div>
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-[65px] z-50 bg-charcoal/50 lg:hidden">
-          <div className="w-4/5 max-w-sm h-full bg-ivory shadow-2xl p-6 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 border-r border-beige-300">
-            <div className="mb-6 pb-4 border-b border-beige-200">
-              <span className="text-xs uppercase tracking-widest text-bronze font-semibold">
-                Explore Collections
+        <div className="fixed inset-0 top-[80px] z-50 bg-[#211710]/60 lg:hidden backdrop-blur-xs">
+          <div className="w-4/5 max-w-sm h-full bg-[#F8F0E8] shadow-2xl p-6 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300 border-r border-[#E9D8C5]">
+            <div className="mb-6 pb-4 border-b border-[#E9D8C5]">
+              <span className="text-xs uppercase tracking-widest text-[#D69A4B] font-semibold">
+                Explore MNC LifeStyle
               </span>
             </div>
 
-            <nav className="flex flex-col space-y-3.5 flex-1">
-              {mobileNavLinks.map((link) => (
-                <NavLink
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `min-h-[44px] text-sm font-serif tracking-wide px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${
-                      isActive
-                        ? 'text-bronze font-semibold border-l-2 border-bronze bg-beige-100/60 pl-3.5 shadow-2xs'
-                        : 'text-charcoal hover:text-bronze hover:bg-beige-100/30'
-                    }`
-                  }
-                >
-                  <span>{link.name}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-warmgrey/50" />
-                </NavLink>
-              ))}
+            {/* Mobile Navigation Links */}
+            <nav className="flex flex-col space-y-2 flex-1">
+              
+              {/* 1. HOME */}
+              <NavLink
+                to="/"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileShopOpen(false);
+                }}
+                className={({ isActive }) =>
+                  `min-h-[46px] text-sm font-serif tracking-wide px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                    isActive
+                      ? 'text-[#D69A4B] font-semibold bg-[#E9D8C5]/40 border-l-2 border-[#D69A4B]'
+                      : 'text-[#211A15] hover:text-[#D69A4B] hover:bg-[#E9D8C5]/20'
+                  }`
+                }
+              >
+                <span className="uppercase tracking-wider font-semibold">Home</span>
+                <ArrowRight className="w-4 h-4 text-[#77736D]/60" />
+              </NavLink>
 
-              <div className="pt-4 mt-4 border-t border-beige-200">
+              {/* 2. SHOP (Accordion Dropdown) */}
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  data-testid="mobile-shop-accordion"
+                  onClick={() => setIsMobileShopOpen(!isMobileShopOpen)}
+                  className={`min-h-[46px] text-sm font-serif tracking-wide px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                    isShopActive || isMobileShopOpen
+                      ? 'text-[#D69A4B] font-semibold bg-[#E9D8C5]/40 border-l-2 border-[#D69A4B]'
+                      : 'text-[#211A15] hover:text-[#D69A4B] hover:bg-[#E9D8C5]/20'
+                  }`}
+                  aria-expanded={isMobileShopOpen}
+                >
+                  <span className="uppercase tracking-wider font-semibold">Shop</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[#D69A4B] transition-transform duration-200 ${
+                      isMobileShopOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Mobile Shop Accordion Panel */}
+                {isMobileShopOpen && (
+                  <div className="mt-1.5 ml-2 pl-3 py-2 border-l-2 border-[#D69A4B]/60 space-y-3 bg-[#E9D8C5]/25 rounded-r-xl animate-in slide-in-from-top-2 duration-200">
+                    
+                    {/* Section 1: Shop by Category */}
+                    <div>
+                      <div className="px-3 py-1 mb-1">
+                        <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-bold">
+                          Shop by Category
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {shopCategories.map((item) => (
+                          <Link
+                            key={item.label}
+                            to={item.path}
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setIsMobileShopOpen(false);
+                            }}
+                            className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium text-[#211A15] hover:bg-white hover:text-[#D69A4B] transition-colors flex items-center justify-between"
+                          >
+                            <span className="font-semibold">{item.label}</span>
+                            <span className="text-[10px] text-[#77736D]">&rarr;</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Section 2: Shop by Collection */}
+                    <div className="pt-2 border-t border-[#E9D8C5]/50">
+                      <div className="px-3 py-1 mb-1">
+                        <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-bold">
+                          Shop by Collection
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {shopCollections.map((col) => (
+                          <Link
+                            key={col.title}
+                            to={col.path}
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setIsMobileShopOpen(false);
+                            }}
+                            className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium text-[#211A15] hover:bg-white hover:text-[#D69A4B] transition-colors flex items-center justify-between"
+                          >
+                            <span className="font-semibold">{col.title}</span>
+                            <span className="text-[10px] text-[#77736D]">&rarr;</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#E9D8C5]/50 px-2">
+                      <Link
+                        to="/shop"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setIsMobileShopOpen(false);
+                        }}
+                        className="block text-center py-2.5 bg-[#211710] text-[#F8F0E8] rounded-xl text-xs uppercase tracking-wider font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-xs"
+                      >
+                        View All Furniture Catalog
+                      </Link>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+
+              {/* 3. ABOUT US */}
+              <NavLink
+                to="/about"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileShopOpen(false);
+                }}
+                className={({ isActive }) =>
+                  `min-h-[46px] text-sm font-serif tracking-wide px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                    isActive
+                      ? 'text-[#D69A4B] font-semibold bg-[#E9D8C5]/40 border-l-2 border-[#D69A4B]'
+                      : 'text-[#211A15] hover:text-[#D69A4B] hover:bg-[#E9D8C5]/20'
+                  }`
+                }
+              >
+                <span className="uppercase tracking-wider font-semibold">About Us</span>
+                <ArrowRight className="w-4 h-4 text-[#77736D]/60" />
+              </NavLink>
+
+              {/* 4. CONTACT */}
+              <NavLink
+                to="/contact"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsMobileShopOpen(false);
+                }}
+                className={({ isActive }) =>
+                  `min-h-[46px] text-sm font-serif tracking-wide px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                    isActive
+                      ? 'text-[#D69A4B] font-semibold bg-[#E9D8C5]/40 border-l-2 border-[#D69A4B]'
+                      : 'text-[#211A15] hover:text-[#D69A4B] hover:bg-[#E9D8C5]/20'
+                  }`
+                }
+              >
+                <span className="uppercase tracking-wider font-semibold">Contact</span>
+                <ArrowRight className="w-4 h-4 text-[#77736D]/60" />
+              </NavLink>
+
+              <div className="pt-4 mt-4 border-t border-[#E9D8C5]">
                 <Link
                   to="/shop"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full py-2.5 px-4 bg-espresso text-white text-xs uppercase tracking-widest text-center rounded block font-medium hover:bg-bronze transition-colors"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsMobileShopOpen(false);
+                  }}
+                  className="w-full py-3 px-4 bg-[#211710] text-[#F8F0E8] text-xs uppercase tracking-widest text-center rounded-xl block font-semibold hover:bg-[#D69A4B] hover:text-[#211710] transition-colors"
                 >
                   View All Furniture
                 </Link>
@@ -321,14 +514,14 @@ export default function Header({ onOpenSearch }) {
             </nav>
 
             {/* Mobile Concierge Contact Info */}
-            <div className="mt-8 pt-6 border-t border-beige-200 text-xs text-warmgrey space-y-2">
+            <div className="mt-8 pt-6 border-t border-[#E9D8C5] text-xs text-[#77736D] space-y-2">
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-bronze" />
-                <span>Client Concierge: Mon – Sat</span>
+                <Phone className="w-4 h-4 text-[#D69A4B]" />
+                <span>+91 98765 43210</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-bronze" />
-                <span>Private Showrooms by Appointment</span>
+                <MapPin className="w-4 h-4 text-[#D69A4B]" />
+                <span>Visakhapatnam, Andhra Pradesh</span>
               </div>
             </div>
           </div>
@@ -337,5 +530,3 @@ export default function Header({ onOpenSearch }) {
     </header>
   );
 }
-
-

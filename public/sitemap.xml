@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mnclifestyle.in/</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://mnclifestyle.in/shop</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://mnclifestyle.in/collections</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mnclifestyle.in/about</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mnclifestyle.in/contact</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Categories -->
+  <url><loc>https://mnclifestyle.in/category/sofas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/beds</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/dining-sets</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/study-tables</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/centre-tables</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/recliners</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/sectional-sofas</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/wardrobes</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/cabinets-sideboards</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/office-furniture</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/shoe-racks</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/category/bar-furniture</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Products -->
+  <url><loc>https://mnclifestyle.in/product/mnc-sof-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-sof-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-bed-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-bed-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-din-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-din-02</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-stu-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-cen-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-rec-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-sec-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-war-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-sto-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-off-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-sho-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mnclifestyle.in/product/mnc-bar-01</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>
+

@@ -1,0 +1,6 @@
+# Robots.txt for MNC LifeStyle
+User-agent: *
+Allow: /
+
+Sitemap: https://mnclifestyle.in/sitemap.xml
+

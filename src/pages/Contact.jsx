@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar, MessageCircle } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
 import ShowroomModal from '../components/ShowroomModal';
+import { getWhatsAppConsultationUrl, buildWhatsAppUrl, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -17,10 +18,11 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [activeFaq, setActiveFaq] = useState(0);
   const [isShowroomModalOpen, setIsShowroomModalOpen] = useState(false);
+  const whatsappUrl = getWhatsAppConsultationUrl('General Concierge Inquiry');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.fullName && formData.email && formData.message) {
+    if (formData.fullName && (formData.email || formData.phone) && formData.message) {
       setSubmitted(true);
     }
   };
@@ -39,26 +41,42 @@ export default function Contact() {
 
   const faqs = [
     {
-      q: 'How does the White-Glove delivery and installation process work?',
-      a: 'All MNC Lifestyle orders include coordinated white-glove service. Our team coordinates a delivery window, brings the piece to your designated room of choice, assembles any components, inspects the finishes, and removes all protective packaging.'
+      q: 'How does the White-Glove delivery and installation process work in Andhra Pradesh?',
+      a: 'All MNC LifeStyle furniture suites include complimentary scheduled white-glove service across Visakhapatnam, Vijayawada, and surrounding Andhra Pradesh. Our two-person logistics team brings each piece into your designated room of choice, unboxes, levels, performs complete assembly, and removes all packaging materials.'
+    },
+    {
+      q: 'How does ordering through WhatsApp work?',
+      a: 'Browse our collection, select your desired piece and finishes, and click "Order Through WhatsApp". You will be connected immediately with our senior Visakhapatnam furniture concierge. We confirm timber stock, verify your pin code delivery, share fabric photos if requested, and coordinate dispatch.'
     },
     {
       q: 'Can furniture pieces be customized with bespoke dimensions or fabrics?',
-      a: 'Yes. Many of our solid wood dining tables, sofas, and media consoles can be customized to match your architectural requirements. Our interior concierge can provide wood finish samples and Belgian fabric swatches directly to your doorstep.'
+      a: 'Yes. Most of our solid Teakwood dining tables, modular sectionals, and wardrobes can be customized to match your floor plan dimensions. Our interior concierge can provide wood finish samples and Belgian bouclé swatches directly to your doorstep.'
     },
     {
-      q: 'What is covered under the MNC Lifestyle Structural Warranty?',
-      a: businessConfig.warranty.details
+      q: 'What is covered under the MNC LifeStyle 10-Year Craftsmanship Warranty?',
+      a: businessConfig.warranty.framing + ' ' + businessConfig.warranty.details
     },
     {
-      q: 'How do I arrange a private showroom visit?',
-      a: 'Our showroom salons are open for private consultations by appointment to give each client dedicated time with a Senior Interior Designer. Simply select "Showroom Visit" on this form, click the Book Showroom Visit button, or contact our concierge.'
+      q: 'How do I arrange a private Experience Centre visit in Visakhapatnam?',
+      a: 'Our Visakhapatnam Flagship Experience Centre on VIP Road, Siripuram is open for walk-ins and private appointments. Click "Book Private Experience Centre Visit" above or message us on WhatsApp.'
     }
   ];
 
+  const whatsappDirectFormUrl = buildWhatsAppUrl(`Hello MNC LifeStyle Concierge,
+
+I am submitting an enquiry from your website contact page:
+• Name: ${formData.fullName}
+• Phone: ${formData.phone || 'N/A'}
+• Email: ${formData.email || 'N/A'}
+• Enquiry Type: ${formData.inquiryType}
+• Project Room: ${formData.projectScope}
+• Message: ${formData.message}
+
+Please get in touch with me.`);
+
   return (
     <div className="py-12 sm:py-20 pb-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px]">
         
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 text-xs text-warmgrey mb-6">
@@ -69,149 +87,188 @@ export default function Contact() {
 
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs uppercase tracking-[0.25em] text-bronze font-semibold block mb-2">
-            Client Concierge
+          <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
+            Client Concierge & Experience Centre
           </span>
           <h1 className="font-serif text-4xl sm:text-5xl text-charcoal font-normal tracking-tight mb-4">
             Connect With Our Design Studio
           </h1>
           <p className="text-sm sm:text-base text-warmgrey leading-relaxed">
-            Whether you are furnishing a new residence, requesting material swatches, or booking a private showroom viewing, our dedicated advisors are here to guide your vision.
+            Whether you are furnishing a new apartment, requesting timber swatches, or ordering furniture pieces via WhatsApp, our dedicated Visakhapatnam advisors are here to assist.
           </p>
         </div>
 
         {/* 2-Column: Left Contact Info & Hours / Right Inquiry Form */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 mb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 mb-24 max-w-7xl mx-auto">
           
           {/* Left Column: Studio & Showroom Info */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white p-8 rounded-3xl border border-beige-300 shadow-soft space-y-6">
-              <h2 className="font-serif text-2xl text-charcoal font-medium border-b border-beige-200 pb-4">
-                Studio Information
+            <div className="bg-white p-8 rounded-3xl border border-[#E9D8C5] shadow-soft space-y-6">
+              <h2 className="font-serif text-2xl text-charcoal font-medium border-b border-[#E9D8C5]/60 pb-4">
+                Visakhapatnam Experience Centre
               </h2>
 
               <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-full bg-beige-100 text-bronze flex-shrink-0">
+                <div className="p-2.5 rounded-full bg-[#F8F0E8] text-[#D69A4B] flex-shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                    Flagship Showroom & Studio
+                    Flagship Design Gallery
                   </h4>
                   <p className="text-xs text-warmgrey mt-1 leading-relaxed">
-                    MNC Lifestyle Design Gallery<br />
-                    Premier Design District, Suite 400<br />
-                    (Viewing by Private Appointment)
+                    Plot 42, VIP Road, Near Siripuram Junction<br />
+                    Visakhapatnam, Andhra Pradesh 530003<br />
+                    (Walk-ins & Private Appointments Welcome)
                   </p>
                   <button
                     type="button"
                     onClick={() => setIsShowroomModalOpen(true)}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-espresso text-white text-xs uppercase tracking-wider font-semibold rounded-lg hover:bg-bronze transition-colors shadow-2xs"
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#211710] text-white text-xs uppercase tracking-wider font-semibold rounded-lg hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-2xs"
                   >
-                    <Calendar className="w-3.5 h-3.5 text-bronze-light" />
-                    <span>Book Private Showroom Visit</span>
+                    <Calendar className="w-3.5 h-3.5 text-[#D69A4B]" />
+                    <span>Book Private Viewing</span>
                   </button>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-full bg-beige-100 text-bronze flex-shrink-0">
+                <div className="p-2.5 rounded-full bg-[#F8F0E8] text-[#25D366] flex-shrink-0">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
+                    Instant WhatsApp Support
+                  </h4>
+                  <p className="text-xs text-warmgrey mt-1 leading-relaxed">
+                    Chat directly with our senior furniture consultants for immediate quotes and wood samples.<br />
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#25D366] font-bold hover:underline inline-block mt-1"
+                    >
+                      Chat on WhatsApp: {WHATSAPP_DISPLAY_PHONE}
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 rounded-full bg-[#F8F0E8] text-[#D69A4B] flex-shrink-0">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                    Concierge Hours
+                    Studio & Concierge Hours
                   </h4>
                   <p className="text-xs text-warmgrey mt-1">
-                    Monday – Friday: 9:00 AM – 6:00 PM<br />
-                    Saturday: 10:00 AM – 5:00 PM<br />
-                    Sunday: Closed for private studio maintenance
+                    Monday – Saturday: 9:30 AM – 8:00 PM<br />
+                    Sunday: 10:30 AM – 6:00 PM (Showroom Open)
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-full bg-beige-100 text-bronze flex-shrink-0">
+                <div className="p-2.5 rounded-full bg-[#F8F0E8] text-[#D69A4B] flex-shrink-0">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                    Telephone Concierge
+                    Direct Telephone
                   </h4>
                   <p className="text-xs text-warmgrey mt-1">
-                    Direct Client Advisory Desk<br />
-                    <span className="text-charcoal font-medium">Inquiry line: Mon – Sat during studio hours</span>
+                    <a href={`tel:${businessConfig.contact.phoneRaw}`} className="text-charcoal font-medium hover:text-[#D69A4B]">
+                      {businessConfig.contact.phone}
+                    </a>
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-full bg-beige-100 text-bronze flex-shrink-0">
+                <div className="p-2.5 rounded-full bg-[#F8F0E8] text-[#D69A4B] flex-shrink-0">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="text-xs uppercase tracking-wider font-semibold text-charcoal">
-                    Written Specifications
+                    Email Inquiries
                   </h4>
                   <p className="text-xs text-warmgrey mt-1">
-                    concierge@mnclifestyle.com<br />
-                    trade@mnclifestyle.com (Architect & Designer Portal)
+                    <a href={`mailto:${businessConfig.contact.email}`} className="text-charcoal font-medium hover:text-[#D69A4B]">
+                      {businessConfig.contact.email}
+                    </a>
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Trade & Architect Note */}
-            <div className="bg-espresso text-ivory-100 p-8 rounded-3xl shadow-soft">
-              <span className="text-[11px] uppercase tracking-widest text-bronze-light font-semibold block mb-1">
-                For Interior Architects & Designers
+            <div className="bg-[#211710] text-[#F8F0E8] p-8 rounded-3xl shadow-soft">
+              <span className="text-[11px] uppercase tracking-widest text-[#D69A4B] font-semibold block mb-1">
+                For Interior Designers & Architects in AP & Telangana
               </span>
               <h3 className="font-serif text-xl text-white font-medium mb-2">
                 The MNC Trade Program
               </h3>
-              <p className="text-xs text-warmgrey-light leading-relaxed mb-4">
-                Enjoy tiered trade pricing, 3D CAD models, reserved showroom slots, and dedicated production tracking for your residential and hospitality projects.
+              <p className="text-xs text-[#E9D8C5]/80 leading-relaxed mb-4">
+                Enjoy trade pricing, custom wood finishing, 3D CAD models, and dedicated production tracking for your residential and commercial projects.
               </p>
-              <span className="text-xs text-bronze-light font-semibold">
-                Select "Trade Inquiry" in the form to register.
-              </span>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-[#D69A4B] font-bold hover:underline"
+              >
+                <span>Register via WhatsApp Concierge &rarr;</span>
+              </a>
             </div>
           </div>
 
-          {/* Right Column: Interactive Inquiry Form */}
+          {/* Right Column: Inquiry Form */}
           <div className="lg:col-span-7">
-            <div className="bg-white p-8 sm:p-10 rounded-3xl border border-beige-300 shadow-soft">
+            <div className="bg-white p-8 sm:p-10 rounded-3xl border border-[#E9D8C5] shadow-soft">
               
               {submitted ? (
                 <div className="py-12 text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="w-16 h-16 rounded-full bg-bronze/10 text-bronze flex items-center justify-center mx-auto mb-2">
+                  <div className="w-16 h-16 rounded-full bg-[#D69A4B]/20 text-[#D69A4B] flex items-center justify-center mx-auto mb-2">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
                   <h3 className="font-serif text-3xl text-charcoal font-medium">
                     Thank You for Reaching Out
                   </h3>
                   <p className="text-sm text-warmgrey max-w-md mx-auto leading-relaxed">
-                    Your inquiry has been received in our front-end demonstration system. A dedicated MNC Lifestyle client concierge specialist typically responds within one business day.
+                    Your inquiry has been received. Our senior furniture concierge typically responds within 2 hours during studio hours.
                   </p>
                   
-                  <div className="bg-ivory p-4 rounded-xl border border-beige-300 max-w-sm mx-auto text-left text-xs space-y-1 text-charcoal-700 my-6">
+                  <div className="bg-[#F8F0E8] p-4 rounded-xl border border-[#E9D8C5] max-w-sm mx-auto text-left text-xs space-y-1 text-charcoal my-6">
                     <div><strong>Name:</strong> {formData.fullName}</div>
-                    <div><strong>Email:</strong> {formData.email}</div>
+                    <div><strong>Contact:</strong> {formData.phone || formData.email}</div>
                     <div><strong>Interest:</strong> {formData.inquiryType} ({formData.projectScope})</div>
                   </div>
 
-                  <button
-                    onClick={handleReset}
-                    className="px-6 py-3 bg-charcoal text-white text-xs uppercase tracking-widest rounded-lg hover:bg-bronze transition-colors"
-                  >
-                    Send Another Inquiry
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <a
+                      href={whatsappDirectFormUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 bg-[#25D366] text-white text-xs uppercase tracking-widest font-bold rounded-lg hover:bg-[#20ba5a] transition-colors flex items-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4 fill-current" />
+                      <span>Send to WhatsApp Now</span>
+                    </a>
+                    <button
+                      onClick={handleReset}
+                      className="px-6 py-3 bg-[#211710] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-bronze transition-colors"
+                    >
+                      Send Another Inquiry
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <h2 className="font-serif text-2xl text-charcoal font-medium">
-                      Send a Message to Our Studio
+                      Send a Message to Our Visakhapatnam Studio
                     </h2>
                     <p className="text-xs text-warmgrey mt-1">
                       Fill out the details below. Our client advisory team will respond promptly.
@@ -229,37 +286,37 @@ export default function Contact() {
                         required
                         value={formData.fullName}
                         onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        placeholder="e.g. Eleanor Vance"
-                        className="w-full bg-ivory/60 border border-beige-300 rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                        placeholder="e.g. Rajesh Sharma"
+                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
                       />
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        Email Address *
+                        WhatsApp Mobile Number *
                       </label>
                       <input
-                        type="email"
+                        type="tel"
                         required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="e.g. eleanor@residence.com"
-                        className="w-full bg-ivory/60 border border-beige-300 rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="e.g. +91 98765 43210"
+                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
                       />
                     </div>
                   </div>
 
-                  {/* Phone & Inquiry Type */}
+                  {/* Email & Inquiry Type */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                        Phone Number (Optional)
+                        Email Address (Optional)
                       </label>
                       <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full bg-ivory/60 border border-beige-300 rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="e.g. rajesh@example.com"
+                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
                       />
                     </div>
                     <div>
@@ -269,60 +326,59 @@ export default function Contact() {
                       <select
                         value={formData.inquiryType}
                         onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
-                        className="w-full bg-ivory/60 border border-beige-300 rounded-lg px-3 py-2.5 text-xs text-charcoal focus:outline-none focus:border-bronze"
+                        className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
                       >
-                        <option value="Showroom Visit">Private Showroom Appointment</option>
-                        <option value="General Question">Product Specifications & Pricing</option>
-                        <option value="Swatch Kit">Complimentary Fabric & Wood Swatches</option>
-                        <option value="Trade Inquiry">Trade & Interior Architecture Partnership</option>
-                        <option value="Custom Dimensions">Bespoke Dimension Request</option>
+                        <option value="WhatsApp Order Inquiry">WhatsApp Order Inquiry</option>
+                        <option value="Showroom Visit">Private Showroom Visit</option>
+                        <option value="Custom Dimensions">Custom Dimensions & Wood Selection</option>
+                        <option value="Trade / Architect Inquiry">Trade / Architect Partnership</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Room / Scope */}
+                  {/* Project Scope */}
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                      Room or Category of Interest
+                      Room / Furniture Category
                     </label>
                     <select
                       value={formData.projectScope}
                       onChange={(e) => setFormData({ ...formData, projectScope: e.target.value })}
-                      className="w-full bg-ivory/60 border border-beige-300 rounded-lg px-3 py-2.5 text-xs text-charcoal focus:outline-none focus:border-bronze"
+                      className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal focus:outline-none focus:border-[#D69A4B]"
                     >
-                      <option value="Living Room">Living Room Furniture (Sofas, Loungers, Coffee Tables)</option>
-                      <option value="Bedroom">Bedroom Suites & Beds</option>
-                      <option value="Dining Room">Dining Room (Monolithic Tables, Chairs, Buffets)</option>
-                      <option value="Executive Office">Executive Workspaces & Desks</option>
-                      <option value="Whole Residence">Comprehensive Whole-Home Curation</option>
+                      <option value="Living Room / Sofas">Living Room (Sofas, Sectionals, Centre Tables)</option>
+                      <option value="Dining Room">Dining Room (Dining Sets, Sideboards)</option>
+                      <option value="Bedroom Suites">Bedroom Suites & Beds</option>
+                      <option value="Study & Office">Home Office & Study Tables</option>
+                      <option value="Complete Home Curation">Complete Home / Multi-Room Package</option>
                     </select>
                   </div>
 
                   {/* Message */}
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-charcoal font-semibold mb-1.5">
-                      Your Message or Project Details *
+                      Your Requirements or Questions *
                     </label>
                     <textarea
                       required
                       rows={4}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      placeholder="Share your timeline, room layout dimensions, or any specific finish requests..."
-                      className="w-full bg-ivory/60 border border-beige-300 rounded-lg p-3.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-bronze"
+                      placeholder="Tell us about your room dimensions, preferred wood species, or pieces you are interested in..."
+                      className="w-full bg-[#F8F0E8]/60 border border-[#E9D8C5] rounded-lg px-3.5 py-2.5 text-xs text-charcoal placeholder:text-warmgrey focus:outline-none focus:border-[#D69A4B]"
                     />
                   </div>
 
+                  {/* Submit Button */}
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="w-full py-4 bg-espresso text-white text-xs uppercase tracking-widest font-semibold rounded-lg hover:bg-bronze transition-colors flex items-center justify-center gap-2 shadow-soft"
+                      className="w-full py-4 bg-[#211710] text-[#F8F0E8] text-xs uppercase tracking-widest font-bold rounded-lg hover:bg-[#D69A4B] hover:text-[#211710] transition-colors shadow-soft"
                     >
-                      <Send className="w-4 h-4" />
-                      <span>Submit Inquiry to Client Concierge</span>
+                      Submit Consultation Request
                     </button>
-                    <p className="text-[11px] text-warmgrey text-center mt-3">
-                      Demonstration frontend mode: Validates and shows confirmation locally without remote server dispatch.
+                    <p className="text-[11px] text-warmgrey text-center mt-2.5">
+                      We respect your privacy. No marketing spam.
                     </p>
                   </div>
                 </form>
@@ -330,54 +386,57 @@ export default function Contact() {
 
             </div>
           </div>
+
         </div>
 
-        {/* Interactive FAQ Section */}
+        {/* FAQ Accordion Section */}
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
-            <span className="text-xs uppercase tracking-[0.25em] text-bronze font-semibold block mb-2">
-              Common Questions
-            </span>
-            <h3 className="font-serif text-3xl text-charcoal font-medium">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#D69A4B] font-semibold block mb-2">
               Frequently Asked Questions
-            </h3>
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl text-charcoal font-normal tracking-tight">
+              White-Glove Service & Ordering
+            </h2>
           </div>
 
           <div className="space-y-4">
-            {faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl border border-beige-300 overflow-hidden shadow-2xs"
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === idx ? -1 : idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-serif text-base sm:text-lg text-charcoal hover:text-bronze transition-colors"
+            {faqs.map((faq, idx) => {
+              const isOpen = activeFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl border border-[#E9D8C5] overflow-hidden transition-all shadow-2xs"
                 >
-                  <span>{faq.q}</span>
-                  {activeFaq === idx ? (
-                    <ChevronUp className="w-5 h-5 text-bronze flex-shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-warmgrey flex-shrink-0" />
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? -1 : idx)}
+                    className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-serif text-lg text-charcoal hover:text-[#D69A4B] transition-colors"
+                  >
+                    <span>{faq.q}</span>
+                    {isOpen ? (
+                      <ChevronUp className="w-5 h-5 text-[#D69A4B] flex-shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-warmgrey flex-shrink-0" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-warmgrey leading-relaxed border-t border-[#E9D8C5]/40 pt-4 font-sans">
+                      {faq.a}
+                    </div>
                   )}
-                </button>
-                {activeFaq === idx && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-warmgrey leading-relaxed border-t border-beige-200 pt-3 font-sans">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Showroom Booking Modal Dialog */}
-        <ShowroomModal 
-          isOpen={isShowroomModalOpen} 
-          onClose={() => setIsShowroomModalOpen(false)} 
-        />
-
       </div>
+
+      {/* Showroom Booking Modal */}
+      <ShowroomModal
+        isOpen={isShowroomModalOpen}
+        onClose={() => setIsShowroomModalOpen(false)}
+      />
     </div>
   );
 }
-

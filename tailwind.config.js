@@ -7,26 +7,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        // MNC LifeStyle Exact Palette
+        'espresso-dark': '#211710',
+        'warm-brown': '#49301F',
+        'champagne-gold': {
+          DEFAULT: '#D69A4B',
+          light: '#E2AC65',
+          dark: '#B87E34',
+        },
+        'light-cream': '#F8F0E8',
+        'warm-beige': '#E9D8C5',
+        'primary-text': '#211A15',
+
         ivory: {
-          DEFAULT: '#F7F5F0',
+          DEFAULT: '#F8F0E8',
           50: '#FDFCFB',
           100: '#FAF8F5',
-          200: '#F7F5F0',
-          300: '#EDE9E0',
+          200: '#F8F0E8',
+          300: '#E9D8C5',
         },
         beige: {
-          DEFAULT: '#EAE3D8',
-          100: '#F4EFE6',
+          DEFAULT: '#E9D8C5',
+          100: '#F8F0E8',
           200: '#EAE3D8',
           300: '#DDD3C4',
           400: '#C9BDAA',
         },
         charcoal: {
-          DEFAULT: '#252525',
-          900: '#181818',
-          800: '#252525',
-          700: '#383838',
-          600: '#4E4E4E',
+          DEFAULT: '#211A15',
+          900: '#18110B',
+          800: '#211A15',
+          700: '#38302A',
+          600: '#4E443C',
         },
         warmgrey: {
           DEFAULT: '#77736D',
@@ -34,21 +46,23 @@ export default {
           dark: '#58554F',
         },
         bronze: {
-          light: '#C4A77D',
-          DEFAULT: '#826039', // 5.48:1 on ivory, 5.93:1 on white (Exceeds WCAG 2.1 AA 4.5:1)
-          accent: '#A88962',  // Original luxury bronze for borders, plinths & graphical accents
-          dark: '#684C2B',
-          hover: '#735530',
+          light: '#D69A4B',
+          DEFAULT: '#D69A4B', // Champagne Gold
+          accent: '#D69A4B',
+          dark: '#B87E34',
+          hover: '#C2873B',
         },
         espresso: {
-          DEFAULT: '#30251F',
-          dark: '#221915',
-          light: '#42342C',
+          DEFAULT: '#211710',
+          dark: '#18110B',
+          light: '#49301F',
         },
       },
       fontFamily: {
         serif: ['"Cormorant Garamond"', '"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'Manrope', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        playfair: ['"Playfair Display"', 'Georgia', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       letterSpacing: {
         luxury: '0.2em',

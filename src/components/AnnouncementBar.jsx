@@ -1,27 +1,61 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
+import { businessConfig } from '../data/businessConfig';
 
 export default function AnnouncementBar() {
+  const { contact } = businessConfig;
+
   return (
-    <div className="bg-espresso text-ivory-100 text-xs py-2 px-4 border-b border-white/10 tracking-widest uppercase transition-all duration-300">
-      <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] sm:text-xs">
-        <div className="hidden sm:flex items-center gap-2 text-bronze-light">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Handcrafted Luxury Furniture</span>
+    <div className="hidden lg:block bg-[#211710] text-[#F8F0E8] border-b border-white/10 select-none">
+      <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[52px] h-[49px] flex items-center justify-between gap-4">
+        
+        {/* Left Side: Real Business Contact Details */}
+        <div className="flex items-center flex-wrap gap-x-5 text-xs text-[#F8F0E8] font-sans">
+          
+          {/* Location */}
+          <div className="inline-flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-white/90 shrink-0" />
+            <span className="font-medium tracking-wide">{contact.location}</span>
+          </div>
+
+          <span className="hidden sm:inline text-white/30" aria-hidden="true">|</span>
+
+          {/* Phone */}
+          <a
+            href={`tel:${contact.phoneRaw}`}
+            className="inline-flex items-center gap-2 hover:text-[#D69A4B] transition-colors"
+            title="Call MNC LifeStyle"
+          >
+            <Phone className="w-3.5 h-3.5 text-white/90 shrink-0" />
+            <span className="font-medium tracking-wide">{contact.phone}</span>
+          </a>
+
+          <span className="hidden md:inline text-white/30" aria-hidden="true">|</span>
+
+          {/* Email */}
+          <a
+            href={`mailto:${contact.email}`}
+            className="hidden md:inline-flex items-center gap-2 hover:text-[#D69A4B] transition-colors"
+            title="Email MNC LifeStyle"
+          >
+            <Mail className="w-3.5 h-3.5 text-white/90 shrink-0" />
+            <span className="font-medium tracking-wide">{contact.email}</span>
+          </a>
         </div>
-        <div className="mx-auto sm:mx-0 text-center font-medium">
-          Discover Furniture That Defines Your Lifestyle
-          <span className="hidden md:inline text-warmgrey-light ml-2 font-normal">
-            — Complimentary White-Glove In-Home Delivery
-          </span>
+
+        {/* Right Side: Gold Pill Consultation Button */}
+        <div className="shrink-0 ml-auto">
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-[#D69A4B] hover:bg-[#e2ac65] text-[#211710] text-xs font-semibold rounded-full transition-all duration-200 shadow-xs group whitespace-nowrap"
+          >
+            <span>{contact.consultationCta}</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
-        <div className="hidden sm:block text-right">
-          <span className="text-ivory-200 hover:text-bronze-light transition-colors cursor-pointer">
-            Explore 2026 Lookbook
-          </span>
-        </div>
+
       </div>
     </div>
   );
 }
-

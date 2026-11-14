@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { products } from '../data/products';
+import { formatINR } from '../utils/currency';
 
 export default function SearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
@@ -46,7 +47,7 @@ export default function SearchModal({ isOpen, onClose }) {
         );
       });
 
-  const popularKeywords = ['Bouclé Sofa', 'Oak Bed', 'Dining Table', 'Travertine', 'Lounge Chair', 'Credenza'];
+  const popularKeywords = ['Bouclé Sofa', 'Teak Bed', 'Dining Set', 'Travertine', 'Recliner', 'Wardrobe', 'Study Table'];
 
   const handleSelectProduct = (id) => {
     onClose();
@@ -57,22 +58,22 @@ export default function SearchModal({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 md:pt-20 px-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-charcoal/70 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-[#211710]/70 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-3xl bg-ivory-100 rounded-2xl shadow-elevated border border-beige-300 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-3xl bg-[#F8F0E8] rounded-2xl shadow-elevated border border-[#E9D8C5] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Search Input Bar */}
-        <div className="flex items-center px-6 py-5 border-b border-beige-300 bg-white">
-          <Search className="w-5 h-5 text-bronze mr-4 flex-shrink-0" />
+        <div className="flex items-center px-6 py-5 border-b border-[#E9D8C5] bg-white">
+          <Search className="w-5 h-5 text-[#D69A4B] mr-4 flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search luxury sofas, oak dining tables, beds, credenzas..."
-            className="w-full bg-transparent text-charcoal placeholder:text-warmgrey text-base md:text-lg focus:outline-none"
+            placeholder="Search luxury sofas, teak dining tables, beds, recliners..."
+            className="w-full bg-transparent text-[#211A15] placeholder:text-warmgrey text-base md:text-lg focus:outline-none"
           />
           {query && (
             <button
@@ -85,7 +86,7 @@ export default function SearchModal({ isOpen, onClose }) {
           )}
           <button
             onClick={onClose}
-            className="p-2 text-warmgrey hover:text-charcoal transition-colors rounded-full hover:bg-ivory"
+            className="p-2 text-warmgrey hover:text-charcoal transition-colors rounded-full hover:bg-[#F8F0E8]"
             aria-label="Close search"
           >
             <X className="w-5 h-5" />
@@ -93,13 +94,13 @@ export default function SearchModal({ isOpen, onClose }) {
         </div>
 
         {/* Quick Suggestions & Tags */}
-        <div className="px-6 py-3 bg-beige/30 border-b border-beige-200 flex items-center gap-2 flex-wrap text-xs">
+        <div className="px-6 py-3 bg-[#E9D8C5]/30 border-b border-[#E9D8C5] flex items-center gap-2 flex-wrap text-xs">
           <span className="text-warmgrey font-medium uppercase tracking-wider text-[10px]">Popular:</span>
           {popularKeywords.map((kw) => (
             <button
               key={kw}
               onClick={() => setQuery(kw)}
-              className="px-2.5 py-1 rounded-full bg-white text-charcoal hover:bg-bronze hover:text-white transition-colors border border-beige-300 shadow-sm"
+              className="px-2.5 py-1 rounded-full bg-white text-charcoal hover:bg-[#D69A4B] hover:text-[#211710] transition-colors border border-beige-300 shadow-sm"
             >
               {kw}
             </button>
@@ -114,14 +115,14 @@ export default function SearchModal({ isOpen, onClose }) {
                 Begin typing to discover handcrafted furniture pieces
               </p>
               <p className="text-xs text-warmgrey/70 mt-1">
-                Search by furniture room, material (oak, travertine, bouclé), or piece name.
+                Search by category, wood species (Teak, Sheesham), stone (Travertine, Marble), or design name.
               </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-base text-charcoal font-medium">No pieces found matching "{query}"</p>
               <p className="text-xs text-warmgrey mt-1">
-                Try searching for broader keywords like "Living", "Table", or "Chair".
+                Try searching for broader keywords like "Sofa", "Bed", "Table", or "Dining".
               </p>
             </div>
           ) : (
@@ -138,7 +139,7 @@ export default function SearchModal({ isOpen, onClose }) {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] uppercase tracking-wider text-bronze font-semibold">
+                    <span className="text-[11px] uppercase tracking-wider text-bron font-semibold text-[#D69A4B]">
                       {prod.categoryLabel}
                     </span>
                     {prod.badge && (
@@ -153,8 +154,8 @@ export default function SearchModal({ isOpen, onClose }) {
                   <p className="text-xs text-warmgrey truncate">{prod.shortDescription}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <span className="text-sm font-semibold text-charcoal">${prod.price.toLocaleString()}</span>
-                  <div className="flex items-center text-xs text-bronze font-medium justify-end mt-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-sm font-semibold text-charcoal">{formatINR(prod.price)}</span>
+                  <div className="flex items-center text-xs text-[#D69A4B] font-medium justify-end mt-1 group-hover:translate-x-1 transition-transform">
                     <span>View</span>
                     <ArrowRight className="w-3 h-3 ml-1" />
                   </div>
@@ -163,22 +164,7 @@ export default function SearchModal({ isOpen, onClose }) {
             ))
           )}
         </div>
-
-        {/* Modal Footer */}
-        <div className="px-6 py-3 bg-ivory-200 border-t border-beige-300 flex justify-between items-center text-xs text-warmgrey">
-          <span>{filtered.length} curated design{filtered.length === 1 ? '' : 's'} available</span>
-          <button
-            onClick={() => {
-              onClose();
-              navigate('/shop');
-            }}
-            className="text-bronze hover:text-bronze-dark font-medium underline underline-offset-4"
-          >
-            Explore Complete Catalog &rarr;
-          </button>
-        </div>
       </div>
     </div>
   );
 }
-

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Star, ShoppingBag, ArrowRight, Heart, ShieldCheck, Truck } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { X, Star, ArrowRight, Heart, MessageCircle } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { formatINR, calculateDiscount } from '../utils/currency';
+import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 
 export default function ProductQuickViewModal({ product, isOpen, onClose }) {
-  const { addToCart, setIsCartOpen } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   if (!isOpen || !product) return null;
@@ -17,23 +17,29 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
   const [quantity, setQuantity] = useState(1);
 
   const isSaved = isInWishlist(product.id);
+  const discount = calculateDiscount(product.price, product.originalPrice);
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity, selectedColor);
-    onClose();
-    setIsCartOpen(true);
-  };
+  const whatsappOrderUrl = getWhatsAppOrderUrl({
+    product,
+    selectedColor,
+    quantity
+  });
+
+  const whatsappInquiryUrl = getWhatsAppInquiryUrl({
+    product,
+    topic: 'Quick View Spec Inquiry'
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-charcoal/70 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-[#211710]/70 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-4xl bg-ivory-100 rounded-3xl shadow-elevated border border-beige-300 overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl bg-[#F8F0E8] rounded-3xl shadow-elevated border border-[#E9D8C5] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
@@ -54,11 +60,18 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              {product.badge && (
-                <div className="absolute top-3 left-3 bg-espresso/85 text-white text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded">
-                  {product.badge}
-                </div>
-              )}
+              <div className="absolute top-3 left-3 flex flex-col gap-1">
+                {product.badge && (
+                  <span className="bg-[#211710]/85 text-white text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded">
+                    {product.badge}
+                  </span>
+                )}
+                {discount && (
+                  <span className="bg-[#D69A4B] text-[#211710] text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
+                    {discount}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Thumbnails */}
@@ -100,13 +113,16 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
 
               <div className="flex items-baseline gap-2.5 mb-4">
                 <span className="font-serif text-2xl font-bold text-charcoal">
-                  ${product.price.toLocaleString()}
+                  {formatINR(product.price)}
                 </span>
                 {product.originalPrice && (
                   <span className="text-xs text-warmgrey line-through">
-                    ${product.originalPrice.toLocaleString()}
+                    {formatINR(product.originalPrice)}
                   </span>
                 )}
+                <span className="text-[11px] text-[#49301F] font-medium ml-1">
+                  (Incl. In-Home Assembly)
+                </span>
               </div>
 
               <p className="text-xs text-warmgrey leading-relaxed mb-6 font-sans">
@@ -142,13 +158,14 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
               )}
             </div>
 
-            {/* Actions */}
+            {/* Actions: Direct WhatsApp Order */}
             <div className="space-y-3 pt-4 border-t border-beige-200">
               <div className="flex gap-3">
                 <div className="flex items-center border border-beige-300 rounded-lg bg-ivory px-2">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="p-1.5 text-charcoal hover:text-bronze font-bold text-sm"
+                    aria-label="Decrease quantity"
                   >
                     -
                   </button>
@@ -156,17 +173,22 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     className="p-1.5 text-charcoal hover:text-bronze font-bold text-sm"
+                    aria-label="Increase quantity"
                   >
                     +
                   </button>
                 </div>
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 py-3 bg-espresso text-white rounded-lg text-xs uppercase tracking-widest font-semibold hover:bg-bronze transition-colors flex items-center justify-center gap-2"
+                
+                {/* Primary WhatsApp Order Button */}
+                <a
+                  href={whatsappOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-lg text-xs uppercase tracking-widest font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Add to Bag</span>
-                </button>
+                  <MessageCircle className="w-4 h-4 fill-current" />
+                  <span>Order on WhatsApp</span>
+                </a>
               </div>
 
               <div className="flex items-center justify-between pt-1">

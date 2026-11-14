@@ -1,63 +1,151 @@
+/**
+ * MNC LifeStyle — Furniture Categories
+ * 12 Indian Market Pepperfry-inspired furniture categories with high-definition assets.
+ */
+
 export const categories = [
   {
-    id: 'living-room',
-    name: 'Living Room',
-    title: 'Living Room Furniture',
-    tagline: 'Sanctuaries for Conversation & Repose',
-    description: 'Sculptural sofas, deep lounge seating, and hand-finished accent tables engineered for effortless comfort and timeless presence.',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80',
-    itemCount: 16,
-    subcategories: ['Sofas & Sectionals', 'Armchairs & Loungers', 'Coffee Tables', 'Media Consoles']
+    id: 'sofas',
+    legacyId: 'living-room',
+    name: 'Sofas',
+    title: 'Luxury Sofas & Couches',
+    tagline: 'Sanctuaries for Living & Entertaining',
+    description: 'Sculptural 3-seaters, bouclé couches, and teak-framed seating engineered for deep sink-in comfort and enduring elegance.',
+    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+    itemCount: 24,
+    subtitle: '24+ Designs',
+    subcategories: ['3-Seater Sofas', '2-Seater Loveseats', 'Curved Bouclé', 'Chesterfields']
   },
   {
-    id: 'bedroom',
-    name: 'Bedroom',
-    title: 'Bedroom Suites & Beds',
+    id: 'beds',
+    legacyId: 'bedroom',
+    name: 'Beds',
+    title: 'Solid Wood Beds & Suites',
     tagline: 'Quiet Luxury for Restorative Sleep',
-    description: 'Platform beds crafted in solid white oak, upholstered headboards, nightstands, and dressers designed to cultivate serene calm.',
-    image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef5?auto=format&fit=crop&w=1200&q=80',
+    description: 'Platform beds crafted in seasoned teakwood and solid oak with upholstered headboards and hydraulic storage options.',
+    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+    itemCount: 18,
+    subtitle: '18+ Designs',
+    subcategories: ['King Size Beds', 'Queen Size Beds', 'Hydraulic Storage Beds', 'Upholstered Headboards']
+  },
+  {
+    id: 'dining-sets',
+    legacyId: 'dining',
+    name: 'Dining Sets',
+    title: 'Handcrafted Dining Tables & Chairs',
+    tagline: 'Where Indian Family Gatherings Flourish',
+    description: 'Solid timber dining tables paired with ergonomic cushioned chairs tailored for everyday hospitality and grand festivities.',
+    image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80',
+    itemCount: 16,
+    subtitle: '16+ Designs',
+    subcategories: ['6-Seater Sets', '8-Seater Grand Suites', 'Marble-Top Tables', 'Solid Teak Dining']
+  },
+  {
+    id: 'study-tables',
+    name: 'Study Tables',
+    title: 'Ergonomic Study Desks & Tables',
+    tagline: 'Designed for Focused Living & Learning',
+    description: 'Solid wood study tables with integrated cable management, paper drawers, and contemporary Scandinavian silhouettes.',
+    image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80',
     itemCount: 12,
-    subcategories: ['Upholstered Beds', 'Solid Oak Frames', 'Nightstands', 'Dressing Tables']
+    subtitle: '12+ Designs',
+    subcategories: ['Compact Writing Desks', 'Executive Study Tables', 'Storage Desks', 'Solid Teak Workstations']
   },
   {
-    id: 'dining',
-    name: 'Dining Room',
-    title: 'Dining Tables & Chairs',
-    tagline: 'Where Gatherings Become Memorable',
-    description: 'Monolithic timber tables, sculptural dining chairs, and refined buffets tailored for intimate family dinners and grand hospitality.',
-    image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1200&q=80',
-    itemCount: 14,
-    subcategories: ['Extendable Tables', 'Dining Chairs', 'Sideboards & Buffets', 'Bar Stools']
+    id: 'centre-tables',
+    legacyId: 'coffee-tables',
+    name: 'Centre Tables',
+    title: 'Sculptural Centre & Coffee Tables',
+    tagline: 'The Anchor of Every Living Space',
+    description: 'Roman travertine stone, fluted brass accents, and bookmatched walnut centerpieces that elevate conversational spaces.',
+    image: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80',
+    itemCount: 15,
+    subtitle: '15+ Designs',
+    subcategories: ['Travertine & Marble', 'Solid Walnut', 'Nesting Coffee Tables', 'Glass & Metal']
   },
   {
-    id: 'office',
-    name: 'Office Furniture',
-    title: 'Executive & Home Workspaces',
-    tagline: 'Architectural Elegance Meets Focus',
-    description: 'Executive desks, ergonomic top-grain leather seating, and modular storage that elevate productivity and interior distinction.',
-    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80',
+    id: 'recliners',
+    name: 'Recliners',
+    title: 'Ergonomic Motorized & Manual Recliners',
+    tagline: 'Ultimate Comfort at the Touch of a Button',
+    description: 'Motorized single-seater recliners upholstered in top-grain genuine leather and performance velvet with multi-angle support.',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
     itemCount: 10,
-    subcategories: ['Executive Desks', 'Ergonomic Task Chairs', 'Bookshelves', 'Credenzas']
+    subtitle: '10+ Designs',
+    subcategories: ['Motorized Recliners', 'Manual Rocker Recliners', 'Genuine Leather Loungers', 'Fabric Swivel Recliners']
   },
   {
-    id: 'coffee-tables',
-    name: 'Coffee Tables',
-    title: 'Low Tables & Centerpieces',
-    tagline: 'Sculptural Anchors for Any Room',
-    description: 'Organic travertine stone, smoked glass, and sculpted walnut coffee tables that act as grounding centerpiece art in your lounge.',
-    image: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=1200&q=80',
+    id: 'sectional-sofas',
+    name: 'Sectional Sofas',
+    title: 'Spacious L-Shaped & U-Shaped Sectionals',
+    tagline: 'Expansive Seating for Modern Living Rooms',
+    description: 'Modular sectionals that configure effortlessly to your room dimensions, with sink-in feather blend cushions and washable linen covers.',
+    image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+    itemCount: 14,
+    subtitle: '14+ Designs',
+    subcategories: ['Left-Facing Sectionals', 'Right-Facing Sectionals', 'U-Shaped Family Modulars', 'Sleeper Sectionals']
+  },
+  {
+    id: 'wardrobes',
+    name: 'Wardrobes',
+    title: 'Artisan Wardrobes & Armoires',
+    tagline: 'Intelligent Organization in Timeless Timber',
+    description: 'Solid wood hinged and sliding wardrobes with customized internal compartments, soft-close hardware, and mirror accents.',
+    image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
+    itemCount: 11,
+    subtitle: '11+ Designs',
+    subcategories: ['3-Door Wardrobes', '4-Door Grand Armoires', 'Sliding Door Wardrobes', 'Walk-in Closets']
+  },
+  {
+    id: 'cabinets-sideboards',
+    legacyId: 'storage',
+    name: 'Cabinets & Sideboards',
+    title: 'Buffets, Credenzas & Consoles',
+    tagline: 'Artful Concealment in Architectural Form',
+    description: 'Fluted wood buffets, slatted media units, and display credenzas blending storage function with museum-worthy aesthetics.',
+    image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
+    itemCount: 15,
+    subtitle: '15+ Designs',
+    subcategories: ['Dining Sideboards', 'TV Media Consoles', 'Fluted Credenzas', 'Bar Cabinets']
+  },
+  {
+    id: 'office-furniture',
+    legacyId: 'office',
+    name: 'Office Furniture',
+    title: 'Executive Desks & Ergonomic Seating',
+    tagline: 'Productivity Harmonized with Luxury',
+    description: 'Solid hardwood executive desks, leather conference seating, and minimalist credenzas designed for high-performing Indian professionals.',
+    image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=80',
+    itemCount: 14,
+    subtitle: '14+ Designs',
+    subcategories: ['Executive Desks', 'High-Back Ergonomic Chairs', 'Bookshelves & Vitrines', 'Conference Tables']
+  },
+  {
+    id: 'shoe-racks',
+    name: 'Shoe Racks',
+    title: 'Ventilated Entryway Shoe Storage',
+    tagline: 'Order and Serenity at Your Doorstep',
+    description: 'Naturally ventilated louvered shoe cabinets in solid teakwood with integrated seating benches and hidden storage drawers.',
+    image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80',
     itemCount: 8,
-    subcategories: ['Travertine & Stone', 'Solid Walnut', 'Nesting Sets', 'Glass & Metal']
+    subtitle: '8+ Designs',
+    subcategories: ['Shoe Cabinets with Bench', 'Louvered Door Racks', 'Multi-Tier Organizers', 'Compact Entryway Consoles']
   },
   {
-    id: 'storage',
-    name: 'Storage & Cabinets',
-    title: 'Artisan Storage & Credenzas',
-    tagline: 'Concealment in Its Most Elegant Form',
-    description: 'Fluted wood credenzas, slatted media units, and minimalist vitrines blending concealed utility with artisan architectural form.',
-    image: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=1200&q=80',
+    id: 'bar-furniture',
+    name: 'Bar Furniture',
+    title: 'Home Bar Units, Counters & Stools',
+    tagline: 'Sophisticated Entertaining at Home',
+    description: 'Compact wine credenzas, solid wood bar cabinets with stemware racks, and brass-trimmed leather bar stools.',
+    image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
     itemCount: 9,
-    subcategories: ['Media Consoles', 'Sideboards', 'Display Vitrines', 'Chests of Drawers']
+    subtitle: '9+ Designs',
+    subcategories: ['Wine & Bar Cabinets', 'Counter-Height Bar Stools', 'Bar Carts & Trolleys', 'Wall-Mounted Bars']
   }
 ];
 
+// Helper to find category by id or legacy id
+export const findCategoryById = (id) => {
+  if (!id) return null;
+  return categories.find((c) => c.id === id || c.legacyId === id);
+};

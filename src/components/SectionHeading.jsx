@@ -14,7 +14,7 @@ export default function SectionHeading({
   const isCenter = align === 'center';
 
   return (
-    <div className={`mb-12 md:mb-16 ${isCenter ? 'text-center max-w-3xl mx-auto' : 'flex flex-col md:flex-row md:items-end justify-between gap-6'}`}>
+    <div className={`mb-6 sm:mb-8 md:mb-10 ${isCenter ? 'text-center max-w-3xl mx-auto' : 'flex flex-col md:flex-row md:items-end justify-between gap-6'}`}>
       <div className={isCenter ? '' : 'max-w-2xl'}>
         {subtitle && (
           <span className={`text-[11px] md:text-xs font-semibold uppercase tracking-[0.25em] block mb-2.5 ${
