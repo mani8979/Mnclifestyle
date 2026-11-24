@@ -5,8 +5,6 @@ import { Link } from '@/lib/router-bridge';
 import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { slugify } from '../data/products';
-import { useWishlist } from '../context/WishlistContext';
-import { Heart } from 'lucide-react';
 
 export default function ProductCard({ product, index }) {
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
@@ -20,15 +18,6 @@ export default function ProductCard({ product, index }) {
     distance: 20,
     once: true,
   });
-
-  const { isInWishlist, toggleWishlist } = useWishlist();
-  const isLiked = isInWishlist(product.id);
-
-  const handleWishlistClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist(product.id);
-  };
 
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price);
   const savingsAmount = hasDiscount ? product.originalPrice - product.price : 0;
@@ -66,24 +55,10 @@ export default function ProductCard({ product, index }) {
 
         {/* Mobile Badge Overlay (Top-Left) */}
         {product.badge && (
-          <span className="sm:hidden absolute top-2 left-2 z-10 text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full shadow-2xs border border-[#E9D8C5]/60 max-w-[calc(100%-48px)] truncate">
+          <span className="sm:hidden absolute top-2 left-2 z-10 text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full shadow-2xs border border-[#E9D8C5]/60 max-w-[calc(100%-16px)] truncate">
             {product.badge}
           </span>
         )}
-
-        {/* Wishlist Heart Icon Button (Top-Right, 36x36 tap target) */}
-        <button
-          type="button"
-          onClick={handleWishlistClick}
-          aria-label={isLiked ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-          className="absolute top-2 right-2 z-10 w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white backdrop-blur-xs flex items-center justify-center text-[#211710] shadow-2xs border border-[#E9D8C5]/60 transition-transform active:scale-90"
-        >
-          <Heart
-            className={`w-4 h-4 transition-colors ${
-              isLiked ? 'fill-rose-500 text-rose-500' : 'text-[#77736D] hover:text-[#211710]'
-            }`}
-          />
-        </button>
       </div>
 
       {/* Product Information Container */}
