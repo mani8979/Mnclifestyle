@@ -38,7 +38,7 @@ export default function CategoryGrid({ categories: customCategories }) {
             className="h-full"
           >
             <Link
-              to={`/category/${cat.id}`}
+              to={`/category/${cat.slug || cat.id}`}
               className="group flex flex-col items-center bg-white rounded-2xl p-3 sm:p-4 border border-[#E9D8C5]/80 shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full"
             >
               {/* Image Circle / Rounded Container */}

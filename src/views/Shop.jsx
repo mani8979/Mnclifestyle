@@ -59,33 +59,51 @@ export default function Shop({ initialProducts, initialCategories }) {
     { id: 'leather', label: 'Italian Leather' }
   ];
 
-  // Specific 12 categories required
-  const categoryNavItems = [
-    { id: 'all', name: 'All Furniture' },
-    { id: 'sofas', name: 'Sofas' },
-    { id: 'beds', name: 'Beds' },
-    { id: 'dining-sets', name: 'Dining Sets' },
-    { id: 'study-tables', name: 'Study Tables' },
-    { id: 'centre-tables', name: 'Centre Tables' },
-    { id: 'recliners', name: 'Recliners' },
-    { id: 'wardrobes', name: 'Wardrobes' },
-    { id: 'cabinets-sideboards', name: 'Cabinets & Sideboards' },
-    { id: 'office-furniture', name: 'Office Furniture' },
-    { id: 'shoe-racks', name: 'Shoe Racks' },
-    { id: 'bar-furniture', name: 'Bar Furniture' }
-  ];
+  // Dynamic categories from database (Admin side) in orderIndex order
+  const categoryNavItems = useMemo(() => {
+    return [
+      { id: 'all', name: 'All Furniture', slug: 'all' },
+      ...allCategories.map((c) => ({
+        id: c.slug || c.id,
+        name: c.name,
+        slug: c.slug || c.id,
+        legacyId: c.legacyId,
+      })),
+    ];
+  }, [allCategories]);
 
   const filteredProducts = useMemo(() => {
     return allProducts
       .filter((p) => {
         // Category filter
         if (selectedCategory !== 'all') {
-          if (p.category !== selectedCategory) {
-            // Also match legacy IDs if present
-            const catObj = allCategories.find((c) => c.id === selectedCategory || c.slug === selectedCategory);
-            if (!catObj || (p.category !== catObj.id && p.category !== catObj.legacyId && p.category !== catObj.slug)) {
-              return false;
-            }
+          const catObj = allCategories.find(
+            (c) =>
+              c.id === selectedCategory ||
+              c.slug === selectedCategory ||
+              c.legacyId === selectedCategory ||
+              c.name?.toLowerCase() === selectedCategory.toLowerCase()
+          );
+
+          const allowedKeys = new Set(
+            [
+              selectedCategory.toLowerCase(),
+              ...(catObj
+                ? [
+                    (catObj.id || '').toLowerCase(),
+                    (catObj.slug || '').toLowerCase(),
+                    (catObj.legacyId || '').toLowerCase(),
+                    (catObj.name || '').toLowerCase(),
+                  ]
+                : []),
+            ].filter(Boolean)
+          );
+
+          const productCat = (p.category || '').toLowerCase();
+          const productCatLabel = (p.categoryLabel || '').toLowerCase();
+
+          if (!allowedKeys.has(productCat) && !allowedKeys.has(productCatLabel)) {
+            return false;
           }
         }
 

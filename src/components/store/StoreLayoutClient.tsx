@@ -7,7 +7,13 @@ import SearchModal from '../SearchModal';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
 import { useLocation } from '../../lib/router-bridge';
 
-export default function StoreLayoutClient({ children }: { children: React.ReactNode }) {
+export default function StoreLayoutClient({
+  children,
+  categories,
+}: {
+  children: React.ReactNode;
+  categories?: any[];
+}) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { pathname, hash } = useLocation();
 
@@ -37,7 +43,7 @@ export default function StoreLayoutClient({ children }: { children: React.ReactN
       <AnnouncementBar />
 
       {/* 2. Main Header Navigation */}
-      <Header onOpenSearch={() => setIsSearchOpen(true)} />
+      <Header onOpenSearch={() => setIsSearchOpen(true)} categories={categories} />
 
       {/* 3. Page Content */}
       <main className="flex-1">

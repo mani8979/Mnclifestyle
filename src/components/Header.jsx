@@ -6,7 +6,24 @@ import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle 
 const logoImg = '/logo.png';
 import { businessConfig } from '../data/businessConfig';
 
-export default function Header({ onOpenSearch }) {
+export default function Header({ onOpenSearch, categories: initialCategories }) {
+  const [categoriesList, setCategoriesList] = useState(initialCategories || []);
+
+  useEffect(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length > 0) {
+      setCategoriesList(initialCategories);
+    } else {
+      fetch('/api/categories')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data?.categories) && data.categories.length > 0) {
+            setCategoriesList(data.categories);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialCategories]);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileShopOpen, setIsMobileShopOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
@@ -79,17 +96,27 @@ export default function Header({ onOpenSearch }) {
     location.pathname.startsWith('/category') ||
     location.pathname === '/collections';
 
-  // Mega Menu Links
-  const shopCategories = [
-    { label: 'Living Room', path: '/category/sofas', desc: 'Curved Bouclé & Solid Teak' },
-    { label: 'Bedroom', path: '/category/beds', desc: 'Platform Beds & Armoires' },
-    { label: 'Dining Room', path: '/category/dining-sets', desc: 'Hardwood Tables & Chairs' },
-    { label: 'Study & Office', path: '/category/study-tables', desc: 'Executive Desks & Workspaces' },
-    { label: 'Sofas', path: '/category/sofas', desc: '3-Seaters, Sectionals & Loungers' },
-    { label: 'Beds', path: '/category/beds', desc: 'Solid Teak & Hydraulic Storage' },
-    { label: 'Dining Sets', path: '/category/dining-sets', desc: '6 & 8-Seater Hardwood Suites' },
-    { label: 'Tables & Storage', path: '/category/centre-tables', desc: 'Travertine Coffee & Side Tables' },
-  ];
+  // Mega Menu Links derived dynamically from Database (Admin categories)
+  const shopCategories = React.useMemo(() => {
+    if (Array.isArray(categoriesList) && categoriesList.length > 0) {
+      return categoriesList.map((cat) => ({
+        label: cat.name,
+        path: `/category/${cat.slug || cat.id}`,
+        desc: cat.title && cat.title !== cat.name
+          ? cat.title
+          : (cat.description ? (cat.description.length > 34 ? `${cat.description.substring(0, 32)}...` : cat.description) : `Handcrafted ${cat.name}`),
+      }));
+    }
+    return [
+      { label: 'Recliners', path: '/category/recliners', desc: 'Silent Power Recliners' },
+      { label: 'Beds', path: '/category/beds', desc: 'Solid Teak Platform Beds' },
+      { label: 'Dining Sets', path: '/category/dining-sets', desc: 'Handcrafted Dining Suites' },
+      { label: 'Sofas', path: '/category/sectional-sofas', desc: 'Curved Bouclé & Teak Seating' },
+      { label: 'Chairs', path: '/category/chairs', desc: 'Sculptural Teak Seating' },
+      { label: 'Wardrobes', path: '/category/wardrobes', desc: 'Seasoned Hardwood Armoires' },
+      { label: 'Centre Tables', path: '/category/centre-tables', desc: 'Travertine & Teak Tables' },
+    ];
+  }, [categoriesList]);
 
   const shopCollections = [
     {
