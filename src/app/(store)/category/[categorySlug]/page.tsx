@@ -1,7 +1,22 @@
 import Category from '@/views/Category';
-import { getCategoryBySlug } from '@/services/categoryService';
+import { getCategoryBySlug, getCategories } from '@/services/categoryService';
 import { getProducts } from '@/services/productService';
 import { notFound } from 'next/navigation';
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const categories = await getCategories();
+    return (categories || [])
+      .map((c: any) => ({ categorySlug: c.slug || c.id }))
+      .filter((param: any) => Boolean(param.categorySlug));
+  } catch (error) {
+    console.warn('[Build Warning] generateStaticParams for category failed gracefully:', error);
+    return [];
+  }
+}
 
 export default async function CategoryPage({
   params,
@@ -9,13 +24,14 @@ export default async function CategoryPage({
   params: Promise<{ categorySlug: string }>;
 }) {
   const { categorySlug } = await params;
-  const category = await getCategoryBySlug(categorySlug);
+  const [category, products] = await Promise.all([
+    getCategoryBySlug(categorySlug),
+    getProducts({ category: categorySlug }),
+  ]);
 
   if (!category) {
     notFound();
   }
-
-  const products = await getProducts({ category: category.slug || categorySlug });
 
   return <Category initialCategory={category} initialProducts={products} />;
 }

@@ -763,7 +763,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           {/* Price & Savings Display */}
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-[#C9BBAE] font-medium leading-none mb-1">
-              Price
+              PRICE
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="font-sans font-bold tabular-nums text-lg sm:text-xl text-white leading-none">

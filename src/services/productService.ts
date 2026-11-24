@@ -77,9 +77,8 @@ export async function getProducts(options: GetProductsOptions = {}) {
       mQuery = mQuery.sort({ isFeatured: -1, isBestseller: -1 });
     }
 
-    if (options.limit) {
-      mQuery = mQuery.limit(options.limit);
-    }
+    const effectiveLimit = options.limit ? Math.min(Math.max(1, options.limit), 100) : 100;
+    mQuery = mQuery.limit(effectiveLimit);
 
     const docs = await mQuery.lean();
 
