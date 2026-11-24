@@ -15,8 +15,45 @@ import {
 } from 'lucide-react';
 
 export default function Shop({ initialProducts, initialCategories }) {
-  const allProducts = initialProducts && initialProducts.length > 0 ? initialProducts : products;
-  const allCategories = initialCategories && initialCategories.length > 0 ? initialCategories : categories;
+  const [liveProducts, setLiveProducts] = useState(
+    initialProducts && initialProducts.length > 0 ? initialProducts : products
+  );
+  const [liveCategories, setLiveCategories] = useState(
+    initialCategories && initialCategories.length > 0 ? initialCategories : categories
+  );
+
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setLiveProducts(initialProducts);
+    }
+  }, [initialProducts]);
+
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setLiveCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  // Client-side dynamic background sync to keep categories and products completely up-to-date
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data?.categories) && data.categories.length > 0) {
+          setLiveCategories(data.categories);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/products?limit=100')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data?.products) && data.products.length > 0) {
+          setLiveProducts(data.products);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
@@ -63,21 +100,21 @@ export default function Shop({ initialProducts, initialCategories }) {
   const categoryNavItems = useMemo(() => {
     return [
       { id: 'all', name: 'All Furniture', slug: 'all' },
-      ...allCategories.map((c) => ({
+      ...liveCategories.map((c) => ({
         id: c.slug || c.id,
         name: c.name,
         slug: c.slug || c.id,
         legacyId: c.legacyId,
       })),
     ];
-  }, [allCategories]);
+  }, [liveCategories]);
 
   const filteredProducts = useMemo(() => {
-    return allProducts
+    return liveProducts
       .filter((p) => {
         // Category filter
         if (selectedCategory !== 'all') {
-          const catObj = allCategories.find(
+          const catObj = liveCategories.find(
             (c) =>
               c.id === selectedCategory ||
               c.slug === selectedCategory ||
@@ -144,7 +181,7 @@ export default function Shop({ initialProducts, initialCategories }) {
         if (selectedSort === 'rating') return (b.rating || 0) - (a.rating || 0);
         return 0; // Default featured
       });
-  }, [allProducts, allCategories, selectedCategory, selectedSort, priceRange, filterBadge, selectedMaterial, searchTerm]);
+  }, [liveProducts, liveCategories, selectedCategory, selectedSort, priceRange, filterBadge, selectedMaterial, searchTerm]);
 
   // Count active filters (excluding defaults)
   const activeFilterCount =

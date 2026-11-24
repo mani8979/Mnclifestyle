@@ -118,14 +118,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Query category to get proper label and subcategories if needed
+    const catDoc = await Category.findOne({
+      $or: [{ slug: body.category }, { legacyId: body.category }],
+    }).lean();
+
+    if (!body.categoryLabel) {
+      body.categoryLabel = catDoc?.name || getCategoryLabel(body.category || 'furniture');
+    }
+
+    if (!body.subCategory || !body.subCategory.trim()) {
+      body.subCategory = catDoc?.subcategories?.[0] || catDoc?.name || 'General';
+    }
+
+    if (!body.shortDescription || body.shortDescription.trim().length < 5) {
+      body.shortDescription = `${body.name || 'Furniture'} — Handcrafted ${body.categoryLabel || 'luxury piece'} tailored for contemporary Indian living.`;
+    }
+
+    if (!body.fullDescription || body.fullDescription.trim().length < 10) {
+      body.fullDescription = `${body.name || 'Furniture'} is an exquisite handcrafted furniture piece made with seasoned materials, precision joinery, and tailored luxury aesthetics.`;
+    }
+
+    if (!Array.isArray(body.materials) || body.materials.length === 0) {
+      body.materials = ['Kiln-Dried Hardwood', 'High-Density Foam'];
+    }
+
+    if (!Array.isArray(body.images) || body.images.length === 0) {
+      body.images = ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
+    }
+
     // Zod schema validation
     const validatedData = ProductInputSchema.parse(body);
 
-    // Auto-derive categoryLabel if not supplied
     if (!validatedData.categoryLabel) {
-      const catDoc = await Category.findOne({
-        $or: [{ slug: validatedData.category }, { legacyId: validatedData.category }],
-      }).lean();
       validatedData.categoryLabel = catDoc?.name || getCategoryLabel(validatedData.category);
     }
 
@@ -163,6 +188,8 @@ export async function POST(request: NextRequest) {
       revalidatePath('/');
       revalidatePath('/shop');
       revalidatePath('/collections');
+      revalidatePath('/admin/products');
+      revalidatePath('/admin/inventory');
       revalidatePath(`/category/${validatedData.category}`);
       revalidatePath(`/product/${validatedData.slug}`);
     } catch (e) {

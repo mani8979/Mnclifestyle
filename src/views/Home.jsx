@@ -26,9 +26,49 @@ import {
 } from 'lucide-react';
 
 export default function Home({ initialProducts, initialCategories }) {
-  const allProducts = initialProducts && initialProducts.length > 0 ? initialProducts : products;
-  const bestsellers = allProducts.filter((p) => p.isBestseller).slice(0, 4);
-  const featuredPieces = allProducts.filter((p) => p.isFeatured).slice(0, 4);
+  const [liveProducts, setLiveProducts] = useState(
+    initialProducts && initialProducts.length > 0 ? initialProducts : products
+  );
+  const [liveCategories, setLiveCategories] = useState(
+    initialCategories && initialCategories.length > 0 ? initialCategories : categories
+  );
+
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setLiveProducts(initialProducts);
+    }
+  }, [initialProducts]);
+
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setLiveCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  useEffect(() => {
+    fetch('/api/products?limit=20')
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d?.products) && d.products.length > 0) {
+          setLiveProducts(d.products);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d?.categories) && d.categories.length > 0) {
+          setLiveCategories(d.categories);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const taggedBestsellers = liveProducts.filter((p) => p.isBestseller);
+  const bestsellers =
+    taggedBestsellers.length >= 4 ? taggedBestsellers.slice(0, 4) : liveProducts.slice(0, 4);
+  const featuredPieces = liveProducts.filter((p) => p.isFeatured).slice(0, 4);
   const whatsappConsultationUrl = getWhatsAppConsultationUrl('Custom Living Room Consultation');
 
   const testimonials = [
@@ -61,7 +101,7 @@ export default function Home({ initialProducts, initialCategories }) {
       <Hero />
 
       {/* 2. Shop by Categories (Immediately below hero benefits strip with clean spacing) */}
-      <CategoryGrid categories={initialCategories} />
+      <CategoryGrid categories={liveCategories} />
 
       <div className="space-y-10 sm:space-y-14 mt-8 sm:mt-12">
         {/* 3. Bestselling Furniture */}

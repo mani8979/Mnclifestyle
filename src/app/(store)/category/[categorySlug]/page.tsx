@@ -3,7 +3,8 @@ import { getCategoryBySlug, getCategories } from '@/services/categoryService';
 import { getProducts } from '@/services/productService';
 import { notFound } from 'next/navigation';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

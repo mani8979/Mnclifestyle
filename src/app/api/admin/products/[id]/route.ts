@@ -153,6 +153,8 @@ export async function PATCH(
       revalidatePath('/');
       revalidatePath('/shop');
       revalidatePath('/collections');
+      revalidatePath('/admin/products');
+      revalidatePath('/admin/inventory');
       revalidatePath(`/category/${oldCategory}`);
       revalidatePath(`/category/${product.category}`);
       revalidatePath(`/product/${oldSlug}`);

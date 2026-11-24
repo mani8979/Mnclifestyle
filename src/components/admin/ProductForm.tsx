@@ -294,6 +294,21 @@ export default function ProductForm({
   const handleSubmit = async (publishStatus?: boolean) => {
     setErrorMessage('');
     setSuccessMessage('');
+
+    // 1. Client-side field validations
+    if (!name.trim() || name.trim().length < 2) {
+      setErrorMessage('Product name is required (at least 2 characters).');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const numericPrice = Number(price);
+    if (!price || isNaN(numericPrice) || numericPrice <= 0) {
+      setErrorMessage('Please specify a valid product selling price greater than ₹0.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const activeState = publishStatus !== undefined ? publishStatus : isActive;
@@ -309,14 +324,47 @@ export default function ProductForm({
       initialProduct?.sku ||
       `FUR-${(finalSlug || 'ITEM').slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const derivedSubCategory =
+      subCategory.trim() ||
+      availableSubcategories[0] ||
+      activeCategoryObj?.name ||
+      'General';
+
+    const derivedShortDescription =
+      shortDescription.trim().length >= 5
+        ? shortDescription.trim()
+        : `${name.trim()} — Handcrafted ${activeCategoryObj?.name || 'furniture piece'} designed for contemporary living.`;
+
+    const derivedFullDescription =
+      fullDescription.trim().length >= 10
+        ? fullDescription.trim()
+        : `${name.trim()} is an exquisite handcrafted furniture piece made with seasoned materials, precision joinery, and tailored luxury aesthetics.`;
+
+    const finalImages =
+      imageItems.length > 0
+        ? imageItems.map((img) => img.url)
+        : ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
+
+    const finalImageDetails =
+      imageItems.length > 0
+        ? imageItems.map((img, idx) => ({
+            url: img.url,
+            key: img.key || '',
+            altText: img.altText || '',
+            isPrimary: idx === 0,
+            width: img.width,
+            height: img.height,
+          }))
+        : [{ url: finalImages[0], key: '', altText: name.trim(), isPrimary: true }];
+
     const payload = {
       name: name.trim(),
       slug: finalSlug,
       sku: finalSku,
       category,
       categoryLabel: activeCategoryObj?.name || category,
-      subCategory: subCategory.trim(),
-      price: Number(price),
+      subCategory: derivedSubCategory,
+      price: numericPrice,
       originalPrice: originalPrice ? Number(originalPrice) : 0,
       badge: badge.trim() || null,
       isBestseller,
@@ -328,8 +376,8 @@ export default function ProductForm({
       trackInventory: false,
       allowBackorders: true,
       inStock: true,
-      shortDescription: shortDescription.trim(),
-      fullDescription: fullDescription.trim(),
+      shortDescription: derivedShortDescription,
+      fullDescription: derivedFullDescription,
       dimensions: {
         width: width.trim(),
         depth: depth.trim(),
@@ -338,19 +386,12 @@ export default function ProductForm({
         bedBaseHeight: bedBaseHeight.trim(),
         weight: weight.trim(),
       },
-      materials: materialsArray.length > 0 ? materialsArray : ['Kiln-Dried Indian Teak'],
+      materials: materialsArray.length > 0 ? materialsArray : ['Kiln-Dried Hardwood', 'High-Density Foam'],
       colors,
-      images: imageItems.map((img) => img.url),
-      imageDetails: imageItems.map((img, idx) => ({
-        url: img.url,
-        key: img.key || '',
-        altText: img.altText || '',
-        isPrimary: idx === 0,
-        width: img.width,
-        height: img.height,
-      })),
-      leadTime: leadTime.trim(),
-      warranty: warranty.trim(),
+      images: finalImages,
+      imageDetails: finalImageDetails,
+      leadTime: leadTime.trim() || 'Complimentary White-Glove In-Home Delivery across AP (3–7 Days)',
+      warranty: warranty.trim() || '10-Year Structural Frame & Termite Warranty',
       customSections: customSections
         .filter((s) => s.title.trim().length > 0)
         .map((s) => ({
@@ -360,7 +401,7 @@ export default function ProductForm({
         })),
       seoMeta: {
         title: seoTitle.trim() || name.trim(),
-        description: seoDescription.trim() || shortDescription.trim(),
+        description: seoDescription.trim() || derivedShortDescription,
         keywords: seoKeywords
           .split(',')
           .map((k) => k.trim())
@@ -385,6 +426,7 @@ export default function ProductForm({
       if (!res.ok || !data.success) {
         setErrorMessage(data.message || 'Operation failed. Please review your input.');
         setIsSubmitting(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
 
@@ -402,6 +444,7 @@ export default function ProductForm({
     } catch (err: any) {
       setErrorMessage('Network error occurred. Please try again.');
       setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -1040,42 +1083,58 @@ export default function ProductForm({
 
       </div>
 
-      {/* Bottom Sticky Action Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between shadow-2xl">
-        <Link
-          href="/admin/products"
-          className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          Discard Changes
-        </Link>
+      {/* Bottom Sticky Action Bar with live feedback */}
+      <div className="space-y-3 sticky bottom-4 z-30">
+        {errorMessage && (
+          <div className="p-4 rounded-2xl bg-red-950/95 border border-red-800 text-red-200 text-xs flex items-center gap-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <span className="font-medium flex-1">{errorMessage}</span>
+          </div>
+        )}
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => handleSubmit(false)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+        {successMessage && (
+          <div className="p-4 rounded-2xl bg-emerald-950/95 border border-emerald-800 text-emerald-200 text-xs flex items-center gap-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium flex-1">{successMessage}</span>
+          </div>
+        )}
+
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between shadow-2xl">
+          <Link
+            href="/admin/products"
+            className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
           >
-            Save as Draft
-          </button>
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => handleSubmit(true)}
-            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>{isEdit ? 'Update Product' : 'Publish Product'}</span>
-              </>
-            )}
-          </button>
+            Discard Changes
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => handleSubmit(false)}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              Save as Draft
+            </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => handleSubmit(true)}
+              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{isEdit ? 'Update Product' : 'Publish Product'}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

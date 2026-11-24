@@ -84,9 +84,9 @@ export const ProductInputSchema = z.object({
     .max(50)
     .transform((val) => val.trim().toUpperCase())
     .optional(),
-  category: z.string().min(2, 'Category is required'),
+  category: z.string().min(1, 'Category is required'),
   categoryLabel: z.string().optional(),
-  subCategory: z.string().min(2, 'Subcategory is required'),
+  subCategory: z.string().optional().default('General'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   originalPrice: z.coerce.number().min(0).optional().default(0),
   badge: z.string().nullable().optional().default(null),
@@ -102,11 +102,12 @@ export const ProductInputSchema = z.object({
   inStock: z.boolean().optional().default(true),
   shortDescription: z
     .string()
-    .min(10, 'Short description must be at least 10 characters')
-    .max(400),
+    .optional()
+    .default('Handcrafted premium furniture designed for contemporary living.'),
   fullDescription: z
     .string()
-    .min(20, 'Full description must be at least 20 characters'),
+    .optional()
+    .default('Handcrafted with premium materials, precision joinery, and tailored luxury aesthetics.'),
   dimensions: DimensionsSchema.optional().default(() => ({
     width: '',
     depth: '',
@@ -115,11 +116,12 @@ export const ProductInputSchema = z.object({
     bedBaseHeight: '',
     weight: '',
   })),
-  materials: z.array(z.string()).min(1, 'At least one material is required'),
+  materials: z.array(z.string()).optional().default(['Kiln-Dried Hardwood']),
   colors: z.array(ColorVariantSchema).optional().default([]),
   images: z
     .array(z.string().url('Each image must be a valid URL'))
-    .min(1, 'At least one product image URL is required'),
+    .optional()
+    .default(['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80']),
   imageDetails: z.array(ImageDetailSchema).optional().default([]),
   leadTime: z.string().optional().default('Complimentary White-Glove In-Home Delivery across AP (3–7 Days)'),
   warranty: z.string().optional().default('10-Year Structural Frame & Termite Warranty'),
