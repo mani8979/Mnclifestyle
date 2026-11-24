@@ -5,6 +5,7 @@
  */
 
 import { formatINR } from './currency';
+import { slugify } from '../data/products';
 
 export const WHATSAPP_PHONE_NUMBER = '918790943457';
 export const WHATSAPP_DISPLAY_PHONE = '+91 87909 43457';
@@ -24,9 +25,8 @@ export const buildWhatsAppUrl = (message) => {
 export const getWhatsAppOrderUrl = ({ product, selectedColor, quantity = 1 }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
 
-  const currentUrl = `https://mnclifestyle.in/product/${product.slug || product.id}`;
+  const currentUrl = `https://mnclifestyle.in/product/${product.slug || slugify(product.name)}`;
   const price = formatINR(product.price);
-  const sku = product.sku || `MNC-${product.category?.slice(0, 3)?.toUpperCase() || 'FURN'}-${product.id.slice(-2)}`;
   const variant = selectedColor || 'Standard';
 
   const message = `Hello MNC LifeStyle,
@@ -34,7 +34,6 @@ export const getWhatsAppOrderUrl = ({ product, selectedColor, quantity = 1 }) =>
 I am interested in ordering the following furniture:
 
 Product: ${product.name}
-SKU: ${sku}
 Price: ${price}
 Quantity: ${quantity}
 Finish/Fabric: ${variant}
@@ -51,12 +50,12 @@ Please share availability and delivery details.`;
 export const getWhatsAppInquiryUrl = ({ product, topic = 'Product Enquiry' }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
 
-  const currentUrl = `https://mnclifestyle.in/product/${product.slug || product.id}`;
+  const currentUrl = `https://mnclifestyle.in/product/${product.slug || slugify(product.name)}`;
   const price = formatINR(product.price);
 
   const message = `Hello MNC LifeStyle Team,
 
-I have an enquiry regarding ${product.name} (${product.sku || product.id}):
+I have an enquiry regarding ${product.name}:
 • Price: ${price}
 • Topic: ${topic}
 • Product Link: ${currentUrl}
@@ -98,7 +97,7 @@ export const getWhatsAppCartOrderUrl = (items = [], subtotal = 0) => {
   const itemsList = items
     .map(
       (item, idx) =>
-        `${idx + 1}. ${item.product.name} (${item.product.sku || 'MNC-FURN'})
+        `${idx + 1}. ${item.product.name}
    • Finish/Fabric: ${item.selectedColor || 'Standard'}
    • Quantity: ${item.quantity}
    • Price: ${formatINR(item.product.price * item.quantity)}`

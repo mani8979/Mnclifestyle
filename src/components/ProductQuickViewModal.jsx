@@ -4,6 +4,7 @@ import { Link } from '@/lib/router-bridge';
 import { X, Star, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
+import { slugify } from '../data/products';
 
 export default function ProductQuickViewModal({ product, isOpen, onClose }) {
   if (!isOpen || !product) return null;
@@ -190,7 +191,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
 
               <div className="flex items-center justify-end pt-1">
                 <Link
-                  to={`/product/${product.id}`}
+                  to={`/product/${product.slug || slugify(product.name)}`}
                   onClick={onClose}
                   className="text-xs font-semibold text-bronze hover:text-bronze-dark flex items-center gap-1"
                 >

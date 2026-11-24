@@ -1,7 +1,7 @@
 ﻿'use client';
 import React, { useState } from 'react';
 import { Link } from '@/lib/router-bridge';
-import { products } from '../data/products';
+import { products, slugify } from '../data/products';
 import { formatINR } from '../utils/currency';
 import { getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import { MessageCircle, ArrowRight } from 'lucide-react';
@@ -106,7 +106,7 @@ export default function ShopTheLook() {
                 <span>Enquire on WhatsApp</span>
               </a>
               <Link
-                to={`/product/${activeProduct.id}`}
+                to={`/product/${activeProduct.slug || slugify(activeProduct.name)}`}
                 className="w-full py-2.5 bg-white border border-[#E9D8C5] text-charcoal rounded-lg text-xs font-semibold uppercase tracking-widest hover:bg-[#F8F0E8] transition-colors flex items-center justify-center gap-1.5"
               >
                 <span>View Full Specifications</span>

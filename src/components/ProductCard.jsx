@@ -4,6 +4,7 @@ import { Link } from '@/lib/router-bridge';
 import { ArrowRight } from 'lucide-react';
 import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { slugify } from '../data/products';
 
 export default function ProductCard({ product, index }) {
 
@@ -25,6 +26,8 @@ export default function ProductCard({ product, index }) {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
+  const productSlug = product.slug || slugify(product.name);
+
   return (
     <div
       ref={ref}
@@ -37,7 +40,7 @@ export default function ProductCard({ product, index }) {
       {/* 1. Product Image — Completely Clean, No Overlays, No Text, No Badges */}
       <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60">
         <Link
-          to={`/product/${product.id}`}
+          to={`/product/${productSlug}`}
           className="block w-full h-full"
           aria-label={`View details of ${product.name}`}
         >
@@ -67,7 +70,7 @@ export default function ProductCard({ product, index }) {
 
           {/* 3. Product Name (Playfair Display) — Standardized height to keep cards aligned */}
           <h3 className="font-serif text-sm sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.8em] sm:min-h-[3em] flex items-start">
-            <Link to={`/product/${product.id}`} className="hover:underline" title={product.name}>
+            <Link to={`/product/${productSlug}`} className="hover:underline" title={product.name}>
               {product.name}
             </Link>
           </h3>
@@ -139,7 +142,7 @@ export default function ProductCard({ product, index }) {
 
           {/* View Details Button (Primary Action) — Guaranteed vertical alignment */}
           <Link
-            to={`/product/${product.id}`}
+            to={`/product/${productSlug}`}
             className="w-full h-10 sm:h-11 py-2 px-3 sm:px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-[11px] sm:text-xs uppercase tracking-wider font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs group/btn text-center"
           >
             <span>View Details</span>

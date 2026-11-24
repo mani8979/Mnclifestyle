@@ -77,7 +77,6 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
 
   const [name, setName] = useState(initialProduct?.name || '');
   const [slug, setSlug] = useState(initialProduct?.slug || '');
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(Boolean(initialProduct?.slug));
   const [sku, setSku] = useState(initialProduct?.sku || '');
   const [category, setCategory] = useState(initialProduct?.category || 'sofas');
   const [subCategory, setSubCategory] = useState(initialProduct?.subCategory || '');
@@ -208,12 +207,10 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Auto-slugify when name changes if not manually edited
+  // Auto-slugify when name changes
   const handleNameChange = (val: string) => {
     setName(val);
-    if (!isSlugManuallyEdited) {
-      setSlug(slugify(val));
-    }
+    setSlug(slugify(val));
   };
 
   // Color helpers
@@ -241,10 +238,16 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
       .map((m) => m.trim())
       .filter(Boolean);
 
+    const finalSlug = slugify(name) || (slug ? slug.trim() : '');
+    const finalSku =
+      sku.trim() ||
+      initialProduct?.sku ||
+      `FUR-${(finalSlug || 'ITEM').slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const payload = {
       name: name.trim(),
-      slug: slug.trim(),
-      sku: sku.trim().toUpperCase(),
+      slug: finalSlug,
+      sku: finalSku,
       category,
       subCategory: subCategory.trim(),
       price: Number(price),
@@ -429,42 +432,6 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="e.g. Aura Curved Bouclé Sofa"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
-              />
-            </div>
-
-            {/* URL Slug */}
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                URL Slug <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={slug}
-                onChange={(e) => {
-                  setIsSlugManuallyEdited(true);
-                  setSlug(e.target.value.toLowerCase());
-                }}
-                placeholder="aura-curved-boucle-sofa"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono text-blue-600 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
-              />
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                Public URL: /product/{slug || '...'}
-              </span>
-            </div>
-
-            {/* SKU */}
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                Product SKU <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={sku}
-                onChange={(e) => setSku(e.target.value.toUpperCase())}
-                placeholder="MNC-SOF-001"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
               />
             </div>
 

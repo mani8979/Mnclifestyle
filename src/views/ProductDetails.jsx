@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { notFound } from 'next/navigation';
 import { useParams, Link, Navigate } from '@/lib/router-bridge';
-import { products } from '../data/products';
+import { products, slugify } from '../data/products';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import ScrollReveal from '../components/ScrollReveal';
@@ -29,7 +29,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
   const params = useParams();
   const id = params?.slug || params?.id;
 
-  const product = initialProduct || products.find((p) => p.id === id || p.slug === id || p.legacyId === id || p.sku?.toLowerCase() === id?.toLowerCase() || p.sku === id);
+  const product = initialProduct || products.find((p) => p.id === id || p.slug === id || slugify(p.name) === id || p.legacyId === id || p.sku?.toLowerCase() === id?.toLowerCase() || p.sku === id);
 
   if (!product) {
     notFound();
@@ -200,15 +200,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               </a>
             </div>
 
-            {/* 4. SKU */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#766B61] mb-2 sm:mb-2.5 pb-2 border-b border-[#E9D8C5]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#766B61]">SKU:</span>
-                <span className="font-medium text-[#211710] font-mono text-[11px]">{product.sku}</span>
-              </div>
-            </div>
-
-            {/* 5 & 6. Current Price, MRP, and Savings */}
+            {/* Current Price, MRP, and Savings */}
             <div className="mb-2.5 sm:mb-3 pb-2.5 border-b border-[#E9D8C5]">
               <span className="text-[10px] uppercase tracking-widest text-[#766B61] font-semibold block mb-0.5">
                 PRICE
@@ -412,7 +404,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 >
                   <div className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury transition-all duration-300 flex flex-col justify-between group h-full">
                     <div>
-                      <Link to={`/product/${p.id}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
+                      <Link to={`/product/${p.slug || slugify(p.name)}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
                         <img
                           src={p.images[0]}
                           alt={p.name}
@@ -425,7 +417,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                           {p.categoryLabel}
                         </span>
                         <Link
-                          to={`/product/${p.id}`}
+                          to={`/product/${p.slug || slugify(p.name)}`}
                           className="font-serif text-xs sm:text-sm font-medium text-[#211710] hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
                           title={p.name}
                         >
@@ -445,7 +437,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                     </div>
                     <div className="p-3 sm:p-4 pt-0">
                       <Link
-                        to={`/product/${p.id}`}
+                        to={`/product/${p.slug || slugify(p.name)}`}
                         className="w-full py-1.5 sm:py-2 bg-[#F8F0E8] hover:bg-[#211710] text-[#211710] hover:text-white rounded-lg text-[11px] sm:text-xs font-semibold text-center block transition-colors border border-[#E9D8C5]"
                       >
                         View Details

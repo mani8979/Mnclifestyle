@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@/lib/router-bridge';
 import { Search, X, ArrowRight } from 'lucide-react';
-import { products } from '../data/products';
+import { products, slugify } from '../data/products';
 import { formatINR } from '../utils/currency';
 
 export default function SearchModal({ isOpen, onClose }) {
@@ -50,9 +50,10 @@ export default function SearchModal({ isOpen, onClose }) {
 
   const popularKeywords = ['Bouclé Sofa', 'Teak Bed', 'Dining Set', 'Travertine', 'Recliner', 'Wardrobe', 'Study Table'];
 
-  const handleSelectProduct = (id) => {
+  const handleSelectProduct = (productOrId) => {
     onClose();
-    navigate(`/product/${id}`);
+    const slug = typeof productOrId === 'object' ? (productOrId.slug || slugify(productOrId.name)) : productOrId;
+    navigate(`/product/${slug}`);
   };
 
   return (
@@ -133,7 +134,7 @@ export default function SearchModal({ isOpen, onClose }) {
             filtered.map((prod) => (
               <div
                 key={prod.id}
-                onClick={() => handleSelectProduct(prod.id)}
+                onClick={() => handleSelectProduct(prod)}
                 className="py-3 flex items-center gap-4 hover:bg-white/80 p-3 rounded-lg transition-colors cursor-pointer group"
               >
                 <img

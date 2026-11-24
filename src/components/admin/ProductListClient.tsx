@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { slugify } from '@/lib/validations/product';
 import {
   Package,
   Plus,
@@ -196,7 +197,7 @@ export default function ProductListClient() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by name, SKU or ID..."
+              placeholder="Search by product name or category..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -311,7 +312,6 @@ export default function ProductListClient() {
               <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 uppercase tracking-wider text-[11px] font-semibold">
                 <tr>
                   <th className="py-3.5 px-4">Product</th>
-                  <th className="py-3.5 px-4">SKU</th>
                   <th className="py-3.5 px-4">Category</th>
                   <th className="py-3.5 px-4">Price</th>
                   <th className="py-3.5 px-4">Status</th>
@@ -351,11 +351,6 @@ export default function ProductListClient() {
                         </div>
                       </td>
 
-                      {/* SKU */}
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
-                        {p.sku}
-                      </td>
-
                       {/* Category */}
                       <td className="py-3.5 px-4">
                         <span className="capitalize text-slate-800 font-medium">
@@ -393,7 +388,7 @@ export default function ProductListClient() {
                         <div className="flex items-center justify-end gap-1.5">
                           {/* View on Storefront */}
                           <Link
-                            href={`/product/${p.slug}`}
+                            href={`/product/${p.slug || slugify(p.name)}`}
                             target="_blank"
                             title="View on public storefront"
                             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
@@ -473,7 +468,7 @@ export default function ProductListClient() {
             </h3>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Are you sure you want to archive <strong className="text-slate-900">&quot;{deleteModalProduct.name}&quot;</strong> (SKU: {deleteModalProduct.sku})?
+              Are you sure you want to archive <strong className="text-slate-900">&quot;{deleteModalProduct.name}&quot;</strong>?
             </p>
 
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 mb-6">
