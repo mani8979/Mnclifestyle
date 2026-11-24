@@ -123,7 +123,7 @@ export async function requireAdminSession(
 export function validateRequestOrigin(request: Request): boolean {
   // Allow all in test or development if no origin header present
   const origin = request.headers.get('origin');
-  const host = request.headers.get('host');
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
 
   if (!origin || !host) {
     // Standard direct API or same-host requests without origin
