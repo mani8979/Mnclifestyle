@@ -41,22 +41,36 @@ interface ProductItem {
   updatedAt: string;
 }
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'sofas', name: 'Sofas' },
-  { id: 'beds', name: 'Beds' },
-  { id: 'dining-sets', name: 'Dining Sets' },
-  { id: 'study-tables', name: 'Study Tables' },
-  { id: 'centre-tables', name: 'Centre Tables' },
-  { id: 'recliners', name: 'Recliners' },
-  { id: 'wardrobes', name: 'Wardrobes' },
-  { id: 'cabinets-sideboards', name: 'Cabinets & Sideboards' },
-  { id: 'office-furniture', name: 'Office Furniture' },
-  { id: 'shoe-racks', name: 'Shoe Racks' },
-  { id: 'bar-furniture', name: 'Bar Furniture' },
-];
+interface ProductListClientProps {
+  initialCategories?: any[];
+}
 
-export default function ProductListClient() {
+export default function ProductListClient({ initialCategories = [] }: ProductListClientProps) {
+  const [categories, setCategories] = useState<any[]>(initialCategories);
+
+  // Sync state if initialCategories updates
+  useEffect(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  // Always refresh categories from database so changes from /admin/categories appear immediately
+  useEffect(() => {
+    async function loadFreshCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic categories in ProductListClient', err);
+      }
+    }
+    loadFreshCategories();
+  }, []);
+
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -218,11 +232,15 @@ export default function ProductListClient() {
               aria-label="Filter products by category"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition-colors"
             >
-              {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              <option value="all">All Categories ({categories.length})</option>
+              {categories.map((c: any) => {
+                const val = c.slug || c.id;
+                return (
+                  <option key={val} value={val}>
+                    {c.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

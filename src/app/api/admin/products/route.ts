@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
+import { Category } from '@/models/Category';
 import { requireAdminSession } from '@/lib/auth';
 import { ProductInputSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
 import { ZodError } from 'zod';
@@ -122,7 +123,10 @@ export async function POST(request: NextRequest) {
 
     // Auto-derive categoryLabel if not supplied
     if (!validatedData.categoryLabel) {
-      validatedData.categoryLabel = getCategoryLabel(validatedData.category);
+      const catDoc = await Category.findOne({
+        $or: [{ slug: validatedData.category }, { legacyId: validatedData.category }],
+      }).lean();
+      validatedData.categoryLabel = catDoc?.name || getCategoryLabel(validatedData.category);
     }
 
     // Auto-derive slug from product name if not supplied or ensure uniqueness

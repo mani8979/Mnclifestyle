@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -25,18 +25,27 @@ import { slugify } from '@/lib/validations/product';
 import { formatINR, calculateDiscount } from '@/utils/currency';
 import ProductImageUploader, { UploadedImageItem } from './ProductImageUploader';
 
-const CATEGORIES = [
-  { id: 'sofas', name: 'Sofas' },
-  { id: 'beds', name: 'Beds' },
-  { id: 'dining-sets', name: 'Dining Sets' },
-  { id: 'study-tables', name: 'Study Tables' },
-  { id: 'centre-tables', name: 'Centre Tables' },
-  { id: 'recliners', name: 'Recliners' },
-  { id: 'wardrobes', name: 'Wardrobes' },
-  { id: 'cabinets-sideboards', name: 'Cabinets & Sideboards' },
-  { id: 'office-furniture', name: 'Office Furniture' },
-  { id: 'shoe-racks', name: 'Shoe Racks' },
-  { id: 'bar-furniture', name: 'Bar Furniture' },
+export interface CategoryOption {
+  _id?: string;
+  id?: string;
+  slug: string;
+  name: string;
+  subcategories?: string[];
+  orderIndex?: number;
+}
+
+const FALLBACK_CATEGORIES: CategoryOption[] = [
+  { id: 'sofas', slug: 'sofas', name: 'Sofas' },
+  { id: 'beds', slug: 'beds', name: 'Beds' },
+  { id: 'dining-sets', slug: 'dining-sets', name: 'Dining Sets' },
+  { id: 'study-tables', slug: 'study-tables', name: 'Study Tables' },
+  { id: 'centre-tables', slug: 'centre-tables', name: 'Centre Tables' },
+  { id: 'recliners', slug: 'recliners', name: 'Recliners' },
+  { id: 'wardrobes', slug: 'wardrobes', name: 'Wardrobes' },
+  { id: 'cabinets-sideboards', slug: 'cabinets-sideboards', name: 'Cabinets & Sideboards' },
+  { id: 'office-furniture', slug: 'office-furniture', name: 'Office Furniture' },
+  { id: 'shoe-racks', slug: 'shoe-racks', name: 'Shoe Racks' },
+  { id: 'bar-furniture', slug: 'bar-furniture', name: 'Bar Furniture' },
 ];
 
 const DEFAULT_SECTIONS = [
@@ -70,16 +79,72 @@ const DEFAULT_SECTIONS = [
 interface ProductFormProps {
   initialProduct?: any;
   isEdit?: boolean;
+  initialCategories?: CategoryOption[];
 }
 
-export default function ProductForm({ initialProduct, isEdit = false }: ProductFormProps) {
+export default function ProductForm({
+  initialProduct,
+  isEdit = false,
+  initialCategories = [],
+}: ProductFormProps) {
   const router = useRouter();
+
+  const [categories, setCategories] = useState<CategoryOption[]>(
+    Array.isArray(initialCategories) && initialCategories.length > 0
+      ? initialCategories
+      : FALLBACK_CATEGORIES
+  );
+
+  // Sync state if initialCategories updates from server revalidation
+  useEffect(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  // Always fetch fresh categories so changes made in Admin Categories reflect immediately
+  useEffect(() => {
+    async function loadFreshCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic categories in ProductForm:', err);
+      }
+    }
+    loadFreshCategories();
+  }, []);
 
   const [name, setName] = useState(initialProduct?.name || '');
   const [slug, setSlug] = useState(initialProduct?.slug || '');
   const [sku, setSku] = useState(initialProduct?.sku || '');
-  const [category, setCategory] = useState(initialProduct?.category || 'sofas');
+  const [category, setCategory] = useState(
+    initialProduct?.category ||
+      (initialCategories && initialCategories[0]
+        ? initialCategories[0].slug || initialCategories[0].id || 'sofas'
+        : 'sofas')
+  );
   const [subCategory, setSubCategory] = useState(initialProduct?.subCategory || '');
+
+  // If new product and categories load, ensure category points to a valid option
+  useEffect(() => {
+    if (!initialProduct?.category && categories.length > 0) {
+      const exists = categories.some((c) => (c.slug || c.id) === category);
+      if (!exists) {
+        setCategory(categories[0].slug || categories[0].id || 'sofas');
+      }
+    }
+  }, [categories, initialProduct, category]);
+
+  const activeCategoryObj = categories.find(
+    (c) => (c.slug || c.id) === category || c.name?.toLowerCase() === category?.toLowerCase()
+  );
+  const availableSubcategories: string[] = Array.isArray(activeCategoryObj?.subcategories)
+    ? activeCategoryObj.subcategories
+    : [];
   const [price, setPrice] = useState<number | string>(initialProduct?.price ?? '');
   const [originalPrice, setOriginalPrice] = useState<number | string>(initialProduct?.originalPrice ?? '');
   const [shortDescription, setShortDescription] = useState(initialProduct?.shortDescription || '');
@@ -249,6 +314,7 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
       slug: finalSlug,
       sku: finalSku,
       category,
+      categoryLabel: activeCategoryObj?.name || category,
       subCategory: subCategory.trim(),
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : 0,
@@ -445,27 +511,68 @@ export default function ProductForm({ initialProduct, isEdit = false }: ProductF
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors"
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-white">
-                    {c.name}
-                  </option>
-                ))}
+                {categories.map((c) => {
+                  const val = c.slug || c.id || '';
+                  return (
+                    <option key={val} value={val} className="bg-white">
+                      {c.name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
             {/* Subcategory */}
             <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                Subcategory <span className="text-red-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium">
+                  Subcategory <span className="text-red-400">*</span>
+                </label>
+                {activeCategoryObj && availableSubcategories.length > 0 && (
+                  <span className="text-[10px] text-blue-600 font-medium">
+                    {availableSubcategories.length} configured in {activeCategoryObj.name}
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
+                list="admin-subcategory-list"
                 required
                 value={subCategory}
                 onChange={(e) => setSubCategory(e.target.value)}
-                placeholder="e.g. Curved Sofas, Platform Beds, Dining Tables"
+                placeholder={
+                  availableSubcategories.length > 0
+                    ? `e.g. ${availableSubcategories.slice(0, 3).join(', ')}`
+                    : 'e.g. Curved Sofas, Platform Beds, Dining Tables'
+                }
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
               />
+              <datalist id="admin-subcategory-list">
+                {availableSubcategories.map((sub) => (
+                  <option key={sub} value={sub} />
+                ))}
+              </datalist>
+
+              {/* Quick Select Pill Suggestions */}
+              {availableSubcategories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-slate-400 font-medium">Suggestions:</span>
+                  {availableSubcategories.map((sub) => (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => setSubCategory(sub)}
+                      className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                        subCategory.toLowerCase() === sub.toLowerCase()
+                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Short Description */}

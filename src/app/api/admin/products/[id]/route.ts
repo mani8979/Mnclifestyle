@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
+import { Category } from '@/models/Category';
 import { Collection } from '@/models/Collection';
 import { requireAdminSession } from '@/lib/auth';
 import { ProductUpdateSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
@@ -87,7 +88,10 @@ export async function PATCH(
 
     // If updating category, keep categoryLabel in sync
     if (validatedData.category && !validatedData.categoryLabel) {
-      validatedData.categoryLabel = getCategoryLabel(validatedData.category);
+      const catDoc = await Category.findOne({
+        $or: [{ slug: validatedData.category }, { legacyId: validatedData.category }],
+      }).lean();
+      validatedData.categoryLabel = catDoc?.name || getCategoryLabel(validatedData.category);
     }
 
     // If updating name and slug not explicitly provided, update slug
