@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
 import { requireAdminSession } from '@/lib/auth';
+import { slugify } from '@/lib/validations/product';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,18 +47,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cleanSlug = (slug || name)
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    const existing = await Category.findOne({ slug: cleanSlug });
-    if (existing) {
-      return NextResponse.json(
-        { success: false, message: `Category with slug "${cleanSlug}" already exists` },
-        { status: 409 }
-      );
+    let cleanSlug = (slug || slugify(name));
+    let existing = await Category.findOne({ slug: cleanSlug });
+    let count = 1;
+    while (existing) {
+      count++;
+      cleanSlug = `${slug || slugify(name)}-${count}`;
+      existing = await Category.findOne({ slug: cleanSlug });
     }
 
     const cleanSubcategories = Array.isArray(subcategories)

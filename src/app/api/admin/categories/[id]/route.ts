@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
 import { requireAdminSession } from '@/lib/auth';
+import { slugify } from '@/lib/validations/product';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,15 @@ export async function PATCH(
     if (body.orderIndex !== undefined) category.orderIndex = Number(body.orderIndex);
     if (body.isActive !== undefined) category.isActive = Boolean(body.isActive);
 
-    if (body.slug !== undefined) {
+    if (body.name !== undefined && (!body.slug || body.slug.trim() === '')) {
+      const cleanSlug = slugify(body.name);
+      if (cleanSlug && cleanSlug !== category.slug) {
+        const conflict = await Category.findOne({ slug: cleanSlug, _id: { $ne: category._id } });
+        if (!conflict) {
+          category.slug = cleanSlug;
+        }
+      }
+    } else if (body.slug !== undefined) {
       const cleanSlug = body.slug
         .toLowerCase()
         .trim()
