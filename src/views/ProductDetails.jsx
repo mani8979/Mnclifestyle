@@ -211,7 +211,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
             {/* 5 & 6. Current Price, MRP, and Savings */}
             <div className="mb-2.5 sm:mb-3 pb-2.5 border-b border-[#E9D8C5]">
               <span className="text-[10px] uppercase tracking-widest text-[#766B61] font-semibold block mb-0.5">
-                YOUR PRICE
+                PRICE
               </span>
               <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3">
                 <span className="font-sans font-bold tabular-nums text-2xl sm:text-3xl lg:text-[34px] text-[#211710] tracking-tight leading-none">
@@ -765,7 +765,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           {/* Price & Savings Display */}
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-[#C9BBAE] font-medium leading-none mb-1">
-              Your Price
+              Price
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="font-sans font-bold tabular-nums text-lg sm:text-xl text-white leading-none">
