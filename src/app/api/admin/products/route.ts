@@ -183,12 +183,21 @@ export async function POST(request: NextRequest) {
 
     await newProduct.save();
 
+    // Automatically sync subcategory to Category document in MongoDB
+    if (validatedData.subCategory && catDoc) {
+      await Category.updateOne(
+        { _id: catDoc._id },
+        { $addToSet: { subcategories: validatedData.subCategory.trim() } }
+      );
+    }
+
     // Revalidate public storefront caches
     try {
       revalidatePath('/');
       revalidatePath('/shop');
       revalidatePath('/collections');
       revalidatePath('/admin/products');
+      revalidatePath('/admin/categories');
       revalidatePath('/admin/inventory');
       revalidatePath(`/category/${validatedData.category}`);
       revalidatePath(`/product/${validatedData.slug}`);

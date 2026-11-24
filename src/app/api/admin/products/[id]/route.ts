@@ -148,12 +148,21 @@ export async function PATCH(
     Object.assign(product, validatedData);
     await product.save();
 
+    // Automatically sync subcategory to Category document in MongoDB
+    if (validatedData.subCategory && product.category) {
+      await Category.updateOne(
+        { $or: [{ slug: product.category }, { legacyId: product.category }] },
+        { $addToSet: { subcategories: validatedData.subCategory.trim() } }
+      );
+    }
+
     // Revalidate public storefront caches
     try {
       revalidatePath('/');
       revalidatePath('/shop');
       revalidatePath('/collections');
       revalidatePath('/admin/products');
+      revalidatePath('/admin/categories');
       revalidatePath('/admin/inventory');
       revalidatePath(`/category/${oldCategory}`);
       revalidatePath(`/category/${product.category}`);

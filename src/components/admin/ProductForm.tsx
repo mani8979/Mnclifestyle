@@ -128,13 +128,20 @@ export default function ProductForm({
       : 'sofas')
   );
   const [subCategory, setSubCategory] = useState(initialProduct?.subCategory || '');
+  const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
+  const [customSubcategoryText, setCustomSubcategoryText] = useState('');
 
   // If new product and categories load, ensure category points to a valid option
   useEffect(() => {
     if (!initialProduct?.category && categories.length > 0) {
       const exists = categories.some((c) => (c.slug || c.id) === category);
       if (!exists) {
-        setCategory(categories[0].slug || categories[0].id || 'sofas');
+        const defaultCat = categories[0].slug || categories[0].id || 'sofas';
+        setCategory(defaultCat);
+        const targetCat = categories[0];
+        if (Array.isArray(targetCat?.subcategories) && targetCat.subcategories.length > 0) {
+          setSubCategory(targetCat.subcategories[0]);
+        }
       }
     }
   }, [categories, initialProduct, category]);
@@ -145,6 +152,30 @@ export default function ProductForm({
   const availableSubcategories: string[] = Array.isArray(activeCategoryObj?.subcategories)
     ? activeCategoryObj.subcategories
     : [];
+
+  // When changing category, auto-select its first subcategory or reset
+  const handleCategorySelect = (newCatSlug: string) => {
+    setCategory(newCatSlug);
+    const targetCat = categories.find(
+      (c) => (c.slug || c.id) === newCatSlug || c.name?.toLowerCase() === newCatSlug?.toLowerCase()
+    );
+    const subs = Array.isArray(targetCat?.subcategories) ? targetCat.subcategories : [];
+    if (subs.length > 0) {
+      setSubCategory(subs[0]);
+      setIsCustomSubcategory(false);
+      setCustomSubcategoryText('');
+    } else {
+      setSubCategory('');
+      setIsCustomSubcategory(false);
+    }
+  };
+
+  // On mount/category load, set initial subcategory if empty and not editing
+  useEffect(() => {
+    if (!initialProduct && availableSubcategories.length > 0 && !subCategory && !isCustomSubcategory) {
+      setSubCategory(availableSubcategories[0]);
+    }
+  }, [availableSubcategories, initialProduct, subCategory, isCustomSubcategory]);
   const [price, setPrice] = useState<number | string>(initialProduct?.price ?? '');
   const [originalPrice, setOriginalPrice] = useState<number | string>(initialProduct?.originalPrice ?? '');
   const [shortDescription, setShortDescription] = useState(initialProduct?.shortDescription || '');
@@ -320,7 +351,7 @@ export default function ProductForm({
       `FUR-${(finalSlug || 'ITEM').slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const derivedSubCategory =
-      subCategory.trim() ||
+      (isCustomSubcategory ? customSubcategoryText.trim() : subCategory.trim()) ||
       availableSubcategories[0] ||
       activeCategoryObj?.name ||
       'General';
@@ -540,8 +571,8 @@ export default function ProductForm({
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors"
+                onChange={(e) => handleCategorySelect(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors cursor-pointer"
               >
                 {categories.map((c) => {
                   const val = c.slug || c.id || '';
@@ -554,54 +585,111 @@ export default function ProductForm({
               </select>
             </div>
 
-            {/* Subcategory */}
+            {/* Subcategory Dropdown & Custom Switcher */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium">
                   Subcategory <span className="text-red-400">*</span>
                 </label>
-                {activeCategoryObj && availableSubcategories.length > 0 && (
-                  <span className="text-[10px] text-blue-600 font-medium">
-                    {availableSubcategories.length} configured in {activeCategoryObj.name}
-                  </span>
-                )}
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !isCustomSubcategory;
+                      setIsCustomSubcategory(next);
+                      if (next) {
+                        setCustomSubcategoryText(subCategory || '');
+                      } else if (availableSubcategories.length > 0) {
+                        setSubCategory(availableSubcategories[0]);
+                      }
+                    }}
+                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                  >
+                    {isCustomSubcategory ? '← Choose from Dropdown' : '+ Add New Subcategory'}
+                  </button>
+                  <Link
+                    href="/admin/categories"
+                    target="_blank"
+                    className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors underline"
+                    title="Manage all categories and subcategories in Categories section"
+                  >
+                    Categories Section ↗
+                  </Link>
+                </div>
               </div>
-              <input
-                type="text"
-                list="admin-subcategory-list"
-                required
-                value={subCategory}
-                onChange={(e) => setSubCategory(e.target.value)}
-                placeholder={
-                  availableSubcategories.length > 0
-                    ? `e.g. ${availableSubcategories.slice(0, 3).join(', ')}`
-                    : 'e.g. Curved Sofas, Platform Beds, Dining Tables'
-                }
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
-              />
-              <datalist id="admin-subcategory-list">
-                {availableSubcategories.map((sub) => (
-                  <option key={sub} value={sub} />
-                ))}
-              </datalist>
 
-              {/* Quick Select Pill Suggestions */}
-              {availableSubcategories.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  <span className="text-[10px] text-slate-400 font-medium">Suggestions:</span>
-                  {availableSubcategories.map((sub) => (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => setSubCategory(sub)}
-                      className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${subCategory.toLowerCase() === sub.toLowerCase()
-                        ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                        }`}
-                    >
-                      {sub}
-                    </button>
-                  ))}
+              {!isCustomSubcategory ? (
+                <div className="space-y-2">
+                  <select
+                    value={subCategory}
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setIsCustomSubcategory(true);
+                        setCustomSubcategoryText('');
+                      } else {
+                        setSubCategory(e.target.value);
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors cursor-pointer"
+                  >
+                    {availableSubcategories.length === 0 ? (
+                      <option value="">No subcategories configured for {activeCategoryObj?.name || 'this category'}</option>
+                    ) : (
+                      availableSubcategories.map((sub) => (
+                        <option key={sub} value={sub} className="bg-white">
+                          {sub}
+                        </option>
+                      ))
+                    )}
+                    <option value="__add_new__" className="bg-white text-blue-600 font-semibold">
+                      + Add New Subcategory to {activeCategoryObj?.name || 'Category'}...
+                    </option>
+                  </select>
+
+                  {/* Quick Select Pill Suggestions */}
+                  {availableSubcategories.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="text-[10px] text-slate-400 font-medium">Quick Select:</span>
+                      {availableSubcategories.map((sub) => (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() => {
+                            setSubCategory(sub);
+                            setIsCustomSubcategory(false);
+                          }}
+                          className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                            subCategory.toLowerCase() === sub.toLowerCase()
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={customSubcategoryText}
+                      onChange={(e) => {
+                        setCustomSubcategoryText(e.target.value);
+                        setSubCategory(e.target.value);
+                      }}
+                      placeholder={`Enter new subcategory for ${activeCategoryObj?.name || 'category'} (e.g. Ergonomic Loungers)...`}
+                      className="w-full bg-white border border-blue-400 ring-2 ring-blue-500/10 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
+                    <span className="font-bold">✓</span>
+                    <span>This subcategory will automatically be saved to <strong>{activeCategoryObj?.name}</strong> in the Categories section when you add this product.</span>
+                  </p>
                 </div>
               )}
             </div>
