@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Playfair_Display, Cormorant_Garamond, Inter, Manrope } from 'next/font/google';
+import { Playfair_Display, Inter } from 'next/font/google';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import '@/index.css';
@@ -10,22 +10,9 @@ const playfair = Playfair_Display({
   display: 'swap',
 });
 
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  variable: '--font-cormorant',
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-});
-
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap',
-});
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
   display: 'swap',
 });
 
@@ -121,7 +108,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
-      className={`scroll-smooth ${playfair.variable} ${cormorant.variable} ${inter.variable} ${manrope.variable}`}
+      className={`scroll-smooth ${playfair.variable} ${inter.variable}`}
     >
       <head>
         <script

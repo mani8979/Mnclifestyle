@@ -1,5 +1,6 @@
 ﻿'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { Home, ArrowRight, Sparkles, ShieldCheck, Truck, Sofa, Headphones } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
@@ -13,12 +14,13 @@ export default function Hero() {
 
         {/* Full-width Realistic Interior Photograph Background */}
         <div className="absolute inset-0 w-full h-full">
-          <img
+          <Image
             src={heroBg}
             alt="MNC Lifestyle luxurious modern living room featuring beige sectional sofa, marble coffee table and gold accents"
-            className="w-full h-full object-cover object-[68%_center] sm:object-[72%_center] lg:object-center select-none"
-            loading="eager"
-            fetchPriority="high"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[68%_center] sm:object-[72%_center] lg:object-center select-none"
           />
 
           {/* Desktop Left Split Subtle Gradient Overlay for Text Readability */}
@@ -40,11 +42,7 @@ export default function Hero() {
 
         {/* Hero Editorial Content (max width approx 650px, aligned left, vertically centered) */}
         <div className="relative z-10 max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] w-full flex items-center">
-          <ScrollReveal
-            className="max-w-xl lg:max-w-[650px] py-8 sm:py-10 lg:py-0 w-full"
-            delay={100}
-            duration={800}
-          >
+          <div className="max-w-xl lg:max-w-[650px] py-8 sm:py-10 lg:py-0 w-full">
             {/* Small Outlined Gold Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full border border-[#D99B45] text-[#D99B45] bg-[#211710]/70 backdrop-blur-xs mb-3.5 sm:mb-7 shadow-xs">
               <Home className="w-3.5 h-3.5 text-[#D99B45] stroke-[2] shrink-0" />
@@ -102,7 +100,7 @@ export default function Hero() {
               </div>
             </div>
 
-          </ScrollReveal>
+          </div>
         </div>
       </div>
 
