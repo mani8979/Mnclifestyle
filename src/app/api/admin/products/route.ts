@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { requireAdminSession } from '@/lib/auth';
-import { ProductInputSchema, getCategoryLabel } from '@/lib/validations/product';
+import { ProductInputSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
 import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -125,23 +125,25 @@ export async function POST(request: NextRequest) {
       validatedData.categoryLabel = getCategoryLabel(validatedData.category);
     }
 
-    // Check duplicate SKU
-    const existingSku = await Product.findOne({ sku: validatedData.sku });
-    if (existingSku) {
-      return NextResponse.json(
-        { success: false, message: `Product SKU "${validatedData.sku}" is already in use.` },
-        { status: 409 }
-      );
+    // Auto-derive slug from product name if not supplied or ensure uniqueness
+    let targetSlug = validatedData.slug || slugify(validatedData.name);
+    let slugSuffix = 1;
+    let existingSlug = await Product.findOne({ slug: targetSlug });
+    while (existingSlug) {
+      slugSuffix++;
+      targetSlug = `${validatedData.slug || slugify(validatedData.name)}-${slugSuffix}`;
+      existingSlug = await Product.findOne({ slug: targetSlug });
     }
+    validatedData.slug = targetSlug;
 
-    // Check duplicate Slug
-    const existingSlug = await Product.findOne({ slug: validatedData.slug });
-    if (existingSlug) {
-      return NextResponse.json(
-        { success: false, message: `Product URL slug "${validatedData.slug}" is already in use.` },
-        { status: 409 }
-      );
+    // Auto-derive SKU if not supplied or ensure uniqueness
+    let targetSku = validatedData.sku || `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let existingSku = await Product.findOne({ sku: targetSku });
+    while (existingSku) {
+      targetSku = `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      existingSku = await Product.findOne({ sku: targetSku });
     }
+    validatedData.sku = targetSku;
 
     // Build and save new product
     const newProduct = new Product({
@@ -156,6 +158,7 @@ export async function POST(request: NextRequest) {
     try {
       revalidatePath('/');
       revalidatePath('/shop');
+      revalidatePath('/collections');
       revalidatePath(`/category/${validatedData.category}`);
       revalidatePath(`/product/${validatedData.slug}`);
     } catch (e) {

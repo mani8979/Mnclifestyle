@@ -76,12 +76,14 @@ export const ProductInputSchema = z.object({
     .string()
     .min(2, 'Slug must be at least 2 characters')
     .max(150)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens'),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens')
+    .optional(),
   sku: z
     .string()
     .min(2, 'SKU must be at least 2 characters')
     .max(50)
-    .transform((val) => val.trim().toUpperCase()),
+    .transform((val) => val.trim().toUpperCase())
+    .optional(),
   category: z.string().min(2, 'Category is required'),
   categoryLabel: z.string().optional(),
   subCategory: z.string().min(2, 'Subcategory is required'),

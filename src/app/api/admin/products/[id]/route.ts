@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Collection } from '@/models/Collection';
 import { requireAdminSession } from '@/lib/auth';
-import { ProductUpdateSchema, getCategoryLabel } from '@/lib/validations/product';
+import { ProductUpdateSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
 import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -90,6 +90,25 @@ export async function PATCH(
       validatedData.categoryLabel = getCategoryLabel(validatedData.category);
     }
 
+    // If updating name and slug not explicitly provided, update slug
+    if (validatedData.name && !validatedData.slug) {
+      let candidateSlug = slugify(validatedData.name);
+      let suffix = 1;
+      let existingSlug = await Product.findOne({
+        slug: candidateSlug,
+        _id: { $ne: product._id },
+      });
+      while (existingSlug) {
+        suffix++;
+        candidateSlug = `${slugify(validatedData.name)}-${suffix}`;
+        existingSlug = await Product.findOne({
+          slug: candidateSlug,
+          _id: { $ne: product._id },
+        });
+      }
+      validatedData.slug = candidateSlug;
+    }
+
     // Check duplicate SKU if changed
     if (validatedData.sku && validatedData.sku !== product.sku) {
       const existingSku = await Product.findOne({
@@ -129,6 +148,7 @@ export async function PATCH(
     try {
       revalidatePath('/');
       revalidatePath('/shop');
+      revalidatePath('/collections');
       revalidatePath(`/category/${oldCategory}`);
       revalidatePath(`/category/${product.category}`);
       revalidatePath(`/product/${oldSlug}`);

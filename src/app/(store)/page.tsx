@@ -2,7 +2,7 @@ import Home from '@/views/Home';
 import { getProducts } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([

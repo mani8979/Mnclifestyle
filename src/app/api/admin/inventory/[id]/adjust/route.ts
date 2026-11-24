@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { requireAdminSession } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
@@ -104,6 +105,14 @@ export async function POST(
         timestamp: new Date(),
       });
 
+      try {
+        revalidatePath('/');
+        revalidatePath('/shop');
+        revalidatePath('/collections');
+        if (updated.slug) revalidatePath(`/product/${updated.slug}`);
+        if (updated.category) revalidatePath(`/category/${updated.category}`);
+      } catch (e) {}
+
       return NextResponse.json({
         success: true,
         message: `Stock successfully adjusted for ${updated.name}.`,
@@ -193,6 +202,14 @@ export async function POST(
       adminName: (admin as any).name || (admin as any).email || 'Administrator',
       timestamp: new Date(),
     });
+
+    try {
+      revalidatePath('/');
+      revalidatePath('/shop');
+      revalidatePath('/collections');
+      if (product.slug) revalidatePath(`/product/${product.slug}`);
+      if (product.category) revalidatePath(`/category/${product.category}`);
+    } catch (e) {}
 
     return NextResponse.json({
       success: true,

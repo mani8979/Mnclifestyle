@@ -105,6 +105,8 @@ export async function PATCH(
     revalidatePath('/admin/categories');
     revalidatePath('/');
     revalidatePath('/shop');
+    revalidatePath('/collections');
+    revalidatePath(`/category/${category.slug}`);
 
     return NextResponse.json({
       success: true,
@@ -146,6 +148,8 @@ export async function DELETE(
     revalidatePath('/admin/categories');
     revalidatePath('/');
     revalidatePath('/shop');
+    revalidatePath('/collections');
+    revalidatePath(`/category/${category.slug}`);
 
     return NextResponse.json({
       success: true,

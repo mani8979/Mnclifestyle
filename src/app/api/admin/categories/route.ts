@@ -80,6 +80,8 @@ export async function POST(request: NextRequest) {
     revalidatePath('/admin/categories');
     revalidatePath('/');
     revalidatePath('/shop');
+    revalidatePath('/collections');
+    revalidatePath(`/category/${newCategory.slug}`);
 
     return NextResponse.json(
       {

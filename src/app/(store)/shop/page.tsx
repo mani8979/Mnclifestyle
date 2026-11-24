@@ -3,7 +3,7 @@ import Shop from '@/views/Shop';
 import { getProducts } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 function ShopLoader() {
   return (
