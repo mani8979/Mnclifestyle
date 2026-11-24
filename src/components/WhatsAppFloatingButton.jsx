@@ -12,7 +12,7 @@ export default function WhatsAppFloatingButton() {
   return (
     <aside
       aria-label="WhatsApp quick contact"
-      className={`fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 items-center gap-3 ${
+      className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 items-center gap-3 ${
         isProductPage ? 'hidden lg:flex' : 'flex'
       }`}
     >
@@ -33,7 +33,7 @@ export default function WhatsAppFloatingButton() {
         rel="noopener noreferrer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="relative group w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white flex items-center justify-center shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40"
+        className="relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white flex items-center justify-center shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40"
         title="Chat with MNC LifeStyle on WhatsApp"
         aria-label={`Chat with us on WhatsApp at ${WHATSAPP_DISPLAY_PHONE}`}
       >
@@ -42,7 +42,7 @@ export default function WhatsAppFloatingButton() {
 
         {/* Real WhatsApp Official Icon */}
         <svg
-          className="w-7 h-7 sm:w-8 sm:h-8 fill-white transition-transform duration-300 group-hover:scale-105 relative z-10"
+          className="w-6 h-6 sm:w-8 sm:h-8 fill-white transition-transform duration-300 group-hover:scale-105 relative z-10"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"

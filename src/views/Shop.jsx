@@ -167,14 +167,14 @@ export default function Shop({ initialProducts, initialCategories }) {
   // Balanced responsive grid classes depending on product count
   const getShopGridClasses = (count) => {
     if (count === 1) return 'max-w-md mx-auto';
-    if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-4 sm:gap-8';
-    if (count === 3) return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-4 sm:gap-6';
+    if (count === 2) return 'grid grid-cols-2 max-w-4xl mx-auto gap-3 sm:gap-8';
+    if (count === 3) return 'grid grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-3 sm:gap-6';
     return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6';
   };
 
   return (
-    <div className="pt-2 sm:pt-3 pb-20">
-      <div className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px]">
+    <div className="pt-2 sm:pt-3 pb-24">
+      <div className="max-w-[1672px] mx-auto px-3 sm:px-8 lg:px-[50px]">
         
         {/* 1. Compact Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center justify-center space-x-2 text-[11px] sm:text-xs text-[#766B61] mb-1 sm:mb-1.5">
@@ -197,33 +197,37 @@ export default function Shop({ initialProducts, initialCategories }) {
         </div>
 
         {/* 3. Horizontal Category Navigation Bar */}
-        <div className="mb-2.5 sm:mb-3 overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap py-0.5">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-0.5">
-            {categoryNavItems.map((cat) => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 shrink-0 ${
-                    isActive
-                      ? 'bg-[#211710] text-white shadow-xs border border-[#211710]'
-                      : 'bg-white text-[#211710] hover:border-[#D69A4B] hover:text-[#D69A4B] border border-[#E9D8C5]'
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  {cat.name}
-                </button>
-              );
-            })}
+        <div className="relative mb-2.5 sm:mb-3">
+          <div className="overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap py-0.5 snap-x snap-mandatory pr-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-0.5">
+              {categoryNavItems.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 shrink-0 snap-start ${
+                      isActive
+                        ? 'bg-[#211710] text-white shadow-xs border border-[#211710]'
+                        : 'bg-white text-[#211710] hover:border-[#D69A4B] hover:text-[#D69A4B] border border-[#E9D8C5]'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+          {/* Right-edge gradient fade hint */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#F8F0E8] to-transparent sm:hidden" />
         </div>
 
         {/* 4. Compact Shopping Toolbar */}
-        <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-[#E9D8C5] shadow-2xs mb-3 sm:mb-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
+        <div className="bg-white rounded-2xl p-2.5 sm:p-2.5 border border-[#E9D8C5] shadow-2xs mb-3 sm:mb-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
           
-          {/* Left: Search Input */}
+          {/* Left: Search Input (h-11 on mobile with consistent radius) */}
           <div className="relative flex-1 max-w-full md:max-w-xs lg:max-w-sm">
             <Search className="w-4 h-4 text-[#766B61] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -231,14 +235,14 @@ export default function Shop({ initialProducts, initialCategories }) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search furniture (e.g. Bouclé, Teak)..."
-              className="w-full h-9 sm:h-10 bg-[#F8F0E8]/50 border border-[#E9D8C5] rounded-full pl-9 pr-8 text-xs text-[#211710] placeholder:text-[#766B61]/70 focus:outline-none focus:border-[#D69A4B] transition-colors"
+              className="w-full h-11 sm:h-10 bg-[#F8F0E8]/50 border border-[#E9D8C5] rounded-xl sm:rounded-full pl-10 pr-8 text-xs text-[#211710] placeholder:text-[#766B61]/70 focus:outline-none focus:border-[#D69A4B] transition-colors"
               aria-label="Search products"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#766B61] hover:text-[#211710] text-xs font-bold p-0.5"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#766B61] hover:text-[#211710] text-sm font-bold p-1"
                 aria-label="Clear search"
               >
                 ×
@@ -246,14 +250,14 @@ export default function Shop({ initialProducts, initialCategories }) {
             )}
           </div>
 
-          {/* Right Controls: Filters Button + Sort Dropdown + Product Count */}
-          <div className="flex items-center justify-between md:justify-end gap-2.5 sm:gap-3 flex-wrap sm:flex-nowrap">
+          {/* Right Controls: Filters Button + Sort Dropdown (side by side in 2 equal cols on mobile) */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
             
             {/* Filter Drawer Toggle Button */}
             <button
               type="button"
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="h-9 sm:h-10 inline-flex items-center gap-2 px-3.5 sm:px-4 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] rounded-full text-xs font-medium text-[#211710] transition-colors shadow-2xs"
+              className="h-11 sm:h-10 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] rounded-xl sm:rounded-full text-[11px] sm:text-xs font-medium text-[#211710] transition-colors shadow-2xs"
               aria-label="Open filter options"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#D69A4B]" />
@@ -266,11 +270,11 @@ export default function Shop({ initialProducts, initialCategories }) {
             </button>
 
             {/* Sort Dropdown */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select
                 value={selectedSort}
                 onChange={(e) => setSelectedSort(e.target.value)}
-                className="h-9 sm:h-10 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] rounded-full pl-3.5 pr-8 text-xs font-medium text-[#211710] focus:outline-none focus:border-[#D69A4B] cursor-pointer shadow-2xs transition-colors appearance-none"
+                className="h-11 sm:h-10 w-full sm:w-auto bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] rounded-xl sm:rounded-full pl-2.5 sm:pl-3.5 pr-6 sm:pr-8 text-[11px] sm:text-xs font-medium text-[#211710] focus:outline-none focus:border-[#D69A4B] cursor-pointer shadow-2xs transition-colors appearance-none"
                 aria-label="Sort products"
               >
                 <option value="featured">Featured Curations</option>
@@ -278,7 +282,7 @@ export default function Shop({ initialProducts, initialCategories }) {
                 <option value="price-high">Price: High to Low</option>
                 <option value="rating">Customer Rating</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#766B61] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#766B61] absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Product Count Indicator */}
