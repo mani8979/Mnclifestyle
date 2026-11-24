@@ -1,6 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
-import { products as staticProducts, findProductById as findStaticProductById } from '@/data/products';
+import { products as staticProducts, findProductById as findStaticProductById, slugify } from '@/data/products';
 
 export interface GetProductsOptions {
   category?: string;
@@ -27,7 +27,7 @@ export function sanitizeProduct(doc: any) {
   return {
     ...rest,
     id: clean.legacyId || clean.id || _id?.toString(),
-    slug: clean.slug,
+    slug: clean.slug || slugify(clean.name),
     sku: clean.sku,
   };
 }
@@ -130,5 +130,5 @@ export async function getProductByIdOrSlug(idOrSlug: string) {
   }
 
   // Controlled static fallback
-  return findStaticProductById(idOrSlug) || staticProducts.find((p) => p.id === idOrSlug || p.sku === idOrSlug) || null;
+  return findStaticProductById(idOrSlug) || null;
 }

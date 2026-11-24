@@ -779,7 +779,36 @@ export const products = [
   }
 ];
 
-// Helper to look up a product by ID (supports legacy IDs)
-export const findProductById = (id) => {
-  return products.find((p) => p.id === id);
+export function slugify(text) {
+  if (!text) return '';
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, '-and-')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Automatically ensure every product has a slug derived from its name
+products.forEach((p) => {
+  if (!p.slug) {
+    p.slug = slugify(p.name);
+  }
+});
+
+// Helper to look up a product by ID or Slug (supports legacy IDs, SKUs, and name slugs)
+export const findProductById = (idOrSlug) => {
+  if (!idOrSlug) return null;
+  const target = idOrSlug.toString().toLowerCase().trim();
+  return products.find(
+    (p) =>
+      p.id?.toLowerCase() === target ||
+      p.slug === target ||
+      slugify(p.name) === target ||
+      p.sku?.toLowerCase() === target
+  ) || null;
 };
