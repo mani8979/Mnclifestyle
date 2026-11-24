@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name, slug, title, description, image, subcategories, orderIndex } = body;
+    const { name, slug, title, description, image, imageKey, subcategories, orderIndex } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json(
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       title: title?.trim() || name.trim(),
       description: description?.trim() || `Handcrafted ${name.trim()} by MNC LifeStyle.`,
       image: image?.trim() || '/hero-bg.webp',
+      imageKey: imageKey?.trim() || undefined,
       subcategories: cleanSubcategories,
       orderIndex: assignedOrder,
       isActive: true,

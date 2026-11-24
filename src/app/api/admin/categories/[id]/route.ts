@@ -81,6 +81,7 @@ export async function PATCH(
     if (body.title !== undefined) category.title = body.title.trim();
     if (body.description !== undefined) category.description = body.description.trim();
     if (body.image !== undefined) category.image = body.image.trim();
+    if (body.imageKey !== undefined) category.imageKey = body.imageKey.trim();
     if (body.orderIndex !== undefined) category.orderIndex = Number(body.orderIndex);
     if (body.isActive !== undefined) category.isActive = Boolean(body.isActive);
 

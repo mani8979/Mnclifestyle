@@ -18,6 +18,9 @@ import {
   ArrowDown,
   Save,
   ExternalLink,
+  UploadCloud,
+  ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
 
@@ -29,6 +32,7 @@ interface CategoryItem {
   title?: string;
   description?: string;
   image?: string;
+  imageKey?: string;
   subcategories: string[];
   orderIndex: number;
   itemCount?: number;
@@ -62,6 +66,79 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
   const [formOrder, setFormOrder] = useState<number>(0);
   const [formSubcategories, setFormSubcategories] = useState<string[]>([]);
   const [newSubcatInput, setNewSubcatInput] = useState('');
+
+  // Category Photo Upload State
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [formImage, setFormImage] = useState('');
+  const [formImageKey, setFormImageKey] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  const handleUploadImageFile = async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const type = file.type.toLowerCase();
+    const isImage = type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext || '');
+
+    if (!isImage) {
+      showToast('error', 'Only JPG, PNG, and WebP images are supported.');
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('error', 'File size exceeds 8 MB limit.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      // 1. Get signed upload parameters from server
+      const sigRes = await fetch('/api/admin/uploads/signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          format: file.type,
+          size: file.size,
+          productIdentifier: formName ? slugify(formName) : 'category',
+        }),
+      });
+
+      const sigData = await sigRes.json();
+      if (!sigRes.ok || !sigData.success) {
+        throw new Error(sigData.message || 'Failed to generate upload signature');
+      }
+
+      // 2. Direct upload to Cloudinary CDN
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', sigData.apiKey);
+      formData.append('timestamp', sigData.timestamp.toString());
+      formData.append('signature', sigData.signature);
+      formData.append('folder', sigData.folder);
+      formData.append('public_id', sigData.publicId);
+
+      const uploadRes = await fetch(sigData.uploadUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || uploadData.error) {
+        throw new Error(uploadData.error?.message || 'Failed to upload photo to Cloudinary');
+      }
+
+      const imageUrl = uploadData.secure_url || uploadData.url;
+      setFormImage(imageUrl);
+      setFormImageKey(uploadData.public_id || '');
+      showToast('success', 'Category photo uploaded successfully');
+    } catch (err: any) {
+      console.error('Image upload failed:', err);
+      showToast('error', err.message || 'Image upload failed');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   // Inline quick-add subcategory states (mapped by category id)
   const [inlineSubcatInputs, setInlineSubcatInputs] = useState<Record<string, string>>({});
@@ -146,6 +223,9 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     setFormSlug('');
     setFormTitle('');
     setFormDescription('');
+    setFormImage('');
+    setFormImageKey('');
+    setShowUrlInput(false);
     setFormOrder(categories.length + 1);
     setFormSubcategories([]);
     setNewSubcatInput('');
@@ -158,6 +238,9 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     setFormSlug(cat.slug || '');
     setFormTitle(cat.title || cat.name || '');
     setFormDescription(cat.description || '');
+    setFormImage(cat.image || '');
+    setFormImageKey(cat.imageKey || '');
+    setShowUrlInput(false);
     setFormOrder(cat.orderIndex ?? 0);
     setFormSubcategories([...(cat.subcategories || [])]);
     setNewSubcatInput('');
@@ -200,6 +283,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
         slug: finalSlug,
         title: formTitle.trim() || formName.trim(),
         description: formDescription.trim() || `Handcrafted ${formName.trim()} by MNC LifeStyle.`,
+        image: formImage.trim() || '/hero-bg.webp',
+        imageKey: formImageKey.trim() || undefined,
         orderIndex: Number(formOrder) || 0,
         subcategories: formSubcategories,
       };
@@ -229,6 +314,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
           name: formName.trim(),
           title: formTitle.trim(),
           description: formDescription.trim(),
+          image: formImage.trim() || editingCategory.image,
+          imageKey: formImageKey.trim() || editingCategory.imageKey,
           orderIndex: Number(formOrder) || 0,
           subcategories: formSubcategories,
           ...(data.category || {}),
@@ -249,6 +336,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
           slug: payload.slug,
           title: formTitle.trim(),
           description: formDescription.trim(),
+          image: formImage.trim() || '/hero-bg.webp',
+          imageKey: formImageKey.trim(),
           orderIndex: Number(formOrder) || 0,
           subcategories: formSubcategories,
         };
@@ -497,24 +586,40 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
               ) : (
                 filteredCategories.map((cat) => (
                   <tr key={cat.id || cat.slug} className="hover:bg-slate-50/70 transition-colors align-top">
-                    {/* 1. Name & Title */}
+                    {/* 1. Name, Photo Thumbnail & Title */}
                     <td className="py-4 px-5">
-                      <div className="font-semibold text-slate-900 text-[13px] flex items-center gap-1.5">
-                        <span>{cat.name}</span>
-                        <Link
-                          href={`/category/${cat.slug}`}
-                          target="_blank"
-                          className="text-slate-400 hover:text-blue-600 transition-colors"
-                          title="View storefront category"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
-                      </div>
-                      {cat.title && cat.title !== cat.name && (
-                        <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-                          {cat.title}
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                          {cat.image && cat.image !== '/hero-bg.webp' ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={cat.image}
+                              alt={cat.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="w-5 h-5 text-slate-400" />
+                          )}
                         </div>
-                      )}
+                        <div>
+                          <div className="font-semibold text-slate-900 text-[13px] flex items-center gap-1.5">
+                            <span>{cat.name}</span>
+                            <Link
+                              href={`/category/${cat.slug}`}
+                              target="_blank"
+                              className="text-slate-400 hover:text-blue-600 transition-colors"
+                              title="View storefront category"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                          {cat.title && cat.title !== cat.name && (
+                            <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                              {cat.title}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Subcategories with Inline Quick Add & Delete */}
@@ -666,6 +771,121 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                   placeholder="e.g. Living Room, Recliners, Dining Sets"
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
+              </div>
+
+              {/* Category Photo Upload */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Category Photo
+                </label>
+                {formImage ? (
+                  <div className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center gap-3 p-2.5">
+                    <div className="w-16 h-16 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={formImage}
+                        alt={formName || 'Category preview'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-800">
+                        Photo Uploaded
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5" title={formImage}>
+                        {formImage}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mt-1 text-[11px] text-blue-600 hover:underline font-medium inline-block"
+                      >
+                        Change photo
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormImage('');
+                        setFormImageKey('');
+                      }}
+                      className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                      title="Remove photo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      if (e.dataTransfer.files?.[0]) {
+                        handleUploadImageFile(e.dataTransfer.files[0]);
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
+                      isDragging
+                        ? 'border-blue-500 bg-blue-50/50'
+                        : 'border-slate-300 hover:border-blue-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {isUploadingImage ? (
+                      <div className="flex flex-col items-center justify-center py-2 text-blue-600 gap-2">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <span className="text-xs font-medium">Uploading photo to Cloudinary...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-2 text-slate-500 gap-1.5">
+                        <UploadCloud className="w-6 h-6 text-slate-400" />
+                        <p className="text-xs font-medium text-slate-700">
+                          Click to upload photo or drag and drop
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          PNG, JPG or WebP (max 8 MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleUploadImageFile(e.target.files[0]);
+                    }
+                  }}
+                  className="hidden"
+                />
+
+                <div className="flex items-center justify-between mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="text-[11px] text-blue-600 hover:underline font-medium"
+                  >
+                    {showUrlInput ? 'Hide image URL field' : 'Or paste image URL directly'}
+                  </button>
+                </div>
+
+                {showUrlInput && (
+                  <input
+                    type="url"
+                    value={formImage}
+                    onChange={(e) => setFormImage(e.target.value)}
+                    placeholder="https://images.unsplash.com/... or https://res.cloudinary.com/..."
+                    className="w-full mt-1.5 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  />
+                )}
               </div>
 
               <div>
