@@ -39,6 +39,14 @@ interface CategoryManagerClientProps {
 export default function CategoryManagerClient({ initialCategories }: CategoryManagerClientProps) {
   const router = useRouter();
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+
+  // Sync state if initialCategories updates from server revalidation
+  React.useEffect(() => {
+    if (Array.isArray(initialCategories) && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
@@ -92,9 +100,9 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
 
   const handleNameChange = (val: string) => {
     setFormName(val);
-    const generatedSlug = slugify(val);
-    setFormSlug(generatedSlug);
     if (!editingCategory) {
+      const generatedSlug = slugify(val);
+      setFormSlug(generatedSlug);
       setFormTitle(val);
     }
   };
@@ -120,7 +128,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
 
     setIsSubmitting(true);
     try {
-      const finalSlug = formSlug.trim() || slugify(formName.trim());
+      const finalSlug = editingCategory ? editingCategory.slug : (formSlug.trim() || slugify(formName.trim()));
       const payload = {
         name: formName.trim(),
         slug: finalSlug,
@@ -130,8 +138,11 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
         subcategories: formSubcategories,
       };
 
-      const url = editingCategory
-        ? `/api/admin/categories/${editingCategory.id || editingCategory._id || editingCategory.slug}`
+      const categoryIdentifier = editingCategory
+        ? (editingCategory._id || editingCategory.id || editingCategory.slug)
+        : null;
+      const url = categoryIdentifier
+        ? `/api/admin/categories/${encodeURIComponent(categoryIdentifier)}`
         : '/api/admin/categories';
       const method = editingCategory ? 'PATCH' : 'POST';
 
@@ -147,22 +158,42 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
       }
 
       if (editingCategory) {
+        const updatedCat: CategoryItem = {
+          ...editingCategory,
+          name: formName.trim(),
+          title: formTitle.trim(),
+          description: formDescription.trim(),
+          orderIndex: Number(formOrder) || 0,
+          subcategories: formSubcategories,
+          ...(data.category || {}),
+        };
+
         setCategories((prev) =>
           prev.map((c) =>
-            (c.id === editingCategory.id || c.slug === editingCategory.slug)
-              ? { ...c, ...data.category }
+            (c.id === editingCategory.id || c._id === editingCategory._id || c.slug === editingCategory.slug)
+              ? { ...c, ...updatedCat }
               : c
           )
         );
         showToast('success', `Category "${formName}" updated successfully`);
       } else {
-        setCategories((prev) => [...prev, data.category]);
+        const newCat: CategoryItem = data.category || {
+          id: data.id || `cat-${Date.now()}`,
+          name: formName.trim(),
+          slug: payload.slug,
+          title: formTitle.trim(),
+          description: formDescription.trim(),
+          orderIndex: Number(formOrder) || 0,
+          subcategories: formSubcategories,
+        };
+        setCategories((prev) => [...prev, newCat]);
         showToast('success', `Category "${formName}" added successfully`);
       }
 
       setIsModalOpen(false);
       router.refresh();
     } catch (err: any) {
+      console.error('Error saving category:', err);
       showToast('error', err.message || 'An error occurred while saving category');
     } finally {
       setIsSubmitting(false);
@@ -208,7 +239,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     setSavingInlineId(cat.id);
 
     try {
-      const res = await fetch(`/api/admin/categories/${cat.id || cat.slug}`, {
+      const catIdentifier = cat._id || cat.id || cat.slug;
+      const res = await fetch(`/api/admin/categories/${encodeURIComponent(catIdentifier)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subcategories: updatedSubcategories }),
@@ -219,7 +251,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
       }
 
       setCategories((prev) =>
-        prev.map((c) => (c.id === cat.id ? { ...c, subcategories: updatedSubcategories } : c))
+        prev.map((c) => (c.id === cat.id || c._id === cat._id || c.slug === cat.slug ? { ...c, subcategories: updatedSubcategories } : c))
       );
       setInlineSubcatInputs((prev) => ({ ...prev, [cat.id]: '' }));
       showToast('success', `Added "${inputVal}" to ${cat.name}`);
@@ -236,7 +268,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     const updatedSubcategories = (cat.subcategories || []).filter((s) => s !== subToRemove);
 
     try {
-      const res = await fetch(`/api/admin/categories/${cat.id || cat.slug}`, {
+      const catIdentifier = cat._id || cat.id || cat.slug;
+      const res = await fetch(`/api/admin/categories/${encodeURIComponent(catIdentifier)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subcategories: updatedSubcategories }),
@@ -247,7 +280,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
       }
 
       setCategories((prev) =>
-        prev.map((c) => (c.id === cat.id ? { ...c, subcategories: updatedSubcategories } : c))
+        prev.map((c) => (c.id === cat.id || c._id === cat._id || c.slug === cat.slug ? { ...c, subcategories: updatedSubcategories } : c))
       );
       showToast('success', `Removed "${subToRemove}" from ${cat.name}`);
       router.refresh();

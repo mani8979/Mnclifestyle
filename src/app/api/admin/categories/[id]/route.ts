@@ -3,16 +3,26 @@ import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
+import { Product } from '@/models/Product';
 import { requireAdminSession } from '@/lib/auth';
 import { slugify } from '@/lib/validations/product';
 
 export const dynamic = 'force-dynamic';
 
 function getLookupQuery(id: string) {
-  if (mongoose.Types.ObjectId.isValid(id)) {
-    return { _id: id };
+  const decoded = decodeURIComponent(id).trim();
+  const queries: any[] = [
+    { slug: decoded },
+    { slug: decoded.toLowerCase() },
+    { legacyId: decoded },
+    { name: new RegExp(`^${decoded}$`, 'i') },
+  ];
+
+  if (mongoose.Types.ObjectId.isValid(decoded)) {
+    queries.unshift({ _id: new mongoose.Types.ObjectId(decoded) });
   }
-  return { $or: [{ slug: id }, { legacyId: id }] };
+
+  return { $or: queries };
 }
 
 export async function GET(
@@ -74,29 +84,23 @@ export async function PATCH(
     if (body.orderIndex !== undefined) category.orderIndex = Number(body.orderIndex);
     if (body.isActive !== undefined) category.isActive = Boolean(body.isActive);
 
-    if (body.name !== undefined && (!body.slug || body.slug.trim() === '')) {
-      const cleanSlug = slugify(body.name);
+    // Slug management: preserve existing slug if conflict exists so editing category never throws 409
+    if (body.slug && typeof body.slug === 'string') {
+      const cleanSlug = slugify(body.slug);
       if (cleanSlug && cleanSlug !== category.slug) {
         const conflict = await Category.findOne({ slug: cleanSlug, _id: { $ne: category._id } });
         if (!conflict) {
+          const oldSlug = category.slug;
           category.slug = cleanSlug;
+          try {
+            await Product.updateMany(
+              { category: oldSlug },
+              { $set: { category: cleanSlug, categoryLabel: category.name } }
+            );
+          } catch (e) {
+            console.error('Failed to sync products category:', e);
+          }
         }
-      }
-    } else if (body.slug !== undefined) {
-      const cleanSlug = body.slug
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      if (cleanSlug && cleanSlug !== category.slug) {
-        const conflict = await Category.findOne({ slug: cleanSlug, _id: { $ne: category._id } });
-        if (conflict) {
-          return NextResponse.json(
-            { success: false, message: `Slug "${cleanSlug}" is already taken` },
-            { status: 409 }
-          );
-        }
-        category.slug = cleanSlug;
       }
     }
 
