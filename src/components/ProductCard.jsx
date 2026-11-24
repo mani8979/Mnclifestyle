@@ -2,7 +2,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
-import { ArrowRight } from 'lucide-react';
 import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { slugify } from '../data/products';
@@ -30,29 +29,25 @@ export default function ProductCard({ product, index }) {
   const productSlug = product.slug || slugify(product.name);
 
   return (
-    <div
+    <Link
+      to={`/product/${productSlug}`}
       ref={ref}
       style={revealStyle}
       data-revealed={isVisible}
-      className={`group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-shadow duration-300 h-full ${
+      aria-label={`View details of ${product.name}`}
+      className={`group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full cursor-pointer ${
         isVisible ? 'is-revealed' : 'is-hidden'
       }`}
     >
       {/* 1. Product Image — Completely Clean, No Overlays, No Text, No Badges */}
       <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60">
-        <Link
-          to={`/product/${productSlug}`}
-          className="block w-full h-full relative"
-          aria-label={`View details of ${product.name}`}
-        >
-          <Image
-            src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        </Link>
+        <Image
+          src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
       </div>
 
       {/* Product Information Container */}
@@ -72,9 +67,7 @@ export default function ProductCard({ product, index }) {
 
           {/* 3. Product Name (Playfair Display) — Standardized height to keep cards aligned */}
           <h3 className="font-serif text-sm sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.8em] sm:min-h-[3em] flex items-start">
-            <Link to={`/product/${productSlug}`} className="hover:underline" title={product.name}>
-              {product.name}
-            </Link>
+            {product.name}
           </h3>
 
           {/* 4. Short Product Description — Enhanced readability, line spacing & standardized height */}
@@ -108,10 +101,10 @@ export default function ProductCard({ product, index }) {
           </div>
         </div>
 
-        {/* Bottom Section: Price & View Details Action */}
+        {/* Bottom Section: Price */}
         <div className="mt-auto pt-2.5 sm:pt-3.5 border-t border-[#E9D8C5]/70">
           {/* Price Block: Selling Price, Original MRP & Savings */}
-          <div className="space-y-0.5 mb-2.5 sm:mb-3">
+          <div className="space-y-0.5">
             <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-[#77736D] font-medium block">
               Selling Price
             </span>
@@ -128,7 +121,7 @@ export default function ProductCard({ product, index }) {
               )}
             </div>
 
-            {/* You Save Label — Reserved height container so buttons remain aligned */}
+            {/* You Save Label */}
             <div className="h-5 sm:h-6 flex items-center pt-0.5">
               {hasDiscount ? (
                 <span className="inline-block text-[10px] sm:text-[11px] font-sans font-medium text-emerald-800 bg-emerald-50/90 border border-emerald-200/80 px-1.5 sm:px-2 py-0.5 rounded truncate max-w-full">
@@ -141,17 +134,8 @@ export default function ProductCard({ product, index }) {
               )}
             </div>
           </div>
-
-          {/* View Details Button (Primary Action) — Guaranteed vertical alignment */}
-          <Link
-            to={`/product/${productSlug}`}
-            className="w-full h-10 sm:h-11 py-2 px-3 sm:px-4 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-[11px] sm:text-xs uppercase tracking-wider font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs group/btn text-center"
-          >
-            <span>View Details</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform shrink-0" />
-          </Link>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -80,6 +80,17 @@ export default function Home({ initialProducts, initialCategories }) {
             <ProductCard key={product.id} product={product} index={idx} />
           ))}
         </div>
+
+        {/* View More Products Button */}
+        <div className="mt-8 sm:mt-12 text-center">
+          <Link
+            to="/shop"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#211710] hover:bg-[#D69A4B] text-[#F8F0E8] hover:text-[#211710] text-xs sm:text-sm font-semibold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group"
+          >
+            <span>View More</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
+          </Link>
+        </div>
       </section>
 
       {/* Why Choose MNC LifeStyle? */}

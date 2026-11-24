@@ -407,9 +407,12 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   staggerIndex={idx}
                   className="h-full"
                 >
-                  <div className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury transition-all duration-300 flex flex-col justify-between group h-full">
+                  <Link
+                    to={`/product/${p.slug || slugify(p.name)}`}
+                    className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 flex flex-col justify-between group h-full block cursor-pointer"
+                  >
                     <div>
-                      <Link to={`/product/${p.slug || slugify(p.name)}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
+                      <div className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
                         <Image
                           src={p.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                           alt={p.name}
@@ -417,18 +420,17 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                      </Link>
+                      </div>
                       <div className="p-3 sm:p-4">
                         <span className="text-[10px] uppercase tracking-wider text-[#D69A4B] font-semibold block mb-0.5 truncate">
                           {p.categoryLabel}
                         </span>
-                        <Link
-                          to={`/product/${p.slug || slugify(p.name)}`}
-                          className="font-serif text-xs sm:text-sm font-medium text-[#211710] hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
+                        <h4
+                          className="font-serif text-xs sm:text-sm font-medium text-[#211710] group-hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
                           title={p.name}
                         >
                           {p.name}
-                        </Link>
+                        </h4>
                         <div className="flex flex-wrap items-baseline gap-1.5">
                           <span className="font-sans font-bold tabular-nums text-sm sm:text-base text-[#211710]">
                             {formatINR(p.price)}
@@ -441,15 +443,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                         </div>
                       </div>
                     </div>
-                    <div className="p-3 sm:p-4 pt-0">
-                      <Link
-                        to={`/product/${p.slug || slugify(p.name)}`}
-                        className="w-full py-1.5 sm:py-2 bg-[#F8F0E8] hover:bg-[#211710] text-[#211710] hover:text-white rounded-lg text-[11px] sm:text-xs font-semibold text-center block transition-colors border border-[#E9D8C5]"
-                      >
-                        View Details
-                      </Link>
-                    </div>
-                  </div>
+                  </Link>
                 </ScrollReveal>
               ))}
             </div>
