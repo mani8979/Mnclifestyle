@@ -31,6 +31,12 @@ export async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   }
 
+  // If connection dropped or in invalid state, invalidate cache
+  if (cached.conn && cached.conn.connection.readyState !== 1) {
+    cached.promise = null;
+    cached.conn = null;
+  }
+
   if (!cached.promise) {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,

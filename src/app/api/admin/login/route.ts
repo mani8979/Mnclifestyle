@@ -130,8 +130,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error: any) {
     console.error('[Admin Login Error]:', error);
+    const detail = error?.message || 'An internal server error occurred';
     return NextResponse.json(
-      { success: false, message: 'An internal server error occurred' },
+      { success: false, message: detail },
       { status: 500 }
     );
   }
