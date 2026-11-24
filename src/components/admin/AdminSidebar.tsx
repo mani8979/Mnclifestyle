@@ -29,7 +29,7 @@ export default function AdminSidebar({ isMobileOpen, onCloseMobile }: AdminSideb
   const sidebarContent = (
     <div className="flex flex-col h-full bg-slate-900 text-slate-100 border-r border-slate-800">
       {/* Brand Header */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800">
+      <div className="h-16 shrink-0 px-6 flex items-center justify-between border-b border-slate-800">
         <Link href="/admin/dashboard" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
             <ShieldCheck className="w-4 h-4 text-blue-400" />
@@ -81,7 +81,7 @@ export default function AdminSidebar({ isMobileOpen, onCloseMobile }: AdminSideb
       </nav>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/50">
+      <div className="shrink-0 p-4 border-t border-slate-800 bg-slate-950/50">
         <Link
           href="/"
           target="_blank"
@@ -102,7 +102,7 @@ export default function AdminSidebar({ isMobileOpen, onCloseMobile }: AdminSideb
   return (
     <>
       {/* Desktop Persistent Sidebar (w-64) */}
-      <aside className="hidden lg:block w-64 h-screen sticky top-0 shrink-0">
+      <aside className="hidden lg:flex lg:flex-col w-64 h-screen shrink-0">
         {sidebarContent}
       </aside>
 

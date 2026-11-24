@@ -27,7 +27,7 @@ export default function AdminHeader({ admin, onOpenMobileSidebar }: AdminHeaderP
   const roleLabel = admin?.role === 'super_admin' ? 'Super Admin' : 'Admin';
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+    <header className="h-16 shrink-0 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between z-20 shadow-2xs">
       {/* Mobile Toggle & Brand indicator */}
       <div className="flex items-center gap-3">
         <button

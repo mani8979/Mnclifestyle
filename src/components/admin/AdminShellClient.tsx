@@ -21,7 +21,7 @@ export default function AdminShellClient({ initialSession, children }: AdminShel
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex">
+    <div className="h-screen bg-slate-100 text-slate-900 flex overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar
         isMobileOpen={isMobileSidebarOpen}
@@ -29,7 +29,7 @@ export default function AdminShellClient({ initialSession, children }: AdminShel
       />
 
       {/* Main Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <AdminHeader
           admin={initialSession}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
