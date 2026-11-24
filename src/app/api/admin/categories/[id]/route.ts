@@ -158,6 +158,18 @@ export async function DELETE(
 
     await Category.deleteOne({ _id: category._id });
 
+    // Automatically re-index remaining categories sequentially (1, 2, 3...)
+    const remainingCategories = await Category.find({})
+      .sort({ orderIndex: 1, createdAt: 1 });
+
+    for (let i = 0; i < remainingCategories.length; i++) {
+      const cat = remainingCategories[i];
+      if (cat.orderIndex !== i + 1) {
+        cat.orderIndex = i + 1;
+        await cat.save();
+      }
+    }
+
     revalidatePath('/admin/categories');
     revalidatePath('/');
     revalidatePath('/shop');

@@ -62,6 +62,13 @@ export async function POST(request: NextRequest) {
       ? subcategories.split(',').map((s: string) => s.trim()).filter(Boolean)
       : [];
 
+    // Ensure sequential unique orderIndex if not explicitly given or <= 0
+    let assignedOrder = typeof orderIndex === 'number' && orderIndex > 0 ? orderIndex : undefined;
+    if (!assignedOrder) {
+      const highest = await Category.findOne({}).sort({ orderIndex: -1 }).select('orderIndex').lean();
+      assignedOrder = (highest?.orderIndex || 0) + 1;
+    }
+
     const newCategory = await Category.create({
       name: name.trim(),
       slug: cleanSlug,
@@ -69,7 +76,7 @@ export async function POST(request: NextRequest) {
       description: description?.trim() || `Handcrafted ${name.trim()} by MNC LifeStyle.`,
       image: image?.trim() || '/hero-bg.webp',
       subcategories: cleanSubcategories,
-      orderIndex: typeof orderIndex === 'number' ? orderIndex : 0,
+      orderIndex: assignedOrder,
       isActive: true,
     });
 
