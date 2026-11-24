@@ -6,7 +6,7 @@ import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { slugify } from '../data/products';
 import { useWishlist } from '../context/WishlistContext';
-import { Heart, ArrowRight } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 export default function ProductCard({ product, index }) {
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
@@ -184,14 +184,6 @@ export default function ProductCard({ product, index }) {
                   Direct Concierge Pricing
                 </span>
               )}
-            </div>
-          </div>
-
-          {/* Mobile Enquire CTA Button */}
-          <div className="mt-2.5 sm:hidden">
-            <div className="w-full h-9 rounded-lg bg-[#211710] text-[#F8F0E8] flex items-center justify-center gap-1.5 text-sm font-medium transition-colors shadow-2xs group-hover:bg-[#D69A4B] group-hover:text-[#211710]">
-              <span>Enquire</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </div>
