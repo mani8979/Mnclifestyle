@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
@@ -56,10 +57,12 @@ export default function Collections({ initialCollections, initialProducts }) {
                   {/* Photo Column */}
                   <div className={`lg:col-span-7 ${isReversed ? 'lg:order-2' : ''}`}>
                     <div className="relative rounded-3xl overflow-hidden shadow-luxury group aspect-[16/10] bg-beige-200">
-                      <img
-                        src={col.image}
+                      <Image
+                        src={col.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                         alt={col.title}
-                        className="w-full h-full object-cover luxury-image-zoom"
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 58vw"
+                        className="object-cover luxury-image-zoom"
                       />
                       <div className="absolute top-4 left-4 bg-[#211710]/85 backdrop-blur-sm text-[#F8F0E8] text-xs uppercase tracking-widest px-3 py-1 rounded">
                         {col.piecesCount}

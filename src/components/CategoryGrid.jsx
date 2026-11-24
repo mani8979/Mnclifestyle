@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { categories } from '../data/categories';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -42,15 +43,12 @@ export default function CategoryGrid({ categories: customCategories }) {
             >
               {/* Image Circle / Rounded Container */}
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F0E8] mb-3">
-                <img
-                  src={cat.image}
+                <Image
+                  src={cat.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                   alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80';
-                  }}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
               </div>

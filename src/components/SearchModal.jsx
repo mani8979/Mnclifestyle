@@ -1,5 +1,6 @@
 ﻿'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useNavigate } from '@/lib/router-bridge';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { products, slugify } from '../data/products';
@@ -137,9 +138,11 @@ export default function SearchModal({ isOpen, onClose }) {
                 onClick={() => handleSelectProduct(prod)}
                 className="py-3 flex items-center gap-4 hover:bg-white/80 p-3 rounded-lg transition-colors cursor-pointer group"
               >
-                <img
-                  src={prod.images[0]}
+                <Image
+                  src={prod.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                   alt={prod.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 object-cover rounded-md bg-beige-200 flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">

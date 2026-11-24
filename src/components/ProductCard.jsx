@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { ArrowRight } from 'lucide-react';
 import { formatINR } from '../utils/currency';
@@ -41,14 +42,15 @@ export default function ProductCard({ product, index }) {
       <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60">
         <Link
           to={`/product/${productSlug}`}
-          className="block w-full h-full"
+          className="block w-full h-full relative"
           aria-label={`View details of ${product.name}`}
         >
-          <img
-            src={product.images && product.images.length > 0 ? product.images[0] : ''}
+          <Image
+            src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
       </div>

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { NavLink, Link, useLocation } from '@/lib/router-bridge';
 import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
 const logoImg = '/logo.png';
@@ -139,9 +140,12 @@ export default function Header({ onOpenSearch }) {
             onMouseEnter={closeShopDropdown}
             className="inline-flex items-center group max-w-full"
           >
-            <img
+            <Image
               src="/logo.png"
               alt="MNC LifeStyle — Furniture & Contemporary Living"
+              width={366}
+              height={68}
+              priority
               className="h-8 min-[375px]:h-9 sm:h-11 lg:h-[66px] max-w-[140px] min-[375px]:max-w-[185px] sm:max-w-none w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
             />
           </Link>

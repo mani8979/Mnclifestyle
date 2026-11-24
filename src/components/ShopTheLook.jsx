@@ -1,5 +1,6 @@
 ﻿'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { products, slugify } from '../data/products';
 import { formatINR } from '../utils/currency';
@@ -50,10 +51,12 @@ export default function ShopTheLook() {
         
         {/* Curated Living Room Photograph — Clean without Hotspot Dots */}
         <div className="lg:col-span-8 relative aspect-[16/10] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-beige-200">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=85"
             alt="MNC Lifestyle Penthouse Living Room"
-            className="w-full h-full object-cover brightness-95"
+            fill
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            className="object-cover brightness-95"
           />
         </div>
 
@@ -65,9 +68,11 @@ export default function ShopTheLook() {
             </span>
             
             <div className="flex gap-4 items-center mb-4">
-              <img
-                src={activeProduct.images[0]}
+              <Image
+                src={activeProduct.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                 alt={activeProduct.name}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-xl object-cover bg-beige-200 border border-beige-300 flex-shrink-0"
               />
               <div className="min-w-0">

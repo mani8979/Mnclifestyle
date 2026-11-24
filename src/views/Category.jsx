@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { useParams, Link, Navigate } from '@/lib/router-bridge';
 import ProductCard from '../components/ProductCard';
@@ -119,10 +120,12 @@ export default function Category({ initialCategory, initialProducts }) {
       <div className="bg-[#211710] text-[#F8F0E8] py-12 sm:py-16 relative overflow-hidden border-b border-[#49301F]">
         {/* Subtle Background Ambience */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <img
-            src={category.image}
+          <Image
+            src={category.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
             alt={category.name}
-            className="w-full h-full object-cover brightness-75 scale-105"
+            fill
+            sizes="100vw"
+            className="object-cover brightness-75 scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#211710] via-[#211710]/70 to-[#211710]/40" />
         </div>
@@ -370,10 +373,12 @@ export default function Category({ initialCategory, initialProducts }) {
                 to={`/category/${c.id}`}
                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] bg-beige-200 block shadow-soft border border-[#E9D8C5]"
               >
-                <img
-                  src={c.image}
+                <Image
+                  src={c.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                   alt={c.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 brightness-90 group-hover:brightness-95"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105 brightness-90 group-hover:brightness-95"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#211710]/85 via-transparent to-transparent flex flex-col justify-end p-5 text-white">
                   <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-semibold">Category</span>

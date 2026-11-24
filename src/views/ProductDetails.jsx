@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { useParams, Link, Navigate } from '@/lib/router-bridge';
 import { products, slugify } from '../data/products';
@@ -134,11 +135,13 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
             
             {/* 2. Main Active Image — Clean without overlays obstructing furniture */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
-              <img
-                src={product.images[activeImageIndex] || product.images[0]}
+              <Image
+                src={product.images[activeImageIndex] || product.images[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                 alt={`${product.name} - View ${activeImageIndex + 1}`}
-                className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
-                loading="eager"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 58vw"
+                className="object-cover transition-all duration-500 group-hover:scale-105"
               />
             </div>
 
@@ -156,10 +159,12 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                     }`}
                     aria-label={`View photo ${idx + 1}`}
                   >
-                    <img
+                    <Image
                       src={img}
                       alt={`${product.name} thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover bg-[#EAE2D8]"
+                      fill
+                      sizes="80px"
+                      className="object-cover bg-[#EAE2D8]"
                     />
                   </button>
                 ))}
@@ -405,11 +410,12 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   <div className="bg-white rounded-xl sm:rounded-2xl border border-[#E9D8C5] overflow-hidden shadow-soft hover:shadow-luxury transition-all duration-300 flex flex-col justify-between group h-full">
                     <div>
                       <Link to={`/product/${p.slug || slugify(p.name)}`} className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
-                        <img
-                          src={p.images[0]}
+                        <Image
+                          src={p.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                           alt={p.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          loading="lazy"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </Link>
                       <div className="p-3 sm:p-4">

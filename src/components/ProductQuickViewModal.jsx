@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { X, Star, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatINR, calculateDiscount } from '../utils/currency';
@@ -53,10 +54,12 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
           {/* Left Column: Gallery */}
           <div className="p-6 md:p-8 bg-beige-200/50 flex flex-col justify-between">
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-white border border-beige-300 shadow-soft mb-4">
-              <img
-                src={product.images[activeImage] || product.images[0]}
+              <Image
+                src={product.images[activeImage] || product.images[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
               />
               <div className="absolute top-3 left-3 flex flex-col gap-1">
                 {product.badge && (
@@ -79,13 +82,13 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
-                    className={`w-16 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`relative w-16 h-14 rounded-lg overflow-hidden border-2 transition-all ${
                       activeImage === idx
                         ? 'border-bronze scale-105'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                   </button>
                 ))}
               </div>

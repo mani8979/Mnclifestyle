@@ -1,5 +1,6 @@
 ﻿'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import SectionHeading from '../components/SectionHeading';
 import ScrollReveal from '../components/ScrollReveal';
@@ -36,10 +37,12 @@ export default function About() {
 
         {/* Editorial Photo Spread */}
         <ScrollReveal className="relative rounded-3xl overflow-hidden shadow-luxury mb-12 sm:mb-16 aspect-[16/9] sm:aspect-[21/9] bg-[#E9D8C5] max-w-5xl mx-auto border border-[#E9D8C5]" delay={100}>
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1800&q=85"
             alt="MNC LifeStyle Studio & Showroom"
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 1024px) 100vw, 1200px"
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-[#211710]/15" />
         </ScrollReveal>
