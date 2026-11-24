@@ -678,16 +678,6 @@ export default function ProductForm({
               />
               <span>Bestseller Piece</span>
             </label>
-
-            <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isFeatured}
-                onChange={(e) => setIsFeatured(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-50 border-slate-200"
-              />
-              <span>Featured Showcase</span>
-            </label>
           </div>
 
           {/* Product Badge Pill */}
