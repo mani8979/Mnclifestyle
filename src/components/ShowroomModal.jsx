@@ -1,3 +1,4 @@
+﻿'use client';
 import React, { useState } from 'react';
 import { X, Calendar, Clock, MapPin, CheckCircle2, Sparkles, User, Mail, Phone, MessageCircle } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
@@ -51,13 +52,13 @@ export default function ShowroomModal({ isOpen, onClose }) {
   const whatsappConfirmUrl = buildWhatsAppUrl(`Hello MNC LifeStyle Concierge,
 
 I would like to book a private showroom visit:
-• Location: ${formData.showroom}
-• Preferred Date: ${formData.date}
-• Time Slot: ${formData.timeSlot}
-• Consultation Type: ${formData.consultationType}
-• Name: ${formData.name}
-• Phone: ${formData.phone || 'N/A'}
-• Email: ${formData.email || 'N/A'}
+¢ Location: ${formData.showroom}
+¢ Preferred Date: ${formData.date}
+¢ Time Slot: ${formData.timeSlot}
+¢ Consultation Type: ${formData.consultationType}
+¢ Name: ${formData.name}
+¢ Phone: ${formData.phone || 'N/A'}
+¢ Email: ${formData.email || 'N/A'}
 
 Please confirm my appointment. Thank you!`);
 

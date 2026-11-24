@@ -1,5 +1,6 @@
+﻿'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-bridge';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { products } from '../data/products';
 import { formatINR } from '../utils/currency';

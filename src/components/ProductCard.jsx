@@ -1,12 +1,11 @@
+'use client';
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ArrowRight } from 'lucide-react';
-import { useWishlist } from '../context/WishlistContext';
+import { Link } from '@/lib/router-bridge';
+import { ArrowRight } from 'lucide-react';
 import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function ProductCard({ product, index }) {
-  const { isInWishlist, toggleWishlist } = useWishlist();
 
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
   const staggerDelay = typeof index === 'number' ? (index % 4) * 80 : 0;
@@ -20,18 +19,11 @@ export default function ProductCard({ product, index }) {
     once: true
   });
 
-  const isSaved = isInWishlist(product.id);
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price);
   const savingsAmount = hasDiscount ? product.originalPrice - product.price : 0;
   const discountPercent = hasDiscount
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
-
-  const handleWishlistClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist(product.id);
-  };
 
   return (
     <div
@@ -61,26 +53,16 @@ export default function ProductCard({ product, index }) {
       {/* Product Information Container */}
       <div className="p-3 sm:p-4 lg:p-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* 2. Product Category & Subtle Badge / Wishlist */}
+          {/* 2. Product Category & Subtle Badge */}
           <div className="flex items-center justify-between gap-1.5 mb-1.5">
             <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-[#855214] truncate">
               {product.categoryLabel || product.category}
             </span>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {product.badge && (
-                <span className="hidden sm:inline-block text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-[#F8F0E8] px-1.5 py-0.5 rounded border border-[#E9D8C5]/80">
-                  {product.badge}
-                </span>
-              )}
-              <button
-                onClick={handleWishlistClick}
-                className="p-1 text-[#77736D] hover:text-[#D69A4B] transition-colors rounded-full hover:bg-[#F8F0E8]"
-                title={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
-                aria-label={isSaved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-              >
-                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isSaved ? 'fill-[#D69A4B] text-[#D69A4B]' : ''}`} />
-              </button>
-            </div>
+            {product.badge && (
+              <span className="text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-[#F8F0E8] px-1.5 py-0.5 rounded border border-[#E9D8C5]/80 shrink-0">
+                {product.badge}
+              </span>
+            )}
           </div>
 
           {/* 3. Product Name (Playfair Display) — Standardized height to keep cards aligned */}

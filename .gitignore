@@ -1,3 +1,38 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing and generated test artifacts
+coverage/
+screenshots/
+scripts/*.png
+*.png
+!public/*.png
+
+# Next.js build and compiler cache
+.next/
+out/
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+atlas-credentials.env
+
+# Credentials and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+
 # Logs
 logs
 *.log
@@ -7,21 +42,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-screenshots
-scripts/*.png
-*.png
-!src/assets/*.png
-!public/*.png
-*.local
-
-# Editor directories and files
+# Editor directories and system files
+.DS_Store
+Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj

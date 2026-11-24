@@ -4,26 +4,38 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "db:test": "tsx src/scripts/test-db.ts",
+    "db:migrate:dry-run": "tsx src/scripts/migrate-data.ts --dry-run",
+    "db:migrate": "tsx src/scripts/migrate-data.ts --execute",
+    "db:verify": "tsx src/scripts/verify-db.ts"
   },
   "dependencies": {
+    "@types/node": "^26.6.6",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
+    "dotenv": "^18.0.10",
+    "jose": "^6.2.18",
     "lucide-react": "^1.70.0",
+    "mongoose": "^9.13.0",
+    "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.5"
+    "typescript": "^7.0.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
     "autoprefixer": "^10.6.2",
     "oxlint": "^1.90.0",
     "postcss": "^8.5.32",
     "puppeteer-core": "^25.16.0",
     "tailwindcss": "^3.4.17",
-    "vite": "^8.3.6"
+    "tsx": "^4.23.15"
   }
 }

@@ -1,5 +1,6 @@
+﻿'use client';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-bridge';
 import { products } from '../data/products';
 import { formatINR } from '../utils/currency';
 import { getWhatsAppInquiryUrl } from '../utils/whatsapp';

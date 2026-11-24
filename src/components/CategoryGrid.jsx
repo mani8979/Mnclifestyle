@@ -1,10 +1,12 @@
+'use client';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-bridge';
 import { categories } from '../data/categories';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
 
-export default function CategoryGrid() {
+export default function CategoryGrid({ categories: customCategories }) {
+  const allCategories = customCategories && customCategories.length > 0 ? customCategories : categories;
   return (
     <section className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px] pt-6 sm:pt-8 pb-4 sm:pb-6">
       {/* Section Header */}
@@ -28,7 +30,7 @@ export default function CategoryGrid() {
 
       {/* 12-Category Grid: 6 cols on desktop, 3-4 cols on tablet, 2 cols on mobile */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-        {categories.map((cat, idx) => (
+        {allCategories.map((cat, idx) => (
           <ScrollReveal
             key={cat.id}
             staggerIndex={idx}

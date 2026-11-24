@@ -1,3 +1,4 @@
+﻿'use client';
 import { useState, useEffect, useRef } from 'react';
 
 /**
@@ -35,7 +36,8 @@ export function useScrollReveal({
   // Fallback: If no IntersectionObserver or reduced motion is requested, show immediately
   const shouldRevealImmediately = !hasIntersectionObserver || isReducedMotion;
 
-  const [isVisible, setIsVisible] = useState(shouldRevealImmediately);
+  // Initial state is false on both server and client to prevent SSR hydration mismatch
+  const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef(null);
 
   useEffect(() => {

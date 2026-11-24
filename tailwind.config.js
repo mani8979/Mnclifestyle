@@ -59,10 +59,10 @@ export default {
         },
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['Inter', 'Manrope', 'system-ui', 'sans-serif'],
-        playfair: ['"Playfair Display"', 'Georgia', 'serif'],
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        serif: ['var(--font-playfair)', '"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['var(--font-inter)', 'var(--font-manrope)', 'Inter', 'Manrope', 'system-ui', 'sans-serif'],
+        playfair: ['var(--font-playfair)', '"Playfair Display"', 'Georgia', 'serif'],
+        cormorant: ['var(--font-cormorant)', '"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       letterSpacing: {
         luxury: '0.2em',

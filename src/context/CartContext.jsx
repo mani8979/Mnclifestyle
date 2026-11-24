@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CartContext = createContext();
@@ -5,6 +6,7 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
+      if (typeof window === 'undefined') return [];
       const saved = localStorage.getItem('mnc_lifestyle_cart');
       return saved ? JSON.parse(saved) : [];
     } catch {

@@ -1,3 +1,4 @@
+﻿'use client';
 import React, { useState } from 'react';
 import { X, Check, Sparkles, Box, CheckCircle2 } from 'lucide-react';
 

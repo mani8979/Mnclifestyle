@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { products } from '../data/products';
 
@@ -6,6 +7,7 @@ const WishlistContext = createContext();
 export function WishlistProvider({ children }) {
   const [wishlistIds, setWishlistIds] = useState(() => {
     try {
+      if (typeof window === 'undefined') return [];
       const saved = localStorage.getItem('mnc_lifestyle_wishlist');
       if (saved) {
         const parsed = JSON.parse(saved);

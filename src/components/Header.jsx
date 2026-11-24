@@ -1,10 +1,9 @@
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle, Heart, ShoppingBag } from 'lucide-react';
-import logoImg from '../assets/logo.png';
+import { NavLink, Link, useLocation } from '@/lib/router-bridge';
+import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
+const logoImg = '/logo.png';
 import { businessConfig } from '../data/businessConfig';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 
 export default function Header({ onOpenSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -13,9 +12,6 @@ export default function Header({ onOpenSearch }) {
   const dropdownRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const location = useLocation();
-
-  const { wishlistProducts, setIsWishlistOpen } = useWishlist();
-  const { totalItems, setIsCartOpen } = useCart();
 
   // Close mobile drawer and dropdown on route change
   useEffect(() => {
@@ -144,7 +140,7 @@ export default function Header({ onOpenSearch }) {
             className="inline-flex items-center group max-w-full"
           >
             <img
-              src={logoImg}
+              src="/logo.png"
               alt="MNC LifeStyle — Furniture & Contemporary Living"
               className="h-8 min-[375px]:h-9 sm:h-11 lg:h-[66px] max-w-[140px] min-[375px]:max-w-[185px] sm:max-w-none w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
             />
@@ -310,9 +306,9 @@ export default function Header({ onOpenSearch }) {
 
         </nav>
 
-        {/* Right Actions: Search, Wishlist, Cart */}
+        {/* Right Actions: Search */}
         <div className="flex items-center gap-0.5 min-[375px]:gap-1 sm:gap-2 shrink-0">
-          {/* 1. Search Trigger */}
+          {/* Search Trigger */}
           <button
             onClick={onOpenSearch}
             className="p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
@@ -320,36 +316,6 @@ export default function Header({ onOpenSearch }) {
             aria-label="Search furniture"
           >
             <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-          </button>
-
-          {/* 2. Wishlist Trigger */}
-          <button
-            onClick={() => setIsWishlistOpen(true)}
-            className="relative p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
-            title="View saved pieces"
-            aria-label="View curated wishlist"
-          >
-            <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-            {wishlistProducts.length > 0 && (
-              <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#D69A4B] text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
-                {wishlistProducts.length}
-              </span>
-            )}
-          </button>
-
-          {/* 3. Shopping Bag / Cart Trigger */}
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5"
-            title="View shopping bag"
-            aria-label="View shopping bag"
-          >
-            <ShoppingBag className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-            {totalItems > 0 && (
-              <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-[#211710] text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
-                {totalItems}
-              </span>
-            )}
           </button>
         </div>
 
@@ -376,32 +342,6 @@ export default function Header({ onOpenSearch }) {
                 aria-label="Close menu"
               >
                 <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Quick Mobile Wishlist & Bag Row */}
-            <div className="grid grid-cols-2 gap-2 mb-4 pb-3 border-b border-[#E9D8C5]">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsWishlistOpen(true);
-                }}
-                className="py-2 px-3 bg-white border border-[#E9D8C5] rounded-xl text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Heart className="w-3.5 h-3.5 text-[#D69A4B]" />
-                <span>Wishlist ({wishlistProducts.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsCartOpen(true);
-                }}
-                className="py-2 px-3 bg-white border border-[#E9D8C5] rounded-xl text-xs font-semibold text-[#211A15] hover:text-[#D69A4B] flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <ShoppingBag className="w-3.5 h-3.5 text-[#211A15]" />
-                <span>Bag ({totalItems})</span>
               </button>
             </div>
 

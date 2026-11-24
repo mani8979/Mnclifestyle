@@ -1,13 +1,11 @@
+'use client';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { X, Star, ArrowRight, Heart, MessageCircle } from 'lucide-react';
-import { useWishlist } from '../context/WishlistContext';
+import { Link } from '@/lib/router-bridge';
+import { X, Star, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 
 export default function ProductQuickViewModal({ product, isOpen, onClose }) {
-  const { isInWishlist, toggleWishlist } = useWishlist();
-
   if (!isOpen || !product) return null;
 
   const [activeImage, setActiveImage] = useState(0);
@@ -16,7 +14,6 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
   );
   const [quantity, setQuantity] = useState(1);
 
-  const isSaved = isInWishlist(product.id);
   const discount = calculateDiscount(product.price, product.originalPrice);
 
   const whatsappOrderUrl = getWhatsAppOrderUrl({
@@ -191,14 +188,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                 </a>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className="text-xs text-warmgrey hover:text-bronze flex items-center gap-1 font-medium"
-                >
-                  <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-bronze text-bronze' : ''}`} />
-                  <span>{isSaved ? 'Saved to Wishlist' : 'Add to Wishlist'}</span>
-                </button>
+              <div className="flex items-center justify-end pt-1">
                 <Link
                   to={`/product/${product.id}`}
                   onClick={onClose}

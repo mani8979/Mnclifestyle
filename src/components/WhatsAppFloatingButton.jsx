@@ -1,5 +1,6 @@
+﻿'use client';
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-bridge';
 import { getWhatsAppConsultationUrl, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
 
 export default function WhatsAppFloatingButton() {

@@ -1,8 +1,9 @@
+﻿'use client';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-bridge';
 import { Home, ArrowRight, Sparkles, ShieldCheck, Truck, Sofa, Headphones } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
-import heroBg from '../assets/hero-bg.webp';
+const heroBg = '/hero-bg.webp';
 
 export default function Hero() {
   return (

@@ -24,7 +24,7 @@ export const buildWhatsAppUrl = (message) => {
 export const getWhatsAppOrderUrl = ({ product, selectedColor, quantity = 1 }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : `https://mnclifestyle.in/product/${product.id}`;
+  const currentUrl = `https://mnclifestyle.in/product/${product.slug || product.id}`;
   const price = formatINR(product.price);
   const sku = product.sku || `MNC-${product.category?.slice(0, 3)?.toUpperCase() || 'FURN'}-${product.id.slice(-2)}`;
   const variant = selectedColor || 'Standard';
@@ -51,7 +51,7 @@ Please share availability and delivery details.`;
 export const getWhatsAppInquiryUrl = ({ product, topic = 'Product Enquiry' }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : `https://mnclifestyle.in/product/${product.id}`;
+  const currentUrl = `https://mnclifestyle.in/product/${product.slug || product.id}`;
   const price = formatINR(product.price);
 
   const message = `Hello MNC LifeStyle Team,
