@@ -113,32 +113,36 @@ export async function PATCH(
       validatedData.slug = candidateSlug;
     }
 
-    // Check duplicate SKU if changed
+    // Check and auto-resolve duplicate SKU if changed
     if (validatedData.sku && validatedData.sku !== product.sku) {
-      const existingSku = await Product.findOne({
-        sku: validatedData.sku,
+      let candidateSku = validatedData.sku;
+      let existingSku = await Product.findOne({
+        sku: candidateSku,
         _id: { $ne: product._id },
       });
       if (existingSku) {
-        return NextResponse.json(
-          { success: false, message: `Product SKU "${validatedData.sku}" is already in use by another piece.` },
-          { status: 409 }
-        );
+        candidateSku = `${candidateSku}-${Math.floor(100 + Math.random() * 900)}`;
+        validatedData.sku = candidateSku;
       }
     }
 
-    // Check duplicate Slug if changed
+    // Check and auto-resolve duplicate Slug if changed
     if (validatedData.slug && validatedData.slug !== product.slug) {
-      const existingSlug = await Product.findOne({
-        slug: validatedData.slug,
+      let candidateSlug = validatedData.slug;
+      let suffix = 1;
+      let existingSlug = await Product.findOne({
+        slug: candidateSlug,
         _id: { $ne: product._id },
       });
-      if (existingSlug) {
-        return NextResponse.json(
-          { success: false, message: `Product URL slug "${validatedData.slug}" is already in use by another piece.` },
-          { status: 409 }
-        );
+      while (existingSlug) {
+        suffix++;
+        candidateSlug = `${validatedData.slug}-${suffix}`;
+        existingSlug = await Product.findOne({
+          slug: candidateSlug,
+          _id: { $ne: product._id },
+        });
       }
+      validatedData.slug = candidateSlug;
     }
 
     // Apply updates
