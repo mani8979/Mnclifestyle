@@ -143,8 +143,8 @@ export async function POST(request: NextRequest) {
       body.materials = ['Kiln-Dried Hardwood', 'High-Density Foam'];
     }
 
-    if (!Array.isArray(body.images) || body.images.length === 0) {
-      body.images = ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
+    if (!Array.isArray(body.images)) {
+      body.images = [];
     }
 
     // Zod schema validation

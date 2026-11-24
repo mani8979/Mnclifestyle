@@ -123,9 +123,9 @@ export default function ProductForm({
   const [sku, setSku] = useState(initialProduct?.sku || '');
   const [category, setCategory] = useState(
     initialProduct?.category ||
-      (initialCategories && initialCategories[0]
-        ? initialCategories[0].slug || initialCategories[0].id || 'sofas'
-        : 'sofas')
+    (initialCategories && initialCategories[0]
+      ? initialCategories[0].slug || initialCategories[0].id || 'sofas'
+      : 'sofas')
   );
   const [subCategory, setSubCategory] = useState(initialProduct?.subCategory || '');
 
@@ -181,12 +181,7 @@ export default function ProductForm({
         isPrimary: i === 0,
       }));
     }
-    return [
-      {
-        url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80',
-        isPrimary: true,
-      },
-    ];
+    return [];
   }, [initialProduct]);
 
   const [imageItems, setImageItems] = useState<UploadedImageItem[]>(initialImagesList);
@@ -340,22 +335,16 @@ export default function ProductForm({
         ? fullDescription.trim()
         : `${name.trim()} is an exquisite handcrafted furniture piece made with seasoned materials, precision joinery, and tailored luxury aesthetics.`;
 
-    const finalImages =
-      imageItems.length > 0
-        ? imageItems.map((img) => img.url)
-        : ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
+    const finalImages = imageItems.map((img) => img.url);
 
-    const finalImageDetails =
-      imageItems.length > 0
-        ? imageItems.map((img, idx) => ({
-            url: img.url,
-            key: img.key || '',
-            altText: img.altText || '',
-            isPrimary: idx === 0,
-            width: img.width,
-            height: img.height,
-          }))
-        : [{ url: finalImages[0], key: '', altText: name.trim(), isPrimary: true }];
+    const finalImageDetails = imageItems.map((img, idx) => ({
+      url: img.url,
+      key: img.key || '',
+      altText: img.altText || '',
+      isPrimary: idx === 0,
+      width: img.width,
+      height: img.height,
+    }));
 
     const payload = {
       name: name.trim(),
@@ -518,7 +507,7 @@ export default function ProductForm({
 
       {/* Form Grid Sections */}
       <div className="space-y-6">
-        
+
         {/* SECTION 1: Basic Information */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
@@ -605,11 +594,10 @@ export default function ProductForm({
                       key={sub}
                       type="button"
                       onClick={() => setSubCategory(sub)}
-                      className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${
-                        subCategory.toLowerCase() === sub.toLowerCase()
-                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                      }`}
+                      className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${subCategory.toLowerCase() === sub.toLowerCase()
+                        ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
                     >
                       {sub}
                     </button>

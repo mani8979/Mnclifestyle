@@ -121,7 +121,7 @@ export const ProductInputSchema = z.object({
   images: z
     .array(z.string().url('Each image must be a valid URL'))
     .optional()
-    .default(['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80']),
+    .default([]),
   imageDetails: z.array(ImageDetailSchema).optional().default([]),
   leadTime: z.string().optional().default('Complimentary White-Glove In-Home Delivery across AP (3–7 Days)'),
   warranty: z.string().optional().default('10-Year Structural Frame & Termite Warranty'),

@@ -262,10 +262,7 @@ export default function ProductImageUploader({
   };
 
   const handleRemove = (index: number) => {
-    if (images.length <= 1) {
-      setErrorMessage('At least one product image is required.');
-      return;
-    }
+    setErrorMessage('');
     const copy = images.filter((_, i) => i !== index);
     const updated = copy.map((item, idx) => ({ ...item, isPrimary: idx === 0 }));
     onChange(updated);
@@ -508,6 +505,17 @@ export default function ProductImageUploader({
 
         {/* Images List */}
         <div className="space-y-3">
+          {images.length === 0 && (
+            <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 text-center flex flex-col items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+                <ImageIcon className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-semibold text-slate-700">No product images added yet</p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-sm">
+                Upload photos using the dropzone above or click &ldquo;Enter external image URL&rdquo; to add public photo links.
+              </p>
+            </div>
+          )}
           {images.map((img, idx) => (
             <div
               key={idx}
