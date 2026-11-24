@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState } from 'react';
 import { useLocation } from '@/lib/router-bridge';
 import { getWhatsAppConsultationUrl, WHATSAPP_DISPLAY_PHONE } from '../utils/whatsapp';
