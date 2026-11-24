@@ -21,6 +21,7 @@ import {
   UploadCloud,
   ImageIcon,
   Loader2,
+  Link2,
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
 
@@ -73,7 +74,26 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
   const [formImageKey, setFormImageKey] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imageTab, setImageTab] = useState<'upload' | 'url'>('upload');
+  const [linkInput, setLinkInput] = useState('');
+  const [linkPreviewError, setLinkPreviewError] = useState(false);
+
+  const handleApplyLink = () => {
+    const trimmed = linkInput.trim();
+    if (!trimmed) {
+      showToast('error', 'Please enter an image link / URL');
+      return;
+    }
+    try {
+      new URL(trimmed);
+    } catch {
+      showToast('error', 'Please enter a valid HTTP or HTTPS image URL');
+      return;
+    }
+    setFormImage(trimmed);
+    setFormImageKey('');
+    showToast('success', 'Image link applied to category');
+  };
 
   const handleUploadImageFile = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
@@ -225,7 +245,9 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     setFormDescription('');
     setFormImage('');
     setFormImageKey('');
-    setShowUrlInput(false);
+    setImageTab('upload');
+    setLinkInput('');
+    setLinkPreviewError(false);
     setFormOrder(categories.length + 1);
     setFormSubcategories([]);
     setNewSubcatInput('');
@@ -240,7 +262,9 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     setFormDescription(cat.description || '');
     setFormImage(cat.image || '');
     setFormImageKey(cat.imageKey || '');
-    setShowUrlInput(false);
+    setImageTab(cat.image ? 'url' : 'upload');
+    setLinkInput(cat.image || '');
+    setLinkPreviewError(false);
     setFormOrder(cat.orderIndex ?? 0);
     setFormSubcategories([...(cat.subcategories || [])]);
     setNewSubcatInput('');
@@ -778,29 +802,34 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Category Photo
                 </label>
+
                 {formImage ? (
-                  <div className="relative rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center gap-3 p-2.5">
-                    <div className="w-16 h-16 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
+                  <div className="relative rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center gap-3 p-3 shadow-2xs">
+                    <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={formImage}
-                        alt={formName || 'Category preview'}
+                        alt={formName || 'Category photo'}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-800">
-                        Photo Uploaded
+                      <p className="text-xs font-semibold text-slate-900">
+                        Photo Attached
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5" title={formImage}>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5 font-mono" title={formImage}>
                         {formImage}
                       </p>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="mt-1 text-[11px] text-blue-600 hover:underline font-medium inline-block"
+                        onClick={() => {
+                          setLinkInput(formImage);
+                          setFormImage('');
+                          setFormImageKey('');
+                        }}
+                        className="mt-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline font-medium inline-block cursor-pointer"
                       >
-                        Change photo
+                        Change photo / link
                       </button>
                     </div>
                     <button
@@ -808,83 +837,172 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                       onClick={() => {
                         setFormImage('');
                         setFormImageKey('');
+                        setLinkInput('');
                       }}
-                      className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       title="Remove photo"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setIsDragging(false);
-                      if (e.dataTransfer.files?.[0]) {
-                        handleUploadImageFile(e.dataTransfer.files[0]);
-                      }
-                    }}
-                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
-                      isDragging
-                        ? 'border-blue-500 bg-blue-50/50'
-                        : 'border-slate-300 hover:border-blue-500 hover:bg-slate-50'
-                    }`}
-                  >
-                    {isUploadingImage ? (
-                      <div className="flex flex-col items-center justify-center py-2 text-blue-600 gap-2">
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        <span className="text-xs font-medium">Uploading photo to Cloudinary...</span>
+                  <div className="space-y-3">
+                    {/* Method Selector Tabs */}
+                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setImageTab('upload')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          imageTab === 'upload'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>Upload File</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageTab('url')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          imageTab === 'url'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Link2 className="w-3.5 h-3.5" />
+                        <span>Add by Image Link / URL</span>
+                      </button>
+                    </div>
+
+                    {imageTab === 'upload' ? (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragging(true);
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragging(false);
+                          if (e.dataTransfer.files?.[0]) {
+                            handleUploadImageFile(e.dataTransfer.files[0]);
+                          }
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition-colors ${
+                          isDragging
+                            ? 'border-blue-500 bg-blue-50/50'
+                            : 'border-slate-300 hover:border-blue-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {isUploadingImage ? (
+                          <div className="flex flex-col items-center justify-center py-2 text-blue-600 gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <span className="text-xs font-medium">Uploading photo to Cloudinary...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-2 text-slate-500 gap-1.5">
+                            <UploadCloud className="w-6 h-6 text-slate-400" />
+                            <p className="text-xs font-semibold text-slate-700">
+                              Click to upload photo or drag and drop
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              PNG, JPG, or WebP (max 8 MB)
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-2 text-slate-500 gap-1.5">
-                        <UploadCloud className="w-6 h-6 text-slate-400" />
-                        <p className="text-xs font-medium text-slate-700">
-                          Click to upload photo or drag and drop
-                        </p>
-                        <p className="text-[11px] text-slate-400">
-                          PNG, JPG or WebP (max 8 MB)
-                        </p>
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">
+                            Paste Image URL
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="url"
+                              value={linkInput}
+                              onChange={(e) => {
+                                setLinkInput(e.target.value);
+                                setLinkPreviewError(false);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleApplyLink();
+                                }
+                              }}
+                              placeholder="https://images.unsplash.com/... or https://..."
+                              className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleApplyLink}
+                              disabled={!linkInput.trim()}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
+                            >
+                              Use Photo
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            Paste any direct public image URL (Unsplash, Cloudinary, AWS S3, etc.).
+                          </p>
+                        </div>
+
+                        {/* Live Preview for Category Link */}
+                        {linkInput.trim() && (
+                          <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center gap-3">
+                            <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                              {linkPreviewError ? (
+                                <div className="text-center p-1 text-red-500">
+                                  <AlertCircle className="w-4 h-4 mx-auto text-red-400" />
+                                  <span className="text-[9px] block">Error</span>
+                                </div>
+                              ) : (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={linkInput.trim()}
+                                  alt="Live link preview"
+                                  onError={() => setLinkPreviewError(true)}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-slate-800">
+                                {linkPreviewError ? 'Could not load image from this URL' : 'Live Image Preview'}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate mt-0.5 font-mono" title={linkInput}>
+                                {linkInput}
+                              </p>
+                              {!linkPreviewError && (
+                                <button
+                                  type="button"
+                                  onClick={handleApplyLink}
+                                  className="mt-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline font-semibold"
+                                >
+                                  Apply this photo to category →
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleUploadImageFile(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
                   </div>
-                )}
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleUploadImageFile(e.target.files[0]);
-                    }
-                  }}
-                  className="hidden"
-                />
-
-                <div className="flex items-center justify-between mt-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setShowUrlInput(!showUrlInput)}
-                    className="text-[11px] text-blue-600 hover:underline font-medium"
-                  >
-                    {showUrlInput ? 'Hide image URL field' : 'Or paste image URL directly'}
-                  </button>
-                </div>
-
-                {showUrlInput && (
-                  <input
-                    type="url"
-                    value={formImage}
-                    onChange={(e) => setFormImage(e.target.value)}
-                    placeholder="https://images.unsplash.com/... or https://res.cloudinary.com/..."
-                    className="w-full mt-1.5 px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                  />
                 )}
               </div>
 

@@ -41,7 +41,9 @@ export default function ProductImageUploader({
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<Array<{ name: string; progress: number }>>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [uploadTab, setUploadTab] = useState<'upload' | 'url'>('upload');
   const [urlInput, setUrlInput] = useState('');
+  const [urlPreviewError, setUrlPreviewError] = useState(false);
   const [showUrlField, setShowUrlField] = useState(false);
 
   // Validate file client-side
@@ -294,46 +296,155 @@ export default function ProductImageUploader({
         </div>
       )}
 
-      {/* Cloudinary Drag & Drop Zone */}
-      <div
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all cursor-pointer ${
-          isDragging
-            ? 'border-blue-600 bg-blue-50 scale-[1.01]'
-            : 'border-slate-200 hover:border-blue-600/60 bg-slate-50'
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-          onChange={onFileInputChange}
-          className="hidden"
-        />
-
-        <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-blue-600/30 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
-          <UploadCloud className="w-6 h-6" />
-        </div>
-
-        <h3 className="font-serif text-base text-slate-900 font-normal mb-1">
-          Direct Cloudinary Image Upload
-        </h3>
-        <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">
-          Drag and drop product photos here, or <span className="text-blue-600 font-medium underline">browse files</span>. Signed direct browser upload to Cloudinary.
-        </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-400">
-          <span>Formats: JPG, PNG, WebP</span>
-          <span>•</span>
-          <span>Max file size: 8 MB</span>
-          <span>•</span>
-          <span>Up to 10 gallery images</span>
-        </div>
+      {/* Upload Method Switcher: File Upload vs URL Link */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          type="button"
+          onClick={() => setUploadTab('upload')}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            uploadTab === 'upload'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <UploadCloud className="w-3.5 h-3.5" />
+          <span>Upload Image File</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setUploadTab('url')}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            uploadTab === 'url'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Link2 className="w-3.5 h-3.5" />
+          <span>Add by Image Link / URL</span>
+        </button>
       </div>
+
+      {/* Mode A: Direct Cloudinary Drag & Drop Zone */}
+      {uploadTab === 'upload' && (
+        <div
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all cursor-pointer ${
+            isDragging
+              ? 'border-blue-600 bg-blue-50 scale-[1.01]'
+              : 'border-slate-200 hover:border-blue-600/60 bg-slate-50'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            onChange={onFileInputChange}
+            className="hidden"
+          />
+
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-blue-600/30 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
+            <UploadCloud className="w-6 h-6" />
+          </div>
+
+          <h3 className="font-serif text-base text-slate-900 font-normal mb-1">
+            Direct Cloudinary Image Upload
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">
+            Drag and drop product photos here, or <span className="text-blue-600 font-medium underline">browse files</span>. Signed direct browser upload to Cloudinary.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-400">
+            <span>Formats: JPG, PNG, WebP</span>
+            <span>•</span>
+            <span>Max file size: 8 MB</span>
+            <span>•</span>
+            <span>Up to 10 gallery images</span>
+          </div>
+        </div>
+      )}
+
+      {/* Mode B: Add Image by Direct Link / URL with Live Preview */}
+      {uploadTab === 'url' && (
+        <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 mb-1">
+              Image Link / URL
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="url"
+                placeholder="Paste direct image link (e.g. https://images.unsplash.com/... or https://res.cloudinary.com/...)"
+                value={urlInput}
+                onChange={(e) => {
+                  setUrlInput(e.target.value);
+                  setUrlPreviewError(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddUrl();
+                  }
+                }}
+                className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs"
+              />
+              <button
+                type="button"
+                onClick={handleAddUrl}
+                disabled={!urlInput.trim()}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+              >
+                Add Image to Product
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              Supports any direct public image URL (Unsplash, Cloudinary, AWS S3, etc.).
+            </p>
+          </div>
+
+          {/* Live Preview */}
+          {urlInput.trim() && (
+            <div className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center gap-3.5 shadow-2xs">
+              <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                {urlPreviewError ? (
+                  <div className="text-center p-1 text-red-500">
+                    <AlertCircle className="w-4 h-4 mx-auto mb-0.5 text-red-400" />
+                    <span className="text-[9px]">Invalid URL</span>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={urlInput.trim()}
+                    alt="Live link preview"
+                    onError={() => setUrlPreviewError(true)}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-800">
+                  {urlPreviewError ? 'Unable to load image from this URL' : 'Live Image Preview'}
+                </p>
+                <p className="text-[11px] text-slate-500 truncate mt-0.5 font-mono" title={urlInput}>
+                  {urlInput}
+                </p>
+                {!urlPreviewError && (
+                  <button
+                    type="button"
+                    onClick={handleAddUrl}
+                    className="mt-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    Click to add this image to gallery →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Active Uploads Progress Indicator */}
       {uploadingFiles.length > 0 && (
