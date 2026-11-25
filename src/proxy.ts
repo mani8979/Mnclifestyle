@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/auth';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
   const session = token ? await verifyAdminToken(token) : null;
@@ -38,6 +38,9 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export const middleware = proxy;
+export default proxy;
 
 export const config = {
   matcher: ['/admin/:path*', '/api/admin/:path*'],
