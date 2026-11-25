@@ -20,7 +20,7 @@ import {
   Truck
 } from 'lucide-react';
 
-export default function Category({ initialCategory, initialProducts }) {
+export default function Category({ initialCategory, initialProducts, allCategories }) {
   const params = useParams();
   const categoryId = params?.categorySlug || params?.categoryId;
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
@@ -42,11 +42,11 @@ export default function Category({ initialCategory, initialProducts }) {
     notFound();
   }
 
-  const allProducts = initialProducts && initialProducts.length > 0 ? initialProducts : products;
+  const allProducts = Array.isArray(initialProducts) ? initialProducts : products;
 
   // Base products for this category (supports matching by ID or legacy ID or slug)
   const baseCategoryProducts = useMemo(() => {
-    if (initialProducts && initialProducts.length > 0) {
+    if (Array.isArray(initialProducts)) {
       return initialProducts;
     }
     return allProducts.filter(
@@ -101,7 +101,11 @@ export default function Category({ initialCategory, initialProducts }) {
   const hasActiveFilters =
     selectedSubcategory !== 'all' || selectedPriceRange !== 'all' || sortOption !== 'featured';
 
-  const otherCategories = categories.filter((c) => c.id !== category.id).slice(0, 3);
+  const activeCategoriesList =
+    Array.isArray(allCategories) && allCategories.length > 0 ? allCategories : categories;
+  const otherCategories = activeCategoriesList
+    .filter((c) => (c.slug || c.id) !== (category.slug || category.id))
+    .slice(0, 3);
   const whatsappConsultationUrl = getWhatsAppConsultationUrl(
     `Custom ${category.name} Selection & Interior Styling`
   );
@@ -371,8 +375,8 @@ export default function Category({ initialCategory, initialProducts }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {otherCategories.map((c) => (
               <Link
-                key={c.id}
-                to={`/category/${c.id}`}
+                key={c.slug || c.id}
+                to={`/category/${c.slug || c.id}`}
                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] bg-beige-200 block shadow-soft border border-[#E9D8C5]"
               >
                 <Image

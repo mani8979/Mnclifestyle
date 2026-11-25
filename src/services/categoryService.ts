@@ -44,6 +44,12 @@ export async function getCategoryBySlug(slugOrId: string) {
     if (doc) {
       return sanitizeCategory(doc);
     }
+
+    // If MongoDB already has managed categories, do not resurrect deleted static categories
+    const totalActive = await Category.countDocuments({ isActive: true });
+    if (totalActive > 0) {
+      return null;
+    }
   } catch (error) {
     console.error(`[Database Error] MongoDB getCategoryBySlug('${slugOrId}') failed. Falling back to static categories:`, error);
   }

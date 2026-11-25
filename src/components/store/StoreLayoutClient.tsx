@@ -51,7 +51,7 @@ export default function StoreLayoutClient({
       </main>
 
       {/* 4. Footer */}
-      <Footer />
+      <Footer categories={categories} />
 
       {/* 5. Modals */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

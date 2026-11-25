@@ -15,7 +15,26 @@ import ScrollReveal from './ScrollReveal';
 import { businessConfig } from '../data/businessConfig';
 import { WHATSAPP_RAW_NUMBER } from '../utils/whatsapp';
 
-export default function Footer() {
+/**
+ * @param {{ categories?: any[] }} props
+ */
+export default function Footer({ categories: initialCategories = [] }) {
+  const activeFooterCategories = (
+    Array.isArray(initialCategories) && initialCategories.length > 0
+      ? initialCategories
+      : [
+          { slug: 'sectional-sofas', name: 'Sofas' },
+          { slug: 'beds', name: 'Beds' },
+          { slug: 'dining-sets', name: 'Dining Sets' },
+          { slug: 'centre-tables', name: 'Centre Tables' },
+          { slug: 'recliners', name: 'Recliners' },
+          { slug: 'wardrobes', name: 'Wardrobes' },
+          { slug: 'chairs', name: 'Chairs' },
+          { slug: 'office-tables', name: 'Office Tables' },
+        ]
+  ).slice(0, 10);
+  const leftFooterCategories = activeFooterCategories.slice(0, Math.ceil(activeFooterCategories.length / 2));
+  const rightFooterCategories = activeFooterCategories.slice(Math.ceil(activeFooterCategories.length / 2));
   const whatsappDirectUrl = `https://wa.me/${businessConfig.contact.phoneRaw}?text=${encodeURIComponent(
     'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
   )}`;
@@ -165,58 +184,28 @@ export default function Footer() {
             </h5>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs sm:text-[13px] text-[#E9D8C5] font-sans">
               <div className="space-y-1">
-                <div>
-                  <Link to="/category/sofas" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Sofas & Couches
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/beds" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Solid Wood Beds
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/dining-sets" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Dining Sets & Chairs
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/centre-tables" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Centre Tables
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/recliners" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Motorized Recliners
-                  </Link>
-                </div>
+                {leftFooterCategories.map((cat) => (
+                  <div key={cat.slug || cat.id}>
+                    <Link
+                      to={`/category/${cat.slug || cat.id}`}
+                      className="hover:text-[#D69A4B] transition-colors py-1 block"
+                    >
+                      {cat.name}
+                    </Link>
+                  </div>
+                ))}
               </div>
               <div className="space-y-1">
-                <div>
-                  <Link to="/category/study-tables" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Study Tables & Desks
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/wardrobes" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Wardrobes
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/cabinets-sideboards" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Cabinets & Sideboards
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/office-furniture" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Office Furniture
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/category/shoe-racks" className="hover:text-[#D69A4B] transition-colors py-1 block">
-                    Shoe Racks
-                  </Link>
-                </div>
+                {rightFooterCategories.map((cat) => (
+                  <div key={cat.slug || cat.id}>
+                    <Link
+                      to={`/category/${cat.slug || cat.id}`}
+                      className="hover:text-[#D69A4B] transition-colors py-1 block"
+                    >
+                      {cat.name}
+                    </Link>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="pt-3">

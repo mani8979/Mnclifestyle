@@ -25,14 +25,21 @@ export default async function CategoryPage({
   params: Promise<{ categorySlug: string }>;
 }) {
   const { categorySlug } = await params;
-  const [category, products] = await Promise.all([
+  const [category, products, allCategories] = await Promise.all([
     getCategoryBySlug(categorySlug),
     getProducts({ category: categorySlug }),
+    getCategories(),
   ]);
 
   if (!category) {
     notFound();
   }
 
-  return <Category initialCategory={category} initialProducts={products} />;
+  return (
+    <Category
+      initialCategory={category}
+      initialProducts={products}
+      allCategories={allCategories}
+    />
+  );
 }

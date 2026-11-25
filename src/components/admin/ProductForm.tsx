@@ -335,6 +335,12 @@ export default function ProductForm({
       return;
     }
 
+    if (!activeCategoryObj) {
+      setErrorMessage('Please select an active primary category for this product.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const activeState = publishStatus !== undefined ? publishStatus : isActive;
@@ -570,10 +576,15 @@ export default function ProductForm({
                 Primary Category <span className="text-red-400">*</span>
               </label>
               <select
-                value={category}
+                value={activeCategoryObj ? (activeCategoryObj.slug || activeCategoryObj.id || category) : ''}
                 onChange={(e) => handleCategorySelect(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors cursor-pointer"
               >
+                {!activeCategoryObj && (
+                  <option value="" disabled>
+                    -- Select an active category (current &quot;{category || 'none'}&quot; missing) --
+                  </option>
+                )}
                 {categories.map((c) => {
                   const val = c.slug || c.id || '';
                   return (

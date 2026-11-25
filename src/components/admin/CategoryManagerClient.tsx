@@ -24,6 +24,7 @@ import {
   Link2,
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
+import CategoryRemovalModal from './CategoryRemovalModal';
 
 interface CategoryItem {
   _id?: string;
@@ -167,7 +168,17 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
   // Notification Toast
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [removalModal, setRemovalModal] = useState<{
+    isOpen: boolean;
+    mode: 'category' | 'subcategory';
+    sourceCategory: CategoryItem | null;
+    subCategory?: string | null;
+  }>({
+    isOpen: false,
+    mode: 'category',
+    sourceCategory: null,
+    subCategory: null,
+  });
 
   // Reorder State
   const [hasOrderChanges, setHasOrderChanges] = useState(false);
@@ -289,6 +300,19 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
   };
 
   const removeFormSubcategory = (sub: string) => {
+    if (
+      editingCategory &&
+      Array.isArray(editingCategory.subcategories) &&
+      editingCategory.subcategories.some((s) => s.toLowerCase() === sub.toLowerCase())
+    ) {
+      setRemovalModal({
+        isOpen: true,
+        mode: 'subcategory',
+        sourceCategory: editingCategory,
+        subCategory: sub,
+      });
+      return;
+    }
     setFormSubcategories(formSubcategories.filter((s) => s !== sub));
   };
 
@@ -379,32 +403,13 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     }
   };
 
-  const handleDeleteCategory = async (cat: CategoryItem) => {
-    if (!window.confirm(`Are you sure you want to delete category "${cat.name}"? Products under this category will need reassignment.`)) {
-      return;
-    }
-
-    setDeletingId(cat.id);
-    try {
-      const res = await fetch(`/api/admin/categories/${cat.id || cat.slug}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to delete category');
-      }
-
-      setCategories((prev) => {
-        const remaining = prev.filter((c) => c.id !== cat.id && c.slug !== cat.slug);
-        return remaining.map((c, idx) => ({ ...c, orderIndex: idx + 1 }));
-      });
-      showToast('success', `Category "${cat.name}" deleted successfully`);
-      router.refresh();
-    } catch (err: any) {
-      showToast('error', err.message || 'Failed to delete category');
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDeleteCategory = (cat: CategoryItem) => {
+    setRemovalModal({
+      isOpen: true,
+      mode: 'category',
+      sourceCategory: cat,
+      subCategory: null,
+    });
   };
 
   // Quick inline add subcategory to category
@@ -445,30 +450,72 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
     }
   };
 
-  // Quick inline remove subcategory from category
-  const handleInlineRemoveSubcategory = async (cat: CategoryItem, subToRemove: string) => {
-    const updatedSubcategories = (cat.subcategories || []).filter((s) => s !== subToRemove);
+  // Open impact/transfer/delete modal when removing a subcategory
+  const handleInlineRemoveSubcategory = (cat: CategoryItem, subToRemove: string) => {
+    setRemovalModal({
+      isOpen: true,
+      mode: 'subcategory',
+      sourceCategory: cat,
+      subCategory: subToRemove,
+    });
+  };
 
-    try {
-      const catIdentifier = cat._id || cat.id || cat.slug;
-      const res = await fetch(`/api/admin/categories/${encodeURIComponent(catIdentifier)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subcategories: updatedSubcategories }),
+  const handleRemovalCompleted = (result: {
+    mode: 'category' | 'subcategory';
+    sourceCategory: CategoryItem;
+    subCategory?: string | null;
+    message: string;
+    updatedCategory?: any;
+  }) => {
+    if (result.mode === 'category') {
+      setCategories((prev) => {
+        const remaining = prev.filter(
+          (c) =>
+            c.id !== result.sourceCategory.id &&
+            c._id !== result.sourceCategory._id &&
+            c.slug !== result.sourceCategory.slug
+        );
+        return remaining.map((c, idx) => ({ ...c, orderIndex: idx + 1 }));
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to remove subcategory');
-      }
-
+    } else if (result.mode === 'subcategory') {
+      const removed = (result.subCategory || '').toLowerCase();
       setCategories((prev) =>
-        prev.map((c) => (c.id === cat.id || c._id === cat._id || c.slug === cat.slug ? { ...c, subcategories: updatedSubcategories } : c))
+        prev.map((c) => {
+          const isMatch =
+            c.id === result.sourceCategory.id ||
+            c._id === result.sourceCategory._id ||
+            c.slug === result.sourceCategory.slug;
+          if (!isMatch) return c;
+          const nextSubs = Array.isArray(result.updatedCategory?.subcategories)
+            ? result.updatedCategory.subcategories
+            : (c.subcategories || []).filter((s) => s.toLowerCase() !== removed);
+          return { ...c, subcategories: nextSubs };
+        })
       );
-      showToast('success', `Removed "${subToRemove}" from ${cat.name}`);
-      router.refresh();
-    } catch (err: any) {
-      showToast('error', err.message || 'Failed to remove subcategory');
+
+      if (
+        editingCategory &&
+        (editingCategory.id === result.sourceCategory.id ||
+          editingCategory._id === result.sourceCategory._id ||
+          editingCategory.slug === result.sourceCategory.slug)
+      ) {
+        setFormSubcategories((prev) => prev.filter((s) => s.toLowerCase() !== removed));
+        setEditingCategory((prev) =>
+          prev
+            ? {
+                ...prev,
+                subcategories: (prev.subcategories || []).filter(
+                  (s) => s.toLowerCase() !== removed
+                ),
+              }
+            : null
+        );
+      }
     }
+
+    setRemovalModal({ isOpen: false, mode: 'category', sourceCategory: null, subCategory: null });
+    showToast('success', result.message);
+    router.refresh();
   };
 
   const filteredCategories = categories.filter((cat) => {
@@ -749,8 +796,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                         <button
                           type="button"
                           onClick={() => handleDeleteCategory(cat)}
-                          disabled={deletingId === cat.id}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Delete Category"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1123,6 +1169,23 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
           </div>
         </div>
       )}
+      {/* Category / Subcategory Removal Impact & Transfer Modal */}
+      <CategoryRemovalModal
+        isOpen={removalModal.isOpen}
+        mode={removalModal.mode}
+        sourceCategory={removalModal.sourceCategory}
+        subCategory={removalModal.subCategory}
+        allCategories={categories}
+        onClose={() =>
+          setRemovalModal({
+            isOpen: false,
+            mode: 'category',
+            sourceCategory: null,
+            subCategory: null,
+          })
+        }
+        onCompleted={handleRemovalCompleted}
+      />
     </div>
   );
 }
