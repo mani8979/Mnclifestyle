@@ -258,7 +258,7 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
                   <div className="grid grid-cols-2 gap-2">
                     {shopCategories.map((item) => (
                       <Link
-                        key={item.label}
+                        key={item.path}
                         to={item.path}
                         onClick={() => setIsShopOpen(false)}
                         role="menuitem"
@@ -433,7 +433,7 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
                       <div className="space-y-0.5">
                         {shopCategories.map((item) => (
                           <Link
-                            key={item.label}
+                            key={item.path}
                             to={item.path}
                             onClick={() => {
                               setIsMobileMenuOpen(false);

@@ -39,9 +39,6 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const middleware = proxy;
-export default proxy;
-
 export const config = {
   matcher: ['/admin/:path*', '/api/admin/:path*'],
 };

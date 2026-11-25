@@ -1,20 +1,30 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { X, Star, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { slugify } from '../data/products';
 
 export default function ProductQuickViewModal({ product, isOpen, onClose }) {
-  if (!isOpen || !product) return null;
-
   const [activeImage, setActiveImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(
-    product.colors?.[0]?.name || 'Standard'
+    product?.colors?.[0]?.name || 'Standard'
   );
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    setActiveImage(0);
+    setSelectedColor(product?.colors?.[0]?.name || 'Standard');
+    setQuantity(1);
+  }, [product]);
+
+  if (!isOpen || !product) return null;
+
+  const imagesList = Array.isArray(product.images) ? product.images : [];
+  const mainImageSrc = getSafeImageSrc(imagesList[activeImage] || imagesList[0]);
 
   const discount = calculateDiscount(product.price, product.originalPrice);
 
@@ -55,9 +65,10 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
           <div className="p-6 md:p-8 bg-beige-200/50 flex flex-col justify-between">
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-white border border-beige-300 shadow-soft mb-4">
               <Image
-                src={product.images[activeImage] || product.images[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                src={mainImageSrc}
                 alt={product.name}
                 fill
+                unoptimized={shouldUnoptimizeImage(mainImageSrc)}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />
@@ -76,21 +87,31 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
             </div>
 
             {/* Thumbnails */}
-            {product.images.length > 1 && (
+            {imagesList.length > 1 && (
               <div className="flex gap-2.5">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImage(idx)}
-                    className={`relative w-16 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                      activeImage === idx
-                        ? 'border-bronze scale-105'
-                        : 'border-transparent opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
-                  </button>
-                ))}
+                {imagesList.map((img, idx) => {
+                  const thumbSrc = getSafeImageSrc(img);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImage(idx)}
+                      className={`relative w-16 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                        activeImage === idx
+                          ? 'border-bronze scale-105'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <Image
+                        src={thumbSrc}
+                        alt=""
+                        fill
+                        unoptimized={shouldUnoptimizeImage(thumbSrc)}
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

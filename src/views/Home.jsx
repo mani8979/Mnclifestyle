@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from '@/lib/router-bridge';
 import Hero from '../components/Hero';
 import CategoryGrid from '../components/CategoryGrid';
@@ -7,6 +7,7 @@ import SectionHeading from '../components/SectionHeading';
 import ProductCard from '../components/ProductCard';
 import ScrollReveal from '../components/ScrollReveal';
 import { products } from '../data/products';
+import { categories } from '../data/categories';
 import { businessConfig } from '../data/businessConfig';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
 import {

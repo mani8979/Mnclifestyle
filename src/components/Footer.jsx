@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React from 'react';
 import { Link } from '@/lib/router-bridge';
 import {
@@ -114,7 +114,7 @@ export default function Footer() {
                       <span>View on Google Maps</span>
                       <ArrowRight className="w-3 h-3" />
                     </a>
-                    <span className="text-white/20">¢</span>
+                    <span className="text-white/20">•</span>
                     <a
                       href="https://www.google.com/maps/dir/?api=1&destination=17.80386734008789,83.2098159790039"
                       target="_blank"
@@ -278,7 +278,7 @@ export default function Footer() {
 
         {/* 3. COPYRIGHT AND LEGAL FOOTER */}
         <div className="pt-8 border-t border-white/12 flex flex-col sm:flex-row items-center justify-between text-xs text-[#C9BBAE] gap-4 font-sans">
-          <p>Â© 2026 MNC LifeStyle Furniture. All rights reserved.</p>
+          <p>© 2026 MNC LifeStyle Furniture. All rights reserved.</p>
           <div className="flex items-center space-x-6 text-xs">
             <Link to="/contact" className="hover:text-[#D69A4B] transition-colors">
               Privacy Policy

@@ -3,8 +3,9 @@ import React from 'react';
 import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { categories } from '../data/categories';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 
 export default function CategoryGrid({ categories: customCategories }) {
   const allCategories = customCategories && customCategories.length > 0 ? customCategories : categories;
@@ -31,37 +32,40 @@ export default function CategoryGrid({ categories: customCategories }) {
 
       {/* 12-Category Grid: 6 cols on desktop, 3-4 cols on tablet, 2 cols on mobile */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
-        {allCategories.map((cat, idx) => (
-          <ScrollReveal
-            key={cat.id}
-            staggerIndex={idx}
-            className="h-full"
-          >
-            <Link
-              to={`/category/${cat.slug || cat.id}`}
-              className="group flex flex-col items-center bg-white rounded-2xl p-3 sm:p-4 border border-[#E9D8C5]/80 shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full"
+        {allCategories.map((cat, idx) => {
+          const catImageSrc = getSafeImageSrc(cat.image);
+          return (
+            <ScrollReveal
+              key={cat.id || cat.slug || idx}
+              staggerIndex={idx}
+              className="h-full"
             >
-              {/* Image Circle / Rounded Container */}
-              <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F0E8] mb-3">
-                <Image
-                  src={cat.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
-                  alt={cat.name}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
-              </div>
+              <Link
+                to={`/category/${cat.slug || cat.id}`}
+                className="group flex flex-col items-center bg-white rounded-2xl p-3 sm:p-4 border border-[#E9D8C5]/80 shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full"
+              >
+                {/* Image Circle / Rounded Container */}
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F0E8] mb-3">
+                  <Image
+                    src={catImageSrc}
+                    alt={cat.name}
+                    fill
+                    unoptimized={shouldUnoptimizeImage(catImageSrc)}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
+                </div>
 
-              {/* Category Name */}
-              <h3 className="font-serif text-sm sm:text-base font-semibold text-[#211A15] text-center group-hover:text-[#D69A4B] transition-colors leading-tight">
-                {cat.name}
-              </h3>
-            </Link>
-          </ScrollReveal>
-        ))}
+                {/* Category Name */}
+                <h3 className="font-serif text-sm sm:text-base font-semibold text-[#211A15] text-center group-hover:text-[#D69A4B] transition-colors leading-tight">
+                  {cat.name}
+                </h3>
+              </Link>
+            </ScrollReveal>
+          );
+        })}
       </div>
     </section>
   );
 }
-

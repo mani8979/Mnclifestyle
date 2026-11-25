@@ -7,6 +7,7 @@ import ScrollReveal from '../components/ScrollReveal';
 import { collections } from '../data/collections';
 import { products } from '../data/products';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { ArrowRight, Sparkles, CheckCircle2, MessageCircle } from 'lucide-react';
 
 export default function Collections({ initialCollections, initialProducts }) {
@@ -58,7 +59,8 @@ export default function Collections({ initialCollections, initialProducts }) {
                   <div className={`lg:col-span-7 ${isReversed ? 'lg:order-2' : ''}`}>
                     <div className="relative rounded-3xl overflow-hidden shadow-luxury group aspect-[16/10] bg-beige-200">
                       <Image
-                        src={col.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                        src={getSafeImageSrc(col.image)}
+                        unoptimized={shouldUnoptimizeImage(getSafeImageSrc(col.image))}
                         alt={col.title}
                         fill
                         sizes="(max-width: 1024px) 100vw, 58vw"
@@ -91,7 +93,7 @@ export default function Collections({ initialCollections, initialProducts }) {
                         Harmonized Finishes:
                       </span>
                       <div className="flex flex-wrap gap-2">
-                        {col.materials.map((m) => (
+                        {(col.materials || []).map((m) => (
                           <span
                             key={m}
                             className="text-xs bg-white text-[#211A15] px-3 py-1 rounded-full border border-[#E9D8C5] shadow-2xs font-medium"

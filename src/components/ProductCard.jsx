@@ -5,6 +5,7 @@ import { Link } from '@/lib/router-bridge';
 import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { slugify } from '../data/products';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 
 export default function ProductCard({ product, index }) {
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
@@ -26,6 +27,7 @@ export default function ProductCard({ product, index }) {
     : 0;
 
   const productSlug = product.slug || slugify(product.name);
+  const cardImageSrc = getSafeImageSrc(product.images?.[0]);
 
   return (
     <Link
@@ -41,14 +43,11 @@ export default function ProductCard({ product, index }) {
       {/* 1. Product Image with aspect-[4/5] on mobile, sm:aspect-[4/3] on desktop */}
       <div className="relative aspect-[4/5] sm:aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
         <Image
-          src={
-            product.images && product.images.length > 0
-              ? product.images[0]
-              : 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'
-          }
+          src={cardImageSrc}
           alt={product.name}
           fill
           loading="lazy"
+          unoptimized={shouldUnoptimizeImage(cardImageSrc)}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />

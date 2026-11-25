@@ -16,7 +16,8 @@ export function sanitizeCollection(doc: any) {
 }
 
 export async function getCollections() {
-  try {
+  if (process.env.MONGODB_URI) {
+    try {
     await connectDB();
     const [docs, productDocs] = await Promise.all([
       Collection.find({ isActive: true }).select('-__v').sort({ orderIndex: 1 }).lean(),
@@ -38,8 +39,9 @@ export async function getCollections() {
         };
       });
     }
-  } catch (error) {
-    console.error('[Database Error] MongoDB getCollections query failed. Falling back to static collections:', error);
+    } catch (error) {
+      console.error('[Database Error] MongoDB getCollections query failed. Falling back to static collections:', error);
+    }
   }
   return staticCollections.map((col) => ({
     ...col,
@@ -48,7 +50,8 @@ export async function getCollections() {
 }
 
 export async function getCollectionBySlug(slugOrId: string) {
-  try {
+  if (process.env.MONGODB_URI) {
+    try {
     await connectDB();
     const doc = await Collection.findOne({
       $or: [{ slug: slugOrId }, { legacyId: slugOrId }],
@@ -73,8 +76,9 @@ export async function getCollectionBySlug(slugOrId: string) {
         products: productDocs.map(sanitizeProduct),
       };
     }
-  } catch (error) {
-    console.error(`[Database Error] MongoDB getCollectionBySlug('${slugOrId}') failed. Falling back to static collections:`, error);
+    } catch (error) {
+      console.error(`[Database Error] MongoDB getCollectionBySlug('${slugOrId}') failed. Falling back to static collections:`, error);
+    }
   }
   const found = staticCollections.find((c) => c.id === slugOrId || c.title?.toLowerCase() === slugOrId?.toLowerCase());
   if (found) {

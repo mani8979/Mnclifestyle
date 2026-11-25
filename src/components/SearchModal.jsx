@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useNavigate } from '@/lib/router-bridge';
 import { Search, X, ArrowRight } from 'lucide-react';
 import { products, slugify } from '../data/products';
 import { formatINR } from '../utils/currency';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 
 export default function SearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
@@ -139,7 +140,8 @@ export default function SearchModal({ isOpen, onClose }) {
                 className="py-3 flex items-center gap-4 hover:bg-white/80 p-3 rounded-lg transition-colors cursor-pointer group"
               >
                 <Image
-                  src={prod.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                  src={getSafeImageSrc(prod.images?.[0])}
+                  unoptimized={shouldUnoptimizeImage(getSafeImageSrc(prod.images?.[0]))}
                   alt={prod.name}
                   width={64}
                   height={64}

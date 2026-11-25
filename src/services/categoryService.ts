@@ -13,6 +13,9 @@ export function sanitizeCategory(doc: any) {
 }
 
 export async function getCategories() {
+  if (!process.env.MONGODB_URI) {
+    return staticCategories;
+  }
   try {
     await connectDB();
     const docs = await Category.find({ isActive: true }).select('-__v').sort({ orderIndex: 1 }).lean();
@@ -26,6 +29,9 @@ export async function getCategories() {
 }
 
 export async function getCategoryBySlug(slugOrId: string) {
+  if (!process.env.MONGODB_URI) {
+    return findStaticCategoryById(slugOrId);
+  }
   try {
     await connectDB();
     const doc = await Category.findOne({

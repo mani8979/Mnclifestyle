@@ -6,6 +6,7 @@ import { useParams, Link, Navigate } from '@/lib/router-bridge';
 import { products, slugify } from '../data/products';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import ScrollReveal from '../components/ScrollReveal';
 import {
   Star,
@@ -136,7 +137,8 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
             {/* 2. Main Active Image — Clean without overlays obstructing furniture */}
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
               <Image
-                src={product.images[activeImageIndex] || product.images[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                src={getSafeImageSrc(product.images?.[activeImageIndex] || product.images?.[0])}
+                unoptimized={shouldUnoptimizeImage(getSafeImageSrc(product.images?.[activeImageIndex] || product.images?.[0]))}
                 alt={`${product.name} - View ${activeImageIndex + 1}`}
                 fill
                 priority
@@ -146,7 +148,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
             </div>
 
             {/* 3. Product Image Thumbnails */}
-            {product.images.length > 1 && (
+            {product.images?.length > 1 && (
               <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 no-scrollbar">
                 {product.images.map((img, idx) => (
                   <button
@@ -160,7 +162,8 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                     aria-label={`View photo ${idx + 1}`}
                   >
                     <Image
-                      src={img}
+                      src={getSafeImageSrc(img)}
+                      unoptimized={shouldUnoptimizeImage(getSafeImageSrc(img))}
                       alt={`${product.name} thumbnail ${idx + 1}`}
                       fill
                       sizes="80px"
@@ -414,7 +417,8 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                     <div>
                       <div className="block relative aspect-[4/3] bg-[#EAE2D8] overflow-hidden">
                         <Image
-                          src={p.images?.[0] || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                          src={getSafeImageSrc(p.images?.[0])}
+                          unoptimized={shouldUnoptimizeImage(getSafeImageSrc(p.images?.[0]))}
                           alt={p.name}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

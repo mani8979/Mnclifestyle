@@ -8,6 +8,7 @@ import SectionHeading from '../components/SectionHeading';
 import { categories, findCategoryById } from '../data/categories';
 import { products } from '../data/products';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
+import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import {
   SlidersHorizontal,
   X,
@@ -121,7 +122,8 @@ export default function Category({ initialCategory, initialProducts }) {
         {/* Subtle Background Ambience */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <Image
-            src={category.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+            src={getSafeImageSrc(category.image)}
+            unoptimized={shouldUnoptimizeImage(getSafeImageSrc(category.image))}
             alt={category.name}
             fill
             sizes="100vw"
@@ -161,12 +163,12 @@ export default function Category({ initialCategory, initialProducts }) {
               <Sparkles className="w-3.5 h-3.5 text-[#D69A4B]" />
               <span>{baseCategoryProducts.length} Curated Designs</span>
             </div>
-            <span>¢</span>
+            <span>•</span>
             <div className="inline-flex items-center gap-1.5">
               <Truck className="w-3.5 h-3.5 text-[#D69A4B]" />
               <span>Pan-India Delivery</span>
             </div>
-            <span>¢</span>
+            <span>•</span>
             <div className="inline-flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#D69A4B]" />
               <span>10-Year Craftsmanship Warranty</span>
@@ -218,7 +220,7 @@ export default function Category({ initialCategory, initialProducts }) {
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#211710] text-[#F8F0E8] rounded-xl text-xs uppercase tracking-wider font-semibold shadow-xs"
               >
                 <SlidersHorizontal className="w-4 h-4 text-[#D69A4B]" />
-                <span>Filter & Sort {hasActiveFilters && '¢ Active'}</span>
+                <span>Filter & Sort {hasActiveFilters && '• Active'}</span>
               </button>
 
               <span className="text-xs text-[#766B61] font-medium">
@@ -374,7 +376,8 @@ export default function Category({ initialCategory, initialProducts }) {
                 className="group relative rounded-2xl overflow-hidden aspect-[4/3] bg-beige-200 block shadow-soft border border-[#E9D8C5]"
               >
                 <Image
-                  src={c.image || 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80'}
+                  src={getSafeImageSrc(c.image)}
+                  unoptimized={shouldUnoptimizeImage(getSafeImageSrc(c.image))}
                   alt={c.name}
                   fill
                   sizes="(max-width: 640px) 100vw, 33vw"
