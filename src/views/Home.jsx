@@ -66,9 +66,7 @@ export default function Home({ initialProducts, initialCategories }) {
       .catch(() => {});
   }, []);
 
-  const taggedBestsellers = liveProducts.filter((p) => p.isBestseller);
-  const bestsellers =
-    taggedBestsellers.length >= 4 ? taggedBestsellers.slice(0, 4) : liveProducts.slice(0, 4);
+  const bestsellers = liveProducts.filter((p) => Boolean(p.isBestseller)).slice(0, 4);
   const featuredPieces = liveProducts.filter((p) => p.isFeatured).slice(0, 4);
   const whatsappConsultationUrl = getWhatsAppConsultationUrl('Custom Living Room Consultation');
 
