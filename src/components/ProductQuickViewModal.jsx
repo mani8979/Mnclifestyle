@@ -2,19 +2,17 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
-import { X, Star, ArrowRight, ShoppingBag } from 'lucide-react';
+import { X, Star, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from './shared/WhatsAppIcon';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../utils/colors';
-import { useCart } from '../context/CartContext';
 import ColorVariantSelector from './ColorVariantSelector';
 import FormattedTitle from './shared/FormattedTitle';
 import { slugify } from '../data/products';
 
 export default function ProductQuickViewModal({ product, isOpen, onClose }) {
-  const { addToCart } = useCart();
   const [trackedPropProduct, setTrackedPropProduct] = useState(product);
   const [displayedProduct, setDisplayedProduct] = useState(product);
   const [isLoadingVariant, setIsLoadingVariant] = useState(false);
@@ -297,32 +295,17 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                   </button>
                 </div>
 
-                {/* Add to Cart Button */}
-                <button
-                  type="button"
-                  data-testid="quickview-add-to-cart"
-                  disabled={isOutOfStock}
-                  onClick={() => {
-                    addToCart(productForCartAndWa, quantity, selectedColor);
-                    onClose();
-                  }}
-                  className="flex-1 py-3 px-4 bg-[#211710] hover:bg-[#D69A4B] hover:text-[#211710] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg text-xs uppercase tracking-wider font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                {/* Primary WhatsApp Order Button */}
+                <a
+                  href={whatsappOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 px-4 bg-[#169E49] hover:bg-[#12833C] text-white rounded-lg text-xs uppercase tracking-wider font-bold transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                 >
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
-                </button>
+                  <WhatsAppIcon className="w-4 h-4 shrink-0" />
+                  <span>{isOutOfStock ? 'Enquire Restock on WhatsApp' : 'Order on WhatsApp'}</span>
+                </a>
               </div>
-
-              {/* Primary WhatsApp Order Button */}
-              <a
-                href={whatsappOrderUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 bg-[#169E49] hover:bg-[#12833C] text-white rounded-lg text-xs uppercase tracking-wider font-bold transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
-              >
-                <WhatsAppIcon className="w-4 h-4 shrink-0" />
-                <span>{isOutOfStock ? 'Enquire Restock on WhatsApp' : 'Order on WhatsApp'}</span>
-              </a>
 
               <div className="flex items-center justify-end pt-1">
                 <Link
