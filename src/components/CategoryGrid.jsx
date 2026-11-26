@@ -43,25 +43,27 @@ export default function CategoryGrid({ categories: customCategories }) {
             >
               <Link
                 to={`/category/${cat.slug || cat.id}`}
-                className="group flex flex-col items-center bg-white rounded-2xl p-3 sm:p-4 border border-[#E9D8C5]/80 shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full"
+                className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E9D8C5]/80 shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 transition-all duration-300 h-full"
               >
-                {/* Image Circle / Rounded Container */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F0E8] mb-3">
+                {/* Edge-to-Edge Category Image */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#F8F0E8] border-b border-[#E9D8C5]/60">
                   <Image
                     src={catImageSrc}
                     alt={cat.name}
                     fill
                     unoptimized={shouldUnoptimizeImage(catImageSrc)}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
+                  <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-300" />
                 </div>
 
                 {/* Category Name */}
-                <h3 className="font-serif text-sm sm:text-base font-semibold text-[#211A15] text-center group-hover:text-[#D69A4B] transition-colors leading-tight">
-                  <FormattedTitle text={cat.name} />
-                </h3>
+                <div className="px-2.5 py-2.5 sm:px-3 sm:py-3 flex-1 flex items-center justify-center">
+                  <h3 className="font-serif text-sm sm:text-[15px] font-semibold text-[#211A15] text-center group-hover:text-[#D69A4B] transition-colors leading-tight">
+                    <FormattedTitle text={cat.name} />
+                  </h3>
+                </div>
               </Link>
             </ScrollReveal>
           );
