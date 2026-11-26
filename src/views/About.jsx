@@ -169,7 +169,7 @@ export default function About() {
               to="/shop"
               className="w-full sm:w-auto px-8 py-3.5 bg-white border border-[#E9D8C5] text-[#211A15] text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-[#F8F0E8] transition-colors text-center"
             >
-              Explore Full Collection
+              Explore Full Catalog
             </Link>
           </div>
         </ScrollReveal>

@@ -133,7 +133,7 @@ export default function SearchView({ initialProducts, initialCategories }) {
             MNC LIFE STYLE DAMRO
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#211710] font-normal tracking-tight mb-4">
-            Search Our Collection
+            Search Our Catalog
           </h1>
 
           <div className="relative flex items-center bg-white rounded-2xl border border-[#E9D8C5] shadow-sm px-4 sm:px-5 h-12 sm:h-14 focus-within:border-[#D69A4B] focus-within:ring-2 focus-within:ring-[#D69A4B]/20 transition-all">

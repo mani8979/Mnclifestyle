@@ -7,7 +7,6 @@ import { Category } from '../models/Category';
 import { Collection } from '../models/Collection';
 import { getProducts, getProductByIdOrSlug } from '../services/productService';
 import { getCategories, getCategoryBySlug } from '../services/categoryService';
-import { getCollections, getCollectionBySlug } from '../services/collectionService';
 
 async function runReview() {
   console.log('=====================================================');
@@ -66,13 +65,9 @@ async function runReview() {
   const sofaCategory = await getCategoryBySlug('sectional-sofas');
   console.log(`getCategoryBySlug('sectional-sofas'): found="${sofaCategory?.name}", slug="${sofaCategory?.slug}"`);
 
-  // 6. Service Layer — Collections
-  console.log('\n--- 6. Service Layer: Collections ---');
-  const collections = await getCollections();
-  console.log(`getCollections() returned: ${collections.length} collections`);
-  for (const c of collections) {
-    console.log(`Collection: "${c.title}" (slug: ${c.slug}), associated products: ${c.products?.length || 0}`);
-  }
+  // 6. Collections DB Preservation Count
+  console.log('\n--- 6. Database Collections Preservation ---');
+  console.log(`Existing Collection documents preserved in DB: ${collectionCount}`);
 
   // 7. Sanitization Check (Check for __v and sensitive internal fields)
   console.log('\n--- 7. Internal Fields / Sanitization Check ---');

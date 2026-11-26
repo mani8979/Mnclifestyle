@@ -168,32 +168,23 @@ export async function reindexCategoriesSequentially() {
 
 export function revalidateCatalogPaths(
   extraCategorySlugs: string[] = [],
-  extraProductSlugs: string[] = [],
-  extraCollectionSlugs: string[] = []
+  extraProductSlugs: string[] = []
 ) {
   try {
-    // Revalidate layout root so Header and Footer live category/collection menus refresh immediately
+    // Revalidate layout root so Header and Footer live category menus refresh immediately
     revalidatePath('/', 'layout');
     revalidatePath('/');
     revalidatePath('/shop');
     revalidatePath('/search');
-    revalidatePath('/collections');
     revalidatePath('/admin/categories');
-    revalidatePath('/admin/collections');
     revalidatePath('/admin/products');
     revalidatePath('/admin/dashboard');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/inventory/history');
-    revalidatePath('/admin/inventory/reports');
 
     for (const slug of Array.from(new Set(extraCategorySlugs))) {
       if (slug) revalidatePath(`/category/${slug}`);
     }
     for (const slug of Array.from(new Set(extraProductSlugs))) {
       if (slug) revalidatePath(`/product/${slug}`);
-    }
-    for (const slug of Array.from(new Set(extraCollectionSlugs))) {
-      if (slug) revalidatePath(`/collections/${slug}`);
     }
   } catch {
     // Non-blocking in non-Next script environments

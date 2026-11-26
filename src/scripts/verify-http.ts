@@ -117,16 +117,15 @@ async function verifyAll() {
     });
   }
 
-  // Check 5: Collections page (GET /collections)
+  // Check 5: Public /collections route removed (GET /collections returns 404)
   {
     const r = await fetchRoute('/collections');
-    const hasCollections = r.text.includes('Curated Collections') && r.text.includes('Modern Living Collection');
     results.push({
-      name: 'Check 5: Collections page loads & resolves suites',
+      name: 'Check 5: Public /collections page removed (404)',
       url: '/collections',
       status: r.status,
-      passed: r.status === 200 && hasCollections,
-      notes: hasCollections ? 'Collections returned 200 and rendered suite data' : 'Missing collections'
+      passed: r.status === 404,
+      notes: r.status === 404 ? 'Confirmed /collections returns 404 Not Found' : `Unexpected status: ${r.status}`
     });
   }
 
@@ -187,17 +186,15 @@ async function verifyAll() {
     });
   }
 
-  // Check 7e: Public API /api/collections returns collections
+  // Check 7e: Public API /api/collections removed (404)
   {
     const r = await fetchRoute('/api/collections');
-    const isSuccess = r.json?.success === true;
-    const total = r.json?.total || 0;
     results.push({
-      name: 'Check 7e: API /api/collections',
+      name: 'Check 7e: API /api/collections removed (404)',
       url: '/api/collections',
       status: r.status,
-      passed: r.status === 200 && isSuccess && total >= 4,
-      notes: `Returned ${total} collections`
+      passed: r.status === 404,
+      notes: r.status === 404 ? 'Confirmed /api/collections returns 404 Not Found' : `Unexpected status: ${r.status}`
     });
   }
 
