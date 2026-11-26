@@ -200,16 +200,10 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <button
-              type="button"
+            <Link
+              to="/shop"
               data-testid="desktop-shop-button"
-              onClick={() => setIsShopOpen(!isShopOpen)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsShopOpen(!isShopOpen);
-                }
-              }}
+              onClick={closeShopDropdown}
               aria-expanded={isShopOpen}
               aria-haspopup="true"
               className={`relative flex items-center gap-1.5 py-2 text-sm font-semibold tracking-[0.14em] uppercase transition-colors ${
@@ -225,7 +219,7 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
               {isShopActive && (
                 <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#D69A4B] rounded-full" />
               )}
-            </button>
+            </Link>
 
             {/* Desktop Mega Menu Dropdown */}
             {isShopOpen && (
@@ -398,26 +392,41 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
                 <ArrowRight className="w-4 h-4 text-[#77736D]/60" />
               </NavLink>
 
-              {/* 2. SHOP (Accordion Dropdown) */}
+              {/* 2. SHOP (Link to /shop + optional category accordion toggle) */}
               <div className="flex flex-col">
-                <button
-                  type="button"
-                  data-testid="mobile-shop-accordion"
-                  onClick={() => setIsMobileShopOpen(!isMobileShopOpen)}
-                  className={`min-h-[46px] text-sm font-serif tracking-wide px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                <div
+                  className={`min-h-[46px] rounded-xl flex items-center justify-between transition-colors ${
                     isShopActive || isMobileShopOpen
                       ? 'text-[#D69A4B] font-semibold bg-[#E9D8C5]/40 border-l-2 border-[#D69A4B]'
                       : 'text-[#211A15] hover:text-[#D69A4B] hover:bg-[#E9D8C5]/20'
                   }`}
-                  aria-expanded={isMobileShopOpen}
                 >
-                  <span className="uppercase tracking-wider font-semibold">Shop</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-[#D69A4B] transition-transform duration-200 ${
-                      isMobileShopOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
+                  <Link
+                    to="/shop"
+                    data-testid="mobile-shop-link"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsMobileShopOpen(false);
+                    }}
+                    className="flex-1 text-sm font-serif tracking-wide px-3.5 py-2.5 uppercase font-semibold"
+                  >
+                    Shop
+                  </Link>
+                  <button
+                    type="button"
+                    data-testid="mobile-shop-accordion"
+                    onClick={() => setIsMobileShopOpen(!isMobileShopOpen)}
+                    aria-label="Toggle shop categories"
+                    aria-expanded={isMobileShopOpen}
+                    className="px-3.5 py-2.5 flex items-center justify-center"
+                  >
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#D69A4B] transition-transform duration-200 ${
+                        isMobileShopOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
 
                 {/* Mobile Shop Accordion Panel */}
                 {isMobileShopOpen && (
