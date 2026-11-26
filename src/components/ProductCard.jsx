@@ -42,8 +42,8 @@ export default function ProductCard({ product, index }) {
       className={`group relative flex flex-col min-w-0 bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 active:scale-[0.98] transition-all duration-300 h-full cursor-pointer ${isVisible ? 'is-revealed' : 'is-hidden'
         }`}
     >
-      {/* 1. Product Image matching natural 16:10 catalog ratio with object-contain so zero pixels of furniture are ever cut */}
-      <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-white overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
+      {/* 1. Product Image: 16:10 edge-to-edge fill with zero white letterbox space */}
+      <div className="relative aspect-[16/10] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
         <Image
           src={cardImageSrc}
           alt={product.name}
@@ -51,7 +51,7 @@ export default function ProductCard({ product, index }) {
           loading="lazy"
           unoptimized={shouldUnoptimizeImage(cardImageSrc)}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-contain p-1 sm:p-1.5 transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
         {/* Mobile Badge Overlay (Bottom-Right, compact) */}

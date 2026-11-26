@@ -158,7 +158,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                 fill
                 unoptimized={shouldUnoptimizeImage(mainImageSrc)}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-contain"
+                className="object-cover"
               />
               <div className="absolute top-3 left-3 flex flex-col gap-1">
                 {activeProduct.badge && (
@@ -198,7 +198,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                         fill
                         unoptimized={shouldUnoptimizeImage(thumbSrc)}
                         sizes="64px"
-                        className="object-contain"
+                        className="object-cover"
                       />
                     </button>
                   );

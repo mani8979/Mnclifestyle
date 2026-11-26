@@ -205,7 +205,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           <div className="lg:col-span-7 space-y-2.5 sm:space-y-3">
             
             {/* 2. Main Active Image — Clean without overlays obstructing furniture */}
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white border border-[#E9D8C5] shadow-soft group">
+            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
               <Image
                 src={getSafeImageSrc(swatchImageOverride || product.images?.[activeImageIndex] || product.images?.[0])}
                 unoptimized={shouldUnoptimizeImage(getSafeImageSrc(swatchImageOverride || product.images?.[activeImageIndex] || product.images?.[0]))}
@@ -213,7 +213,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 58vw"
-                className="object-contain transition-all duration-500 group-hover:scale-105"
+                className="object-cover transition-all duration-500 group-hover:scale-105"
               />
             </div>
 
