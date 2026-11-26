@@ -16,7 +16,6 @@ import {
   Sparkles,
   Image as ImageIcon,
   Layers,
-  Ruler,
   Tags,
   Eye,
   Palette,
@@ -186,18 +185,16 @@ export default function ProductForm({
   const [shortDescription, setShortDescription] = useState(initialProduct?.shortDescription || '');
   const [fullDescription, setFullDescription] = useState(initialProduct?.fullDescription || '');
 
-  // Dimensions
-  const [width, setWidth] = useState(initialProduct?.dimensions?.width || '');
-  const [depth, setDepth] = useState(initialProduct?.dimensions?.depth || '');
-  const [height, setHeight] = useState(initialProduct?.dimensions?.height || '');
-  const [seatHeight, setSeatHeight] = useState(initialProduct?.dimensions?.seatHeight || '');
-  const [bedBaseHeight, setBedBaseHeight] = useState(initialProduct?.dimensions?.bedBaseHeight || '');
-  const [weight, setWeight] = useState(initialProduct?.dimensions?.weight || '');
-
-  // Materials (comma separated)
-  const [materialsText, setMaterialsText] = useState(
-    Array.isArray(initialProduct?.materials) ? initialProduct.materials.join(', ') : 'Kiln-Dried Indian Teak'
-  );
+  // Dimensions & Materials (preserved / defaulted on save)
+  const width = initialProduct?.dimensions?.width || '';
+  const depth = initialProduct?.dimensions?.depth || '';
+  const height = initialProduct?.dimensions?.height || '';
+  const seatHeight = initialProduct?.dimensions?.seatHeight || '';
+  const bedBaseHeight = initialProduct?.dimensions?.bedBaseHeight || '';
+  const weight = initialProduct?.dimensions?.weight || '';
+  const materialsText = Array.isArray(initialProduct?.materials)
+    ? initialProduct.materials.join(', ')
+    : 'Kiln-Dried Indian Teak';
 
   // Cloudinary / Gallery Images
   const initialImagesList: UploadedImageItem[] = React.useMemo(() => {
@@ -974,106 +971,12 @@ export default function ProductForm({
           />
         </div>
 
-        {/* SECTION 4: Dimensions, Materials & Colors */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
-            <Ruler className="w-4 h-4 text-blue-600" />
-            <h2 className="font-serif text-lg text-slate-900 font-normal">
-              4. Dimensions, Materials & Finishes
-            </h2>
-          </div>
-
-          {/* Dimensions 6-col */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-3">
-              Architectural Proportions & Dimensions
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Width</span>
-                <input
-                  type="text"
-                  value={width}
-                  onChange={(e) => setWidth(e.target.value)}
-                  placeholder="240 cm"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Depth</span>
-                <input
-                  type="text"
-                  value={depth}
-                  onChange={(e) => setDepth(e.target.value)}
-                  placeholder="105 cm"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Height</span>
-                <input
-                  type="text"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder="76 cm"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Seat Height</span>
-                <input
-                  type="text"
-                  value={seatHeight}
-                  onChange={(e) => setSeatHeight(e.target.value)}
-                  placeholder="42 cm"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Base Height</span>
-                <input
-                  type="text"
-                  value={bedBaseHeight}
-                  onChange={(e) => setBedBaseHeight(e.target.value)}
-                  placeholder="22 cm"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 block mb-1">Weight</span>
-                <input
-                  type="text"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="68 kg"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Materials */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-              Materials (Comma Separated) <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={materialsText}
-              onChange={(e) => setMaterialsText(e.target.value)}
-              placeholder="Kiln-Dried Indian Teak, Belgian Textured Bouclé, High-Resilience Foam"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900"
-            />
-          </div>
-        </div>
-
-        {/* SECTION 5: Color Variant Mapping */}
+        {/* SECTION 4: Color Variant Mapping */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
             <Palette className="w-4 h-4 text-blue-600" />
             <h2 className="font-serif text-lg text-slate-900 font-normal">
-              5. Color Variant Mapping
+              4. Color Variant Mapping
             </h2>
           </div>
 
@@ -1102,14 +1005,14 @@ export default function ProductForm({
           />
         </div>
 
-        {/* SECTION 6: Architectural Integrity & Specifications Accordions */}
+        {/* SECTION 5: Architectural Integrity & Specifications Accordions */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-600" />
               <div>
                 <h2 className="font-serif text-lg text-slate-900 font-normal">
-                  6. Architectural Integrity & Specifications Accordions
+                  5. Architectural Integrity & Specifications Accordions
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Customize the 5 standard accordion sections or add new custom sections for this piece.
