@@ -366,23 +366,41 @@ ProductSchema.index({ category: 1, price: 1 });
 ProductSchema.index({ category: 1, isBestseller: 1 });
 ProductSchema.index({ category: 1, isFeatured: 1 });
 
+export function computeProductStockState(
+  trackInventory: boolean | undefined,
+  stockQuantity: number | undefined,
+  reservedQuantity: number | undefined,
+  allowBackorders: boolean | undefined
+) {
+  const physical = typeof stockQuantity === 'number' ? stockQuantity : 0;
+  const reserved = typeof reservedQuantity === 'number' ? reservedQuantity : 0;
+
+  if (trackInventory === false) {
+    return {
+      availableQuantity: physical,
+      inStock: true,
+    };
+  }
+
+  const availableQuantity = Math.max(0, physical - reserved);
+  return {
+    availableQuantity,
+    inStock: availableQuantity > 0 || Boolean(allowBackorders),
+  };
+}
+
 // Pre-save hook to ensure availableQuantity and inStock calculations remain consistent
 ProductSchema.pre('save', function () {
-  if (this.trackInventory === false) {
-    this.inStock = true;
-    this.availableQuantity = typeof this.stockQuantity === 'number' ? this.stockQuantity : 0;
-  } else {
-    const physical = typeof this.stockQuantity === 'number' ? this.stockQuantity : 0;
-    const reserved = typeof this.reservedQuantity === 'number' ? this.reservedQuantity : 0;
-    this.availableQuantity = Math.max(0, physical - reserved);
-    this.inStock = this.availableQuantity > 0 || Boolean(this.allowBackorders);
-  }
+  const computed = computeProductStockState(
+    this.trackInventory,
+    this.stockQuantity,
+    this.reservedQuantity,
+    this.allowBackorders
+  );
+  this.availableQuantity = computed.availableQuantity;
+  this.inStock = computed.inStock;
   this.inventoryUpdatedAt = new Date();
 });
-
-if (mongoose.models.Product) {
-  delete (mongoose.models as any).Product;
-}
 
 export const Product: Model<IProduct> =
   mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

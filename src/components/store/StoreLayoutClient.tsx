@@ -1,11 +1,9 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import AnnouncementBar from '../AnnouncementBar';
 import Header from '../Header';
 import Footer from '../Footer';
-import ProductQuickViewModal from '../ProductQuickViewModal';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
-import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../lib/router-bridge';
 
 export default function StoreLayoutClient({
@@ -15,7 +13,6 @@ export default function StoreLayoutClient({
   children: React.ReactNode;
   categories?: any[];
 }) {
-  const { quickViewProduct, closeQuickView } = useCart();
   const { pathname, hash } = useLocation();
 
   // Scroll to top on route change or to hash anchor
@@ -54,14 +51,7 @@ export default function StoreLayoutClient({
       {/* 4. Footer */}
       <Footer categories={categories} />
 
-      {/* 5. Modals */}
-      <ProductQuickViewModal
-        product={quickViewProduct}
-        isOpen={Boolean(quickViewProduct)}
-        onClose={closeQuickView}
-      />
-
-      {/* 6. WhatsApp Floating Quick Order / Chat Button */}
+      {/* 5. WhatsApp Floating Enquiry / Chat Button */}
       <WhatsAppFloatingButton />
     </div>
   );

@@ -12,8 +12,8 @@ import { ArrowRight, Sparkles, CheckCircle2, MessageCircle } from 'lucide-react'
 
 export default function Collections({ initialCollections, initialProducts }) {
   const whatsappUrl = getWhatsAppConsultationUrl('Custom Tailored Whole-Home Suite');
-  const allCollections = initialCollections && initialCollections.length > 0 ? initialCollections : collections;
-  const allProducts = initialProducts && initialProducts.length > 0 ? initialProducts : products;
+  const allCollections = Array.isArray(initialCollections) ? initialCollections : collections;
+  const allProducts = Array.isArray(initialProducts) ? initialProducts : products;
 
   return (
     <div className="py-12 sm:py-20 pb-28">
@@ -42,11 +42,16 @@ export default function Collections({ initialCollections, initialProducts }) {
         {/* Collections Stack */}
         <div className="space-y-24 sm:space-y-36 max-w-7xl mx-auto">
           {allCollections.map((col, index) => {
-            const featuredItems = allProducts.filter((p) =>
-              col.featuredProductIds?.includes(p.id) ||
-              col.featuredProductIds?.includes(p.legacyId) ||
-              col.featuredProducts?.some((fp) => (typeof fp === 'object' ? (fp.id === p.id || fp.legacyId === p.legacyId || fp.slug === p.slug) : fp === p.id || fp === p.legacyId))
-            );
+            const featuredItems =
+              Array.isArray(col.products) && col.products.length > 0
+                ? col.products
+                : allProducts.filter((p) =>
+                    col.featuredProductIds?.includes(p.id) ||
+                    col.featuredProductIds?.includes(p.legacyId) ||
+                    col.featuredProductIds?.includes(p.slug) ||
+                    col.featuredProductIds?.includes(p.sku) ||
+                    col.featuredProducts?.some((fp) => (typeof fp === 'object' ? (fp.id === p.id || fp.legacyId === p.legacyId || fp.slug === p.slug) : fp === p.id || fp === p.legacyId))
+                  );
 
             const isReversed = index % 2 === 1;
 
@@ -108,7 +113,7 @@ export default function Collections({ initialCollections, initialProducts }) {
                       to={`/category/${col.category}`}
                       className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors pb-1 border-b border-[#211A15]/40 hover:border-[#D69A4B]"
                     >
-                      <span>Explore Entire {col.category.replace('-', ' ')} Catalog</span>
+                      <span>Explore Entire {col.category.replace(/-/g, ' ')} Catalog</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>

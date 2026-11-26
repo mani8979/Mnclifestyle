@@ -29,37 +29,49 @@ async function runComprehensiveChecks() {
   // Service Layer checks
   const products = await getProducts();
   const categories = await getCategories();
-  const sofaProducts = await getProducts({ category: 'sofas' });
-  console.log(`[PASS] getProducts() returned ${products.length} products (sofas: ${sofaProducts.length})`);
+  const sofaProducts = await getProducts({ category: 'sectional-sofas' });
+  console.log(`[PASS] getProducts() returned ${products.length} products (sectional-sofas: ${sofaProducts.length})`);
   console.log(`[PASS] getCategories() returned ${categories.length} categories`);
 
   // CHECK 4: Product detail slug & legacyId resolution
   console.log('\n--- Check 4: Product Detail Resolution (Slug & Legacy ID) ---');
-  const prodSlug = await getProductByIdOrSlug('aura-curved-boucle-sofa');
-  const prodLegacy = await getProductByIdOrSlug('mnc-sof-01');
-  const resolutionMatch = prodSlug && prodLegacy && prodSlug.id === prodLegacy.id;
-  console.log(`[${resolutionMatch ? 'PASS' : 'FAIL'}] Slug "aura-curved-boucle-sofa" resolved: "${prodSlug?.name}" (ID: ${prodSlug?.id})`);
-  console.log(`[${resolutionMatch ? 'PASS' : 'FAIL'}] Legacy ID "mnc-sof-01" resolved: "${prodLegacy?.name}" (ID: ${prodLegacy?.id})`);
+  const sampleWithLegacy = await Product.findOne({
+    isActive: true,
+    isArchived: { $ne: true },
+    legacyId: { $exists: true, $ne: '' },
+  })
+    .select('slug legacyId name')
+    .lean();
+  const prodSlug = sampleWithLegacy ? await getProductByIdOrSlug(sampleWithLegacy.slug) : null;
+  const prodLegacy = sampleWithLegacy?.legacyId ? await getProductByIdOrSlug(sampleWithLegacy.legacyId) : null;
+  const resolutionMatch = Boolean(prodSlug && prodLegacy && prodSlug.id === prodLegacy.id);
+  console.log(`[${resolutionMatch ? 'PASS' : 'FAIL'}] Slug "${sampleWithLegacy?.slug}" resolved: "${prodSlug?.name}" (ID: ${prodSlug?.id})`);
+  console.log(`[${resolutionMatch ? 'PASS' : 'FAIL'}] Legacy ID "${sampleWithLegacy?.legacyId}" resolved: "${prodLegacy?.name}" (ID: ${prodLegacy?.id})`);
   console.log(`[${resolutionMatch ? 'PASS' : 'FAIL'}] Slug and Legacy ID point to identical document: ${resolutionMatch}`);
 
   // Test not-found resolution
   const invalidProd = await getProductByIdOrSlug('non-existent-sku-12345');
   console.log(`[${invalidProd === null ? 'PASS' : 'FAIL'}] Non-existent product returns null: ${invalidProd === null}`);
 
-  // CHECK 5: Collections resolve associated products
+  // CHECK 5: Collections resolve valid categories & associated featured products
   console.log('\n--- Check 5: Collections Associated Products ---');
   const collections = await getCollections();
+  const validCategorySlugs = new Set(categories.map((c) => c.slug));
   for (const col of collections) {
-    const hasProducts = col.products && col.products.length > 0;
-    console.log(`[${hasProducts ? 'PASS' : 'FAIL'}] Collection "${col.title}": ${col.products?.length || 0} associated pieces resolved.`);
+    const validCat = validCategorySlugs.has(col.category);
+    const hasExpectedProducts =
+      Array.isArray(col.featuredProductIds) && col.featuredProductIds.length > 0
+        ? Boolean(col.products && col.products.length > 0)
+        : true;
+    console.log(`[${validCat && hasExpectedProducts ? 'PASS' : 'FAIL'}] Collection "${col.title}" (category=${col.category}): ${col.products?.length || 0} associated pieces resolved.`);
   }
 
-  // CHECK 6: Fallback implementation inspection
-  console.log('\n--- Check 6: Database Fallback Mechanism Inspection ---');
+  // CHECK 6: Fallback implementation inspection (No silent static resurrection)
+  console.log('\n--- Check 6: Database Error Handling & No Static Resurrection Inspection ---');
   const productServiceCode = fs.readFileSync('src/services/productService.ts', 'utf8');
   const hasDbErrorLog = productServiceCode.includes('console.error');
-  const hasFallbackNotice = productServiceCode.includes('Falling back to static products');
-  console.log(`[${hasDbErrorLog && hasFallbackNotice ? 'PASS' : 'FAIL'}] Database errors are explicitly logged with console.error and do not fail silently: ${hasDbErrorLog && hasFallbackNotice}`);
+  const noStaticFallback = !productServiceCode.includes('Falling back to static products');
+  console.log(`[${hasDbErrorLog && noStaticFallback ? 'PASS' : 'FAIL'}] Database errors logged explicitly without silent static catalog fallback: ${hasDbErrorLog && noStaticFallback}`);
 
   // CHECK 7 & 8: Sanitization & Public API Safety
   console.log('\n--- Check 7 & 8: Data Sanitization & Internal Field Exposure ---');
@@ -99,16 +111,17 @@ async function runComprehensiveChecks() {
   }
   console.log(`[${brokenImages === 0 ? 'PASS' : 'WARN'}] Checked ${totalImagesChecked} image URLs (all returned HTTP 200/OK).`);
 
-  // CHECK 10: Cart & Wishlist Implementation
-  console.log('\n--- Check 10: Cart & Wishlist State Management ---');
-  const cartContextCode = fs.readFileSync('src/context/CartContext.jsx', 'utf8');
-  const wishlistContextCode = fs.readFileSync('src/context/WishlistContext.jsx', 'utf8');
-  const hasCartMethods = cartContextCode.includes('addToCart') && cartContextCode.includes('removeFromCart') && cartContextCode.includes('updateQuantity');
-  const hasWishlistMethods = wishlistContextCode.includes('toggleWishlist') && wishlistContextCode.includes('isInWishlist');
-  const hasLocalStorage = cartContextCode.includes('localStorage') && wishlistContextCode.includes('localStorage');
-  console.log(`[${hasCartMethods ? 'PASS' : 'FAIL'}] CartContext exports addToCart, removeFromCart, updateQuantity: ${hasCartMethods}`);
-  console.log(`[${hasWishlistMethods ? 'PASS' : 'FAIL'}] WishlistContext exports toggleWishlist, isInWishlist: ${hasWishlistMethods}`);
-  console.log(`[${hasLocalStorage ? 'PASS' : 'FAIL'}] Both persist to localStorage with SSR safety: ${hasLocalStorage}`);
+  // CHECK 10: Enquiry-Only Catalog Verification (No Wishlist/Cart)
+  console.log('\n--- Check 10: Enquiry-Only Storefront Verification ---');
+  const cartContextRemoved = !fs.existsSync('src/context/CartContext.jsx');
+  const wishlistContextRemoved = !fs.existsSync('src/context/WishlistContext.jsx');
+  const cartDrawerRemoved = !fs.existsSync('src/components/CartDrawer.jsx');
+  const rootLayoutCode = fs.readFileSync('src/app/layout.tsx', 'utf8');
+  const noProviders =
+    !rootLayoutCode.includes('CartProvider') && !rootLayoutCode.includes('WishlistProvider');
+  console.log(`[${cartContextRemoved && cartDrawerRemoved ? 'PASS' : 'FAIL'}] Shopping Cart context and drawer removed: ${cartContextRemoved && cartDrawerRemoved}`);
+  console.log(`[${wishlistContextRemoved ? 'PASS' : 'FAIL'}] Wishlist context removed: ${wishlistContextRemoved}`);
+  console.log(`[${noProviders ? 'PASS' : 'FAIL'}] Root layout mounts no cart/wishlist providers: ${noProviders}`);
 
   // CHECK 11: Cloudinary Usage Audit
   console.log('\n--- Check 11: Cloudinary Usage Audit ---');

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
 import { Product } from '@/models/Product';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
+import { SubcategoryRemoveSchema } from '@/lib/validations/category';
+import { cleanupSingletonColorGroup } from '@/lib/color-variants';
 import {
+  archiveProductsAndCleanupRefs,
   buildCategoryLookupQuery,
   buildCategoryProductQuery,
-  deleteProductsAndCleanupRefs,
   findAffectedProducts,
   revalidateCatalogPaths,
+  syncCategoryItemCounts,
 } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
@@ -18,23 +21,21 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
     const { id } = await context.params;
-    const body = await request.json().catch(() => null);
-    const subCategory = typeof body?.subCategory === 'string' ? body.subCategory.trim() : '';
-    const action = body?.action as 'transfer' | 'delete-all' | undefined;
-    const targetCategoryId = typeof body?.targetCategoryId === 'string' ? body.targetCategoryId.trim() : '';
-    const targetSubCategoryInput =
-      typeof body?.targetSubCategory === 'string' ? body.targetSubCategory.trim() : '';
-
-    if (!subCategory) {
+    const rawBody = await request.json().catch(() => null);
+    const parsed = SubcategoryRemoveSchema.safeParse(rawBody && typeof rawBody === 'object' ? rawBody : {});
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, message: 'Subcategory name is required' },
+        { success: false, message: parsed.error.issues[0]?.message || 'Subcategory removal payload invalid' },
         { status: 400 }
       );
     }
+
+    const { subCategory, action, targetCategoryId, targetSubCategory: targetSubCategoryInput } = parsed.data;
 
     const category = await Category.findOne(buildCategoryLookupQuery(id));
     if (!category) {
@@ -46,7 +47,7 @@ export async function POST(
 
     const affectedProducts = await findAffectedProducts(category, subCategory);
     let transferredCount = 0;
-    let deletedCount = 0;
+    let archivedCount = 0;
     let targetCategorySlug = '';
     let resolvedTargetSubCategory = '';
 
@@ -64,7 +65,7 @@ export async function POST(
         }
 
         const isSameCategory = targetCategory._id.toString() === category._id.toString();
-        if (isSameCategory && targetSubCategoryInput.toLowerCase() === subCategory.toLowerCase()) {
+        if (isSameCategory && (targetSubCategoryInput || '').toLowerCase() === subCategory.toLowerCase()) {
           return NextResponse.json(
             {
               success: false,
@@ -93,6 +94,20 @@ export async function POST(
         });
         transferredCount = updateRes.modifiedCount || affectedProducts.length;
 
+        // Clean singleton color groups if products moved into a new category/subcategory split
+        if (!isSameCategory) {
+          const groupIds = Array.from(
+            new Set(
+              affectedProducts
+                .map((p: any) => (typeof p.colorGroupId === 'string' ? p.colorGroupId.trim() : ''))
+                .filter(Boolean)
+            )
+          );
+          for (const gid of groupIds) {
+            await cleanupSingletonColorGroup(gid);
+          }
+        }
+
         if (resolvedTargetSubCategory) {
           if (isSameCategory) {
             if (
@@ -110,7 +125,7 @@ export async function POST(
           }
         }
       } else if (action === 'delete-all') {
-        deletedCount = await deleteProductsAndCleanupRefs(affectedProducts);
+        archivedCount = await archiveProductsAndCleanupRefs(affectedProducts);
       } else {
         return NextResponse.json(
           {
@@ -133,6 +148,7 @@ export async function POST(
       (s: string) => s.toLowerCase() !== subCategory.toLowerCase()
     );
     await category.save();
+    await syncCategoryItemCounts();
 
     revalidateCatalogPaths([category.slug, targetCategorySlug]);
 
@@ -141,24 +157,18 @@ export async function POST(
       message:
         transferredCount > 0
           ? `Removed "${subCategory}" and transferred ${transferredCount} product(s)`
-          : deletedCount > 0
-          ? `Removed "${subCategory}" and deleted ${deletedCount} product(s)`
-          : `Removed "${subCategory}" from ${category.name}`,
+          : archivedCount > 0
+            ? `Removed "${subCategory}" and archived ${archivedCount} product(s)`
+            : `Removed "${subCategory}" from ${category.name}`,
       transferredCount,
-      deletedCount,
+      deletedCount: archivedCount,
       category: {
         ...category.toObject(),
         id: category._id.toString(),
       },
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('POST /api/admin/categories/[id]/subcategories/remove error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to remove subcategory' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to remove subcategory', '[Subcategory Remove Error]');
   }
 }
+

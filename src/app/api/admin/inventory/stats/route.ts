@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, handleApiError } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 
@@ -13,12 +13,14 @@ export async function GET(request: NextRequest) {
     const activeFilter = { isArchived: { $ne: true } };
 
     const [allProducts, lowStockProducts, outOfStockProducts, madeToOrderCount] = await Promise.all([
-      Product.find(activeFilter).select('price costPrice stockQuantity reservedQuantity availableQuantity lowStockThreshold trackInventory allowBackorders').lean(),
+      Product.find(activeFilter)
+        .select('price costPrice stockQuantity reservedQuantity availableQuantity lowStockThreshold trackInventory allowBackorders')
+        .lean(),
       Product.countDocuments({
         ...activeFilter,
         trackInventory: true,
         availableQuantity: { $gt: 0 },
-        $expr: { $lte: ['$availableQuantity', '$lowStockThreshold'] },
+        $expr: { $lte: ['$availableQuantity', { $ifNull: ['$lowStockThreshold', 5] }] },
       }),
       Product.countDocuments({
         ...activeFilter,
@@ -39,11 +41,17 @@ export async function GET(request: NextRequest) {
     let totalRetailValuation = 0;
 
     for (const p of allProducts as any[]) {
-      const stock = typeof p.stockQuantity === 'number' ? p.stockQuantity : 0;
-      const reserved = typeof p.reservedQuantity === 'number' ? p.reservedQuantity : 0;
-      const available = typeof p.availableQuantity === 'number' ? p.availableQuantity : Math.max(0, stock - reserved);
-      const cost = typeof p.costPrice === 'number' && p.costPrice > 0 ? p.costPrice : Math.round((p.price || 0) * 0.45);
+      const isTracked = p.trackInventory !== false;
+      const stock = isTracked && typeof p.stockQuantity === 'number' ? p.stockQuantity : 0;
+      const reserved = isTracked && typeof p.reservedQuantity === 'number' ? p.reservedQuantity : 0;
+      const available = isTracked
+        ? typeof p.availableQuantity === 'number'
+          ? p.availableQuantity
+          : Math.max(0, stock - reserved)
+        : 0;
       const retail = typeof p.price === 'number' ? p.price : 0;
+      const hasRecordedCost = typeof p.costPrice === 'number' && p.costPrice > 0;
+      const cost = hasRecordedCost ? p.costPrice : Math.round(retail * 0.45);
 
       totalStockUnits += stock;
       availableStockUnits += available;
@@ -67,10 +75,7 @@ export async function GET(request: NextRequest) {
         estimatedGrossProfitPotential: totalRetailValuation - totalCostValuation,
       },
     });
-  } catch (error: any) {
-    if (error.status === 401 || error.message?.includes('Unauthorized')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'Failed to load inventory statistics', '[Inventory Stats Error]');
   }
 }

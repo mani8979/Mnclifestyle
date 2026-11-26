@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState } from 'react';
 import { Link } from '@/lib/router-bridge';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, ChevronDown, ChevronUp, Send, Sparkles, Calendar, MessageCircle, ArrowRight, Navigation } from 'lucide-react';
@@ -65,8 +65,8 @@ export default function Contact() {
       a: 'All MNC LifeStyle furniture suites include complimentary scheduled white-glove service across Visakhapatnam, Vijayawada, and surrounding Andhra Pradesh. Our two-person logistics team brings each piece into your designated room of choice, unboxes, levels, performs complete assembly, and removes all packaging materials.'
     },
     {
-      q: 'How does ordering through WhatsApp work?',
-      a: 'Browse our collection, select your desired piece and finishes, and click "Order Through WhatsApp". You will be connected immediately with our senior Visakhapatnam furniture concierge. We confirm timber stock, verify your pin code delivery, share fabric photos if requested, and coordinate dispatch.'
+      q: 'How do product enquiries through WhatsApp work?',
+      a: 'Browse our collection, select your desired piece and finishes, and click "WhatsApp Enquiry" or "Enquire Now". You will be connected immediately with our senior Visakhapatnam furniture concierge to confirm availability, review timber or fabric photos, discuss custom dimensions, and schedule a showroom visit or white-glove delivery.'
     },
     {
       q: 'Can furniture pieces be customized with bespoke dimensions or fabrics?',
@@ -85,12 +85,12 @@ export default function Contact() {
   const whatsappDirectFormUrl = buildWhatsAppUrl(`Hello MNC LifeStyle Concierge,
 
 I am submitting an enquiry from your website contact page:
-¢ Name: ${formData.fullName}
-¢ Phone: ${formData.phone || 'N/A'}
-¢ Email: ${formData.email || 'N/A'}
-¢ Enquiry Type: ${formData.inquiryType}
-¢ Project Room: ${formData.projectScope}
-¢ Message: ${formData.message}
+• Name: ${formData.fullName}
+• Phone: ${formData.phone || 'N/A'}
+• Email: ${formData.email || 'N/A'}
+• Enquiry Type: ${formData.inquiryType}
+• Project Room: ${formData.projectScope}
+• Message: ${formData.message}
 
 Please get in touch with me.`);
 
@@ -114,7 +114,7 @@ Please get in touch with me.`);
             Connect With Our Design Studio
           </h1>
           <p className="text-sm sm:text-base text-warmgrey leading-relaxed">
-            Whether you are furnishing a new apartment, requesting timber swatches, or ordering furniture pieces via WhatsApp, our dedicated Visakhapatnam advisors are here to assist.
+            Whether you are furnishing a new apartment, requesting timber swatches, or enquiring about furniture pieces via WhatsApp, our dedicated Visakhapatnam advisors are here to assist.
           </p>
         </ScrollReveal>
 
@@ -393,7 +393,7 @@ Please get in touch with me.`);
                         onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
                         className="w-full h-11 sm:h-12 bg-white/80 border border-[#E9D8C5] rounded-xl px-4 text-xs sm:text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-[#D69A4B]/30 focus:border-[#D69A4B] transition-all cursor-pointer"
                       >
-                        <option value="WhatsApp Order Inquiry">WhatsApp Order Inquiry</option>
+                        <option value="WhatsApp Product Enquiry">WhatsApp Product Enquiry</option>
                         <option value="Showroom Visit">Private Showroom Visit</option>
                         <option value="Custom Dimensions">Custom Dimensions & Wood Selection</option>
                         <option value="Trade / Architect Inquiry">Trade / Architect Partnership</option>
@@ -528,7 +528,7 @@ Please get in touch with me.`);
               Frequently Asked Questions
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl text-charcoal font-normal tracking-tight">
-              White-Glove Service & Ordering
+              White-Glove Service & Enquiries
             </h2>
           </div>
 

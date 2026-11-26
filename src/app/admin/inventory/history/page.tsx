@@ -1,5 +1,14 @@
-import { redirect } from 'next/navigation';
+import React from 'react';
+import { requireAdminSession } from '@/lib/auth';
+import InventoryHistoryClient from '@/components/admin/InventoryHistoryClient';
 
-export default function AdminInventoryHistoryPage() {
-  redirect('/admin/products');
+export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: 'Inventory Movement History | MNC LifeStyle Admin',
+};
+
+export default async function AdminInventoryHistoryPage() {
+  await requireAdminSession();
+  return <InventoryHistoryClient />;
 }

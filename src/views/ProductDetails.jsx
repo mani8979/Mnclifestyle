@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { useParams, Link } from '@/lib/router-bridge';
 import { products, slugify } from '../data/products';
 import { formatINR, calculateDiscount } from '../utils/currency';
-import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
+import { getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../utils/colors';
 import ColorVariantSelector from '../components/ColorVariantSelector';
@@ -25,8 +25,6 @@ import {
   ArrowRight,
   Palette,
   CheckCircle2,
-  Minus,
-  Plus,
   Sparkles
 } from 'lucide-react';
 
@@ -34,7 +32,18 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
   const params = useParams();
   const id = params?.slug || params?.id;
 
-  const product = initialProduct || products.find((p) => p.id === id || p.slug === id || slugify(p.name) === id || p.legacyId === id || p.sku?.toLowerCase() === id?.toLowerCase() || p.sku === id);
+  const product =
+    initialProduct !== undefined
+      ? initialProduct
+      : products.find(
+          (p) =>
+            p.id === id ||
+            p.slug === id ||
+            slugify(p.name) === id ||
+            p.legacyId === id ||
+            p.sku?.toLowerCase() === id?.toLowerCase() ||
+            p.sku === id
+        );
 
   if (!product) {
     notFound();
@@ -48,7 +57,6 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
   const [selectedColor, setSelectedColor] = useState(
     initialPrimaryColor?.name || product.colors?.[0]?.name || 'Standard'
   );
-  const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState('details');
   const [collapsedCustomSections, setCollapsedCustomSections] = useState({});
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -85,7 +93,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
   const effectiveOriginalPrice = activeSwatch
     ? activeSwatch.originalPrice
     : Number(product.originalPrice) || 0;
-  const activeProductForCart =
+  const activeProductForInquiry =
     effectivePrice !== Number(product.price) || swatchImageOverride
       ? {
           ...product,
@@ -126,26 +134,29 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     }
   };
 
-  // WhatsApp Order & Inquiry URLs
-  const whatsappOrderUrl = getWhatsAppOrderUrl({
-    product: activeProductForCart,
+  // WhatsApp Direct Enquiry URLs
+  const whatsappEnquiryUrl = getWhatsAppInquiryUrl({
+    product: activeProductForInquiry,
     selectedColor,
-    quantity
+    topic: isOutOfStock ? 'Restock & Lead Time Enquiry' : 'Product Availability & Finish Enquiry'
   });
 
   const whatsappInquiryUrl = getWhatsAppInquiryUrl({
-    product: activeProductForCart,
+    product: activeProductForInquiry,
     selectedColor,
     topic: 'Custom Dimensions & Finish Enquiry'
   });
 
-  // Recommended pieces: server provided or same category first, then others
-  const relatedProducts = (initialRelatedProducts && initialRelatedProducts.length > 0)
-    ? initialRelatedProducts
-    : products
-        .filter((p) => p.id !== product.id && p.category === product.category)
-        .concat(products.filter((p) => p.id !== product.id && p.category !== product.category))
-        .slice(0, 4);
+  // Recommended pieces: server provided (or static fallback only when initialProduct prop omitted)
+  const relatedProducts =
+    initialRelatedProducts && initialRelatedProducts.length > 0
+      ? initialRelatedProducts
+      : initialProduct !== undefined
+        ? []
+        : products
+            .filter((p) => p.id !== product.id && p.category === product.category)
+            .concat(products.filter((p) => p.id !== product.id && p.category !== product.category))
+            .slice(0, 4);
 
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
@@ -172,9 +183,9 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
       author: 'Ananya Reddy',
       location: 'Jubilee Hills, Hyderabad',
       rating: 5,
-      date: 'Verified Buyer • 1 month ago',
-      title: 'Effortless WhatsApp ordering experience',
-      comment: 'Ordering directly on WhatsApp felt like having a personal furniture concierge. They shared high-resolution finish swatches and tracked the shipment seamlessly. Highly recommended!'
+      date: 'Verified Client • 1 month ago',
+      title: 'Effortless WhatsApp concierge experience',
+      comment: 'Enquiring directly on WhatsApp felt like having a personal furniture concierge. They shared high-resolution finish swatches, guided bespoke sizing, and arranged delivery seamlessly. Highly recommended!'
     },
     {
       author: 'Karthik Raman',
@@ -203,7 +214,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           <span className="text-[#211710] font-medium truncate max-w-[150px] sm:max-w-none">{product.name}</span>
         </nav>
 
-        {/* Top Product Section: 2-Column Gallery + Purchasing & WhatsApp Order Details */}
+        {/* Top Product Section: 2-Column Gallery + Specifications & WhatsApp Enquiry Details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 mb-10 lg:mb-14">
           
           {/* Left Column: Image Gallery (Col 7) */}
@@ -338,46 +349,20 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               )
             )}
 
-            {/* 8. Purchasing Actions: Integrated Quantity Selector + Buy Now + Add to Cart with Uniform 48px Heights */}
+            {/* 8. Enquiry Actions: Primary WhatsApp Enquiry + Bespoke Customization & Showroom Visit */}
             <div className="space-y-2.5 mb-4">
-              {/* Primary High-Intent Row: Quantity Selector + Buy Now */}
+              {/* Primary High-Intent Row: WhatsApp Enquiry */}
               <div className="flex items-stretch gap-2.5">
-                {/* Premium Ergonomic Quantity Selector */}
-                <div className="flex items-center justify-between border-2 border-[#E9D8C5] rounded-xl bg-white shadow-2xs shrink-0 h-12 px-1">
-                  <button
-                    type="button"
-                    disabled={isOutOfStock || quantity <= 1}
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 sm:w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-[#211710] disabled:cursor-not-allowed rounded-lg transition-all focus:outline-none"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-                  <span className="w-7 sm:w-9 text-center text-sm font-bold text-[#211710] select-none font-sans tabular-nums">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={isOutOfStock}
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 sm:w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg transition-all focus:outline-none cursor-pointer"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="w-4 h-4 stroke-[2.2]" />
-                  </button>
-                </div>
-
-                {/* Primary Buy Now Button (Direct WhatsApp Order) */}
                 <a
-                  href={whatsappOrderUrl}
+                  href={whatsappEnquiryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex-1 min-w-0 h-12 px-3.5 sm:px-5 text-white text-[11px] sm:text-[13px] uppercase tracking-[0.04em] sm:tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:shadow-md active:scale-[0.99] whitespace-nowrap ${
+                  className={`flex-1 min-w-0 h-12 px-4 sm:px-6 text-white text-[12px] sm:text-[13px] uppercase tracking-[0.06em] sm:tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] whitespace-nowrap ${
                     isOutOfStock
                       ? 'bg-[#49301F] hover:bg-[#211710]'
                       : 'bg-[#169E49] hover:bg-[#12833C]'
                   }`}
-                  title={isOutOfStock ? 'Check restock availability on WhatsApp' : 'Order directly on WhatsApp'}
+                  title={isOutOfStock ? 'Check restock availability on WhatsApp' : 'Enquire directly on WhatsApp'}
                 >
                   <WhatsAppIcon className="w-4 h-4 sm:w-[18px] sm:h-[18px] shrink-0" />
                   {isOutOfStock ? (
@@ -386,12 +371,15 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                       <span className="hidden sm:inline">OUT OF STOCK — ENQUIRE RESTOCK</span>
                     </>
                   ) : (
-                    <span>BUY NOW VIA WHATSAPP</span>
+                    <>
+                      <span className="sm:hidden">ENQUIRE NOW</span>
+                      <span className="hidden sm:inline">WHATSAPP ENQUIRY — ENQUIRE NOW</span>
+                    </>
                   )}
                 </a>
               </div>
 
-              {/* Quick Inquiry & Showroom Links */}
+              {/* Quick Enquiry & Showroom Links */}
               <div className="flex gap-2 pt-0.5">
                 <a
                   href={whatsappInquiryUrl}
@@ -407,7 +395,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   className="h-10 px-4 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors shrink-0"
                 >
                   <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B] shrink-0 stroke-[2]" />
-                  <span>Visit Showroom</span>
+                  <span>Book a Showroom Visit</span>
                 </Link>
               </div>
             </div>
@@ -840,7 +828,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
 
       </div>
 
-      {/* Mobile Sticky Bottom Purchase Bar */}
+      {/* Mobile Sticky Bottom Enquiry Bar */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#211710]/95 backdrop-blur-md border-t border-[#49301F] px-3.5 sm:px-4 py-2.5 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] shadow-2xl transition-all">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2.5">
           
@@ -866,10 +854,10 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
             )}
           </div>
 
-          {/* Mobile Actions: Buy Now */}
+          {/* Mobile Actions: WhatsApp Enquiry */}
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href={whatsappOrderUrl}
+              href={whatsappEnquiryUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2.5 active:scale-95 text-white text-[11px] sm:text-xs font-bold uppercase tracking-wide sm:tracking-wider rounded-xl shadow-md transition-all shrink-0 whitespace-nowrap ${
@@ -877,15 +865,15 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   ? 'bg-[#49301F] hover:bg-[#211710]'
                   : 'bg-[#169E49] hover:bg-[#12833C]'
               }`}
-              aria-label={`Buy ${product.name} on WhatsApp`}
+              aria-label={`Enquire about ${product.name} on WhatsApp`}
             >
               <WhatsAppIcon className="w-4 h-4 shrink-0" />
               {isOutOfStock ? (
                 <span>Enquire Restock</span>
               ) : (
                 <>
-                  <span className="min-[390px]:hidden">Buy on WhatsApp</span>
-                  <span className="hidden min-[390px]:inline">Buy Now via WhatsApp</span>
+                  <span className="min-[390px]:hidden">Enquire Now</span>
+                  <span className="hidden min-[390px]:inline">WhatsApp Enquiry</span>
                 </>
               )}
             </a>

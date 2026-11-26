@@ -17,10 +17,10 @@ export default function SearchView({ initialProducts, initialCategories }) {
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCat);
   const [liveProducts] = useState(
-    Array.isArray(initialProducts) && initialProducts.length > 0 ? initialProducts : fallbackProducts
+    Array.isArray(initialProducts) ? initialProducts : fallbackProducts
   );
   const [liveCategories] = useState(
-    Array.isArray(initialCategories) && initialCategories.length > 0 ? initialCategories : fallbackCategories
+    Array.isArray(initialCategories) ? initialCategories : fallbackCategories
   );
   const inputRef = useRef(null);
 
@@ -53,12 +53,38 @@ export default function SearchView({ initialProducts, initialCategories }) {
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const catObj =
+      selectedCategory !== 'all'
+        ? liveCategories.find(
+            (c) =>
+              c.slug === selectedCategory ||
+              c.id === selectedCategory ||
+              c.legacyId === selectedCategory ||
+              c.name?.toLowerCase() === selectedCategory.toLowerCase()
+          )
+        : null;
+    const allowedCatKeys =
+      selectedCategory !== 'all'
+        ? new Set(
+            [
+              selectedCategory.toLowerCase(),
+              ...(catObj
+                ? [
+                    (catObj.slug || '').toLowerCase(),
+                    (catObj.id || '').toLowerCase(),
+                    (catObj.legacyId || '').toLowerCase(),
+                    (catObj.name || '').toLowerCase(),
+                  ]
+                : []),
+            ].filter(Boolean)
+          )
+        : null;
+
     return liveProducts.filter((p) => {
-      if (selectedCategory !== 'all') {
+      if (allowedCatKeys) {
         const matchesCat =
-          p.category === selectedCategory ||
-          p.categorySlug === selectedCategory ||
-          p.categoryLabel?.toLowerCase() === selectedCategory.toLowerCase();
+          allowedCatKeys.has(String(p.category || '').toLowerCase()) ||
+          allowedCatKeys.has(String(p.categoryLabel || '').toLowerCase());
         if (!matchesCat) return false;
       }
       if (!q) return true;

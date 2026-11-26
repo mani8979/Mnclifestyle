@@ -32,7 +32,7 @@ export default function Footer({ categories: initialCategories = [] }) {
           { slug: 'chairs', name: 'Chairs' },
           { slug: 'office-tables', name: 'Office Tables' },
         ]
-  ).slice(0, 10);
+  );
   const leftFooterCategories = activeFooterCategories.slice(0, Math.ceil(activeFooterCategories.length / 2));
   const rightFooterCategories = activeFooterCategories.slice(Math.ceil(activeFooterCategories.length / 2));
   const whatsappDirectUrl = `https://wa.me/${businessConfig.contact.phoneRaw}?text=${encodeURIComponent(
@@ -160,7 +160,7 @@ export default function Footer({ categories: initialCategories = [] }) {
                 </a>
               </div>
 
-              {/* WhatsApp Ordering */}
+              {/* WhatsApp Enquiry */}
               <div className="flex items-center gap-2.5">
                 <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
                 <a
@@ -170,7 +170,7 @@ export default function Footer({ categories: initialCategories = [] }) {
                   className="hover:text-[#25D366] transition-colors font-medium text-white"
                   title="Message on WhatsApp"
                 >
-                  WhatsApp Ordering:{' '}
+                  WhatsApp Enquiry:{' '}
                   <span className="text-[#25D366] font-bold">{businessConfig.contact.displayPhone}</span>
                 </a>
               </div>

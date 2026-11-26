@@ -4,10 +4,13 @@ import { requireAdminSession } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Category } from '@/models/Category';
+import { Collection } from '@/models/Collection';
 import { Admin } from '@/models/Admin';
 import {
   Package,
   FolderTree,
+  Layers,
+  Boxes,
   Users,
   ArrowUpRight,
   ShieldCheck,
@@ -21,10 +24,22 @@ export default async function AdminDashboardPage() {
   const session = await requireAdminSession();
   await connectDB();
 
-  const [productsCount, categoriesCount, adminsCount] =
+  const [productsCount, categoriesCount, collectionsCount, lowStockAlertsCount, adminsCount] =
     await Promise.all([
       Product.countDocuments({ isActive: true, isArchived: { $ne: true } }),
       Category.countDocuments({ isActive: true }),
+      Collection.countDocuments({ isActive: true }),
+      Product.countDocuments({
+        isArchived: { $ne: true },
+        trackInventory: true,
+        $or: [
+          { availableQuantity: { $lte: 0 }, allowBackorders: { $ne: true } },
+          {
+            availableQuantity: { $gt: 0 },
+            $expr: { $lte: ['$availableQuantity', { $ifNull: ['$lowStockThreshold', 5] }] },
+          },
+        ],
+      }),
       Admin.countDocuments({ isActive: true }),
     ]);
 
@@ -44,6 +59,22 @@ export default async function AdminDashboardPage() {
       icon: FolderTree,
       change: 'Dynamic Departments & Filters',
       accent: 'text-indigo-600 bg-indigo-50 border-indigo-200',
+    },
+    {
+      label: 'Curated Collections',
+      count: collectionsCount,
+      href: '/admin/collections',
+      icon: Layers,
+      change: 'Live Room Suites (/collections)',
+      accent: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    },
+    {
+      label: 'Stock Alerts',
+      count: lowStockAlertsCount,
+      href: '/admin/inventory',
+      icon: Boxes,
+      change: 'Low or Out of Stock SKUs',
+      accent: 'text-amber-600 bg-amber-50 border-amber-200',
     },
     {
       label: 'Admin Accounts',
@@ -85,7 +116,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
@@ -170,6 +201,46 @@ export default async function AdminDashboardPage() {
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
                     Add new categories, organize dynamic subcategories, and manage slugs
+                  </div>
+                </div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+            </Link>
+
+            <Link
+              href="/admin/collections"
+              className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 hover:border-blue-200 transition-colors group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-700">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    Curated Collections
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Manage collection themes, linked categories, and featured product sets
+                  </div>
+                </div>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+            </Link>
+
+            <Link
+              href="/admin/inventory"
+              className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 hover:border-blue-200 transition-colors group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-lg bg-amber-100 text-amber-700">
+                  <Boxes className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    Inventory & Movement Ledger
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Adjust stock levels, manage showroom holds, view movement logs, and export CSVs
                   </div>
                 </div>
               </div>

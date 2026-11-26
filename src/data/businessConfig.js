@@ -78,6 +78,6 @@ export const businessConfig = {
     ]
   },
 
-  // Ordering Notice
-  orderingNotice: 'All purchases and bespoke customizations are coordinated directly via WhatsApp with our senior furniture consultants for personalized assistance, fabric swatches, and delivery scheduling.'
+  // Concierge Enquiry Notice
+  enquiryNotice: 'All enquiries, bespoke customizations, fabric swatches, and delivery scheduling are coordinated directly via WhatsApp or showroom consultation with our senior furniture specialists.'
 };

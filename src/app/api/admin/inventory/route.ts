@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, handleApiError } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
+import { escapeRegex } from '@/lib/category-cleanup';
+import { getCategoryKeySet } from '@/lib/color-variants';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,58 +17,66 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')?.trim() || '';
     const status = searchParams.get('status')?.trim() || 'all';
     const sort = searchParams.get('sort')?.trim() || 'stock-desc';
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20', 10)));
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20', 10) || 20));
     const skip = (page - 1) * limit;
 
-    const query: any = { isArchived: { $ne: true } };
+    const andConditions: any[] = [{ isArchived: { $ne: true } }];
 
-    // Search query
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { sku: { $regex: search, $options: 'i' } },
-        { categoryLabel: { $regex: search, $options: 'i' } },
-        { subCategory: { $regex: search, $options: 'i' } },
-      ];
+      const safeSearch = escapeRegex(search);
+      andConditions.push({
+        $or: [
+          { name: { $regex: safeSearch, $options: 'i' } },
+          { sku: { $regex: safeSearch, $options: 'i' } },
+          { categoryLabel: { $regex: safeSearch, $options: 'i' } },
+          { subCategory: { $regex: safeSearch, $options: 'i' } },
+        ],
+      });
     }
 
-    // Category filter
     if (category && category !== 'all') {
-      query.$or = query.$or
-        ? [{ $and: [{ $or: query.$or }, { $or: [{ category }, { categoryLabel: category }] }] }]
-        : [{ category }, { categoryLabel: category }];
+      const catKeys = await getCategoryKeySet(category);
+      andConditions.push({
+        $or: [{ category: { $in: catKeys } }, { categoryLabel: { $in: catKeys } }],
+      });
     }
 
-    // Status filter
     if (status === 'low_stock') {
-      query.trackInventory = true;
-      query.availableQuantity = { $gt: 0 };
-      query.$expr = { $lte: ['$availableQuantity', '$lowStockThreshold'] };
+      andConditions.push({
+        trackInventory: true,
+        availableQuantity: { $gt: 0 },
+        $expr: { $lte: ['$availableQuantity', { $ifNull: ['$lowStockThreshold', 5] }] },
+      });
     } else if (status === 'out_of_stock') {
-      query.trackInventory = true;
-      query.availableQuantity = { $lte: 0 };
-      query.allowBackorders = { $ne: true };
+      andConditions.push({
+        trackInventory: true,
+        availableQuantity: { $lte: 0 },
+        allowBackorders: { $ne: true },
+      });
     } else if (status === 'in_stock') {
-      query.$or = [
-        { trackInventory: false },
-        { availableQuantity: { $gt: 0 } },
-        { allowBackorders: true },
-      ];
+      andConditions.push({
+        $or: [
+          { trackInventory: false },
+          { availableQuantity: { $gt: 0 } },
+          { allowBackorders: true },
+        ],
+      });
     } else if (status === 'made_to_order') {
-      query.trackInventory = false;
+      andConditions.push({ trackInventory: false });
     }
 
-    // Sorting
-    let sortObj: any = { stockQuantity: -1 };
-    if (sort === 'stock-asc') sortObj = { stockQuantity: 1 };
-    else if (sort === 'stock-desc') sortObj = { stockQuantity: -1 };
-    else if (sort === 'available-asc') sortObj = { availableQuantity: 1 };
-    else if (sort === 'available-desc') sortObj = { availableQuantity: -1 };
-    else if (sort === 'name-asc') sortObj = { name: 1 };
-    else if (sort === 'name-desc') sortObj = { name: -1 };
-    else if (sort === 'price-desc') sortObj = { price: -1 };
-    else if (sort === 'newest') sortObj = { inventoryUpdatedAt: -1 };
+    const query: any = andConditions.length === 1 ? andConditions[0] : { $and: andConditions };
+
+    let sortObj: any = { stockQuantity: -1, _id: -1 };
+    if (sort === 'stock-asc') sortObj = { stockQuantity: 1, _id: 1 };
+    else if (sort === 'stock-desc') sortObj = { stockQuantity: -1, _id: -1 };
+    else if (sort === 'available-asc') sortObj = { availableQuantity: 1, _id: 1 };
+    else if (sort === 'available-desc') sortObj = { availableQuantity: -1, _id: -1 };
+    else if (sort === 'name-asc') sortObj = { name: 1, _id: 1 };
+    else if (sort === 'name-desc') sortObj = { name: -1, _id: -1 };
+    else if (sort === 'price-desc') sortObj = { price: -1, _id: -1 };
+    else if (sort === 'newest') sortObj = { inventoryUpdatedAt: -1, _id: -1 };
 
     const [total, products] = await Promise.all([
       Product.countDocuments(query),
@@ -79,10 +89,10 @@ export async function GET(request: NextRequest) {
       calculatedStatus: !p.trackInventory
         ? 'made_to_order'
         : p.availableQuantity <= 0 && !p.allowBackorders
-        ? 'out_of_stock'
-        : p.availableQuantity <= (p.lowStockThreshold || 5)
-        ? 'low_stock'
-        : 'in_stock',
+          ? 'out_of_stock'
+          : p.availableQuantity <= (typeof p.lowStockThreshold === 'number' ? p.lowStockThreshold : 5)
+            ? 'low_stock'
+            : 'in_stock',
     }));
 
     return NextResponse.json({
@@ -95,10 +105,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit) || 1,
       },
     });
-  } catch (error: any) {
-    if (error.status === 401 || error.message?.includes('Unauthorized')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch inventory list', '[Admin Inventory GET Error]');
   }
 }

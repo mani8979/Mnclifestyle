@@ -14,7 +14,8 @@ export async function GET(
     }
 
     return NextResponse.json({ success: true, product, data: product });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('[Public Product Detail GET Error]:', error);
+    return NextResponse.json({ success: false, message: 'Failed to load product' }, { status: 500 });
   }
 }

@@ -11,7 +11,8 @@ export async function GET() {
       categories,
       data: categories,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('[Public Categories GET Error]:', error);
+    return NextResponse.json({ success: false, message: 'Failed to load categories' }, { status: 500 });
   }
 }

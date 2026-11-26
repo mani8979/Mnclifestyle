@@ -3,8 +3,10 @@ dotenv.config({ path: '.env.local' });
 
 import { connectDB } from '../lib/mongodb';
 import { Product } from '../models/Product';
+import { Category } from '../models/Category';
 import { Admin } from '../models/Admin';
 import { signAdminToken, ADMIN_COOKIE_NAME } from '../lib/auth';
+import { syncCategoryItemCounts } from '../lib/category-cleanup';
 
 const BASE_URL = 'http://127.0.0.1:3007';
 
@@ -43,6 +45,28 @@ async function runCrudVerification() {
     Cookie: `${ADMIN_COOKIE_NAME}=${token}`,
   };
 
+  // Pick active catalog fixtures from live database (no static deleted fixtures)
+  const sampleSofa = await Product.findOne({
+    isActive: true,
+    isArchived: { $ne: true },
+    category: 'sectional-sofas',
+  })
+    .select('name slug legacyId category')
+    .lean();
+  const sampleWithLegacy = await Product.findOne({
+    isActive: true,
+    isArchived: { $ne: true },
+    legacyId: { $exists: true, $ne: '' },
+  })
+    .select('name slug legacyId')
+    .lean();
+  const targetWardrobeCat = await Category.findOne({ slug: 'wardrobes', isActive: true }).lean();
+
+  if (!sampleSofa || !sampleWithLegacy || !targetWardrobeCat) {
+    throw new Error('Missing expected active database fixtures (sectional-sofas / wardrobes / legacyId product).');
+  }
+  const searchToken = sampleSofa.name.split(/\s+/)[0];
+
   // Clean up any previous test artifact
   const testSku = 'MNC-TEST-CRE-01';
   const testSlug = 'kanso-sculptural-teak-credenza-test';
@@ -68,14 +92,14 @@ async function runCrudVerification() {
 
   // 2. Admin can search products
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/products?search=Aura`, { headers: authHeaders });
+    const res = await fetch(`${BASE_URL}/api/admin/products?search=${encodeURIComponent(searchToken)}`, { headers: authHeaders });
     const json = await res.json();
-    const hasAura = json.products?.some((p: any) => p.name.includes('Aura'));
+    const hasMatch = json.products?.some((p: any) => p.name.includes(searchToken));
     results.push({
       id: 2,
       title: 'Admin can search products',
-      passed: res.status === 200 && json.success === true && hasAura,
-      notes: `HTTP ${res.status}, found ${json.count} matching "Aura"`,
+      passed: res.status === 200 && json.success === true && hasMatch,
+      notes: `HTTP ${res.status}, found ${json.count} matching "${searchToken}"`,
     });
   } catch (e: any) {
     results.push({ id: 2, title: 'Admin can search products', passed: false, notes: e.message });
@@ -83,16 +107,19 @@ async function runCrudVerification() {
 
   // 3. Admin can filter products
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/products?category=sofas&status=published&stock=in-stock`, {
+    const res = await fetch(`${BASE_URL}/api/admin/products?category=sectional-sofas&status=published&stock=in-stock`, {
       headers: authHeaders,
     });
     const json = await res.json();
-    const allSofas = json.products?.every((p: any) => p.category === 'sofas' && p.isActive);
+    const allSofas =
+      Array.isArray(json.products) &&
+      json.products.length > 0 &&
+      json.products.every((p: any) => p.category === 'sectional-sofas' && p.isActive);
     results.push({
       id: 3,
       title: 'Admin can filter products',
       passed: res.status === 200 && json.success === true && allSofas,
-      notes: `HTTP ${res.status}, filtered category=sofas, published & in-stock (${json.count} items)`,
+      notes: `HTTP ${res.status}, filtered category=sectional-sofas, published & in-stock (${json.count} items)`,
     });
   } catch (e: any) {
     results.push({ id: 3, title: 'Admin can filter products', passed: false, notes: e.message });
@@ -101,11 +128,11 @@ async function runCrudVerification() {
   // 4. Admin can add a product
   try {
     const newProductPayload = {
-      name: 'Kanso Sculptural Teak Credenza Test',
+      name: 'Kanso Sculptural Teak Wardrobe Test',
       slug: testSlug,
       sku: testSku,
-      category: 'cabinets-sideboards',
-      subCategory: 'Credenzas & Sideboards',
+      category: targetWardrobeCat.slug,
+      subCategory: targetWardrobeCat.subcategories?.[0] || 'Solid Wood Wardrobes',
       price: 135000,
       originalPrice: 155000,
       badge: 'Signature Piece',
@@ -114,8 +141,8 @@ async function runCrudVerification() {
       isActive: true,
       stockQuantity: 12,
       inStock: true,
-      shortDescription: 'Minimalist low credenza in seasoned Indian teak with fluted soft-close tambour doors.',
-      fullDescription: 'Designed with architectural proportion for luxury residences, featuring fluted solid timber tambour doors and German soft-close hardware.',
+      shortDescription: 'Minimalist low wardrobe in seasoned Indian teak with fluted soft-close doors.',
+      fullDescription: 'Designed with architectural proportion for luxury residences, featuring fluted solid timber doors and German soft-close hardware.',
       dimensions: { width: '200 cm', depth: '48 cm', height: '65 cm', weight: '54 kg' },
       materials: ['Kiln-Dried Indian Teak', 'Matte Carbon Hardware'],
       colors: [{ name: 'Smoked Teak', hex: '#3E2A1E', inStock: true }],
@@ -146,8 +173,8 @@ async function runCrudVerification() {
       name: 'Another Piece With Duplicate SKU',
       slug: 'different-slug-for-duplicate-test',
       sku: testSku, // duplicate
-      category: 'sofas',
-      subCategory: 'Sofas',
+      category: 'sectional-sofas',
+      subCategory: '3-Seater Sofas',
       price: 99000,
       shortDescription: 'Testing duplicate SKU rejection.',
       fullDescription: 'Full description testing duplicate SKU rejection properly.',
@@ -176,8 +203,8 @@ async function runCrudVerification() {
       name: 'Another Piece With Duplicate Slug',
       slug: testSlug, // duplicate
       sku: 'UNIQUE-SKU-9999',
-      category: 'sofas',
-      subCategory: 'Sofas',
+      category: 'sectional-sofas',
+      subCategory: '3-Seater Sofas',
       price: 99000,
       shortDescription: 'Testing duplicate slug rejection.',
       fullDescription: 'Full description testing duplicate slug rejection properly.',
@@ -336,21 +363,22 @@ async function runCrudVerification() {
     results.push({ id: 13, title: 'Draft & Archived products are hidden from public APIs', passed: false, notes: e.message });
   }
 
-  // Clean up test product
+  // Clean up test product & resync category counts
   await Product.deleteMany({
     $or: [{ sku: testSku }, { slug: testSlug }],
   });
+  await syncCategoryItemCounts();
 
   // 14. Published products appear in storefront
   try {
     const res = await fetch(`${BASE_URL}/shop`);
     const text = await res.text();
-    const hasShopCatalog = text.includes('Aura Curved') && text.includes('All Furniture');
+    const hasShopCatalog = text.includes(sampleSofa.name) && text.includes('All Furniture');
     results.push({
       id: 14,
       title: 'Published products appear in the storefront',
       passed: res.status === 200 && hasShopCatalog,
-      notes: `HTTP ${res.status}, /shop renders published catalog items`,
+      notes: `HTTP ${res.status}, /shop renders active catalog item "${sampleSofa.name}"`,
     });
   } catch (e: any) {
     results.push({ id: 14, title: 'Published products appear in the storefront', passed: false, notes: e.message });
@@ -358,35 +386,39 @@ async function runCrudVerification() {
 
   // 15. Existing product URLs still work
   try {
-    const resSlug = await fetch(`${BASE_URL}/product/aura-curved-boucle-sofa`);
-    const resLegacy = await fetch(`${BASE_URL}/product/mnc-sof-01`);
+    const resSlug = await fetch(`${BASE_URL}/product/${sampleWithLegacy.slug}`);
+    const resLegacy = await fetch(`${BASE_URL}/product/${sampleWithLegacy.legacyId}`);
     results.push({
       id: 15,
       title: 'Existing product URLs still work',
       passed: resSlug.status === 200 && resLegacy.status === 200,
-      notes: `Slug URL: HTTP ${resSlug.status}, Legacy URL: HTTP ${resLegacy.status}`,
+      notes: `Slug (${sampleWithLegacy.slug}): HTTP ${resSlug.status}, Legacy (${sampleWithLegacy.legacyId}): HTTP ${resLegacy.status}`,
     });
   } catch (e: any) {
     results.push({ id: 15, title: 'Existing product URLs still work', passed: false, notes: e.message });
   }
 
-  // 16. Existing cart and wishlist functionality remains intact
+  // 16. Enquiry-only experience verified (wishlist & shopping cart removed)
   try {
     const fs = await import('fs');
-    const cartCode = fs.readFileSync('src/context/CartContext.jsx', 'utf8');
-    const wishlistCode = fs.readFileSync('src/context/WishlistContext.jsx', 'utf8');
+    const whatsappCode = fs.readFileSync('src/utils/whatsapp.js', 'utf8');
+    const layoutCode = fs.readFileSync('src/app/layout.tsx', 'utf8');
     const intact =
-      cartCode.includes('addToCart') &&
-      cartCode.includes('removeFromCart') &&
-      wishlistCode.includes('toggleWishlist');
+      !fs.existsSync('src/context/CartContext.jsx') &&
+      !fs.existsSync('src/context/WishlistContext.jsx') &&
+      !fs.existsSync('src/components/CartDrawer.jsx') &&
+      !layoutCode.includes('CartProvider') &&
+      !layoutCode.includes('WishlistProvider') &&
+      whatsappCode.includes('getWhatsAppInquiryUrl') &&
+      !whatsappCode.includes('getWhatsAppCartOrderUrl');
     results.push({
       id: 16,
-      title: 'Existing cart and wishlist functionality remains intact',
+      title: 'Enquiry-only catalogue experience verified (no cart or wishlist)',
       passed: intact,
-      notes: `Cart & Wishlist methods preserved with localStorage synchronization: ${intact}`,
+      notes: `Cart & Wishlist removed, direct WhatsApp enquiry active: ${intact}`,
     });
   } catch (e: any) {
-    results.push({ id: 16, title: 'Existing cart and wishlist functionality remains intact', passed: false, notes: e.message });
+    results.push({ id: 16, title: 'Enquiry-only catalogue experience verified (no cart or wishlist)', passed: false, notes: e.message });
   }
 
   // Print scorecard

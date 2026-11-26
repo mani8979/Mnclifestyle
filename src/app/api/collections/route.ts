@@ -11,7 +11,8 @@ export async function GET() {
       collections,
       data: collections,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('[Public Collections GET Error]:', error);
+    return NextResponse.json({ success: false, message: 'Failed to load collections' }, { status: 500 });
   }
 }

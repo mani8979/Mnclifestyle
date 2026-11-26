@@ -4,18 +4,17 @@ import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import {
   UploadCloud,
   ImageIcon,
-  Plus,
   Trash2,
   MoveUp,
   MoveDown,
   Star,
-  CheckCircle2,
   AlertCircle,
   Loader2,
-  ExternalLink,
   Link2,
+  RefreshCw,
 } from 'lucide-react';
 import { MAX_FILE_SIZE_BYTES, MAX_GALLERY_IMAGES, ALLOWED_FORMATS } from '@/lib/storage/cloudinary-constants';
+import ImageUrlPreviewCard, { useValidatedImagePreview } from './ImageUrlPreviewCard';
 
 export interface UploadedImageItem {
   url: string;
@@ -38,13 +37,23 @@ export default function ProductImageUploader({
   productIdentifier = 'furniture',
 }: ProductImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
+  const [editingUrlIndex, setEditingUrlIndex] = useState<number | null>(null);
+  const [editingUrlValue, setEditingUrlValue] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<Array<{ name: string; progress: number }>>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadTab, setUploadTab] = useState<'upload' | 'url'>('upload');
   const [urlInput, setUrlInput] = useState('');
-  const [urlPreviewError, setUrlPreviewError] = useState(false);
   const [showUrlField, setShowUrlField] = useState(false);
+
+  const {
+    previewUrl: validatedPreviewUrl,
+    previewError: urlPreviewError,
+    setPreviewError: setUrlPreviewError,
+    commitImmediately: commitUrlPreviewImmediately,
+  } = useValidatedImagePreview(urlInput);
 
   // Validate file client-side
   const validateFile = (file: File): string | null => {
@@ -70,7 +79,10 @@ export default function ProductImageUploader({
   };
 
   // Upload individual file directly to Cloudinary using signed upload
-  const uploadSingleFile = async (file: File): Promise<UploadedImageItem | null> => {
+  const uploadSingleFile = async (
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<UploadedImageItem> => {
     // 1. Request signature from server
     const sigRes = await fetch('/api/admin/uploads/signature', {
       method: 'POST',
@@ -96,9 +108,13 @@ export default function ProductImageUploader({
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const progress = Math.round((e.loaded / e.total) * 100);
-          setUploadingFiles((prev) =>
-            prev.map((item) => (item.name === file.name ? { ...item, progress } : item))
-          );
+          if (onProgress) {
+            onProgress(progress);
+          } else {
+            setUploadingFiles((prev) =>
+              prev.map((item) => (item.name === file.name ? { ...item, progress } : item))
+            );
+          }
         }
       };
 
@@ -106,15 +122,20 @@ export default function ProductImageUploader({
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText);
+            const uploadedUrl = data.secure_url || data.url;
+            if (!uploadedUrl) {
+              reject(new Error('Cloudinary response did not include an image URL.'));
+              return;
+            }
             resolve({
-              url: data.secure_url || data.url,
+              url: uploadedUrl,
               key: data.public_id,
               altText: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
               width: data.width,
               height: data.height,
               isPrimary: images.length === 0,
             });
-          } catch (err) {
+          } catch {
             reject(new Error('Failed to parse Cloudinary response.'));
           }
         } else {
@@ -274,6 +295,69 @@ export default function ProductImageUploader({
     onChange(copy);
   };
 
+  const handleReplaceFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const targetIdx = replacingIndex;
+    e.target.value = '';
+    if (!file || targetIdx === null) return;
+
+    const err = validateFile(file);
+    if (err) {
+      setErrorMessage(err);
+      setReplacingIndex(null);
+      return;
+    }
+
+    setErrorMessage('');
+    setUploadingFiles([{ name: file.name, progress: 15 }]);
+    try {
+      const uploaded = await uploadSingleFile(file, (prog) => {
+        setUploadingFiles([{ name: file.name, progress: prog }]);
+      });
+      const copy = [...images];
+      if (copy[targetIdx]) {
+        copy[targetIdx] = {
+          ...uploaded,
+          altText: copy[targetIdx].altText || '',
+          isPrimary: targetIdx === 0,
+        };
+        onChange(copy);
+      }
+    } catch (uploadErr: any) {
+      setErrorMessage(uploadErr.message || 'Failed to replace image.');
+    } finally {
+      setUploadingFiles([]);
+      setReplacingIndex(null);
+    }
+  };
+
+  const handleSaveEditedUrl = (index: number) => {
+    const trimmed = editingUrlValue.trim();
+    if (!trimmed) {
+      setErrorMessage('Please enter a valid image URL.');
+      return;
+    }
+    try {
+      new URL(trimmed);
+    } catch {
+      setErrorMessage('Please enter a valid HTTP or HTTPS image URL.');
+      return;
+    }
+    setErrorMessage('');
+    const copy = [...images];
+    if (copy[index]) {
+      copy[index] = {
+        ...copy[index],
+        url: trimmed,
+        key: trimmed === copy[index].url ? copy[index].key : undefined,
+        isPrimary: index === 0,
+      };
+      onChange(copy);
+    }
+    setEditingUrlIndex(null);
+    setEditingUrlValue('');
+  };
+
   return (
     <div className="space-y-5 text-left font-sans">
       {/* Error Message Alert */}
@@ -298,11 +382,10 @@ export default function ProductImageUploader({
         <button
           type="button"
           onClick={() => setUploadTab('upload')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-            uploadTab === 'upload'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${uploadTab === 'upload'
+            ? 'bg-blue-600 text-white shadow-xs'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
         >
           <UploadCloud className="w-3.5 h-3.5" />
           <span>Upload Image File</span>
@@ -310,11 +393,10 @@ export default function ProductImageUploader({
         <button
           type="button"
           onClick={() => setUploadTab('url')}
-          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-            uploadTab === 'url'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${uploadTab === 'url'
+            ? 'bg-blue-600 text-white shadow-xs'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
         >
           <Link2 className="w-3.5 h-3.5" />
           <span>Add by Image Link / URL</span>
@@ -328,11 +410,10 @@ export default function ProductImageUploader({
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all cursor-pointer ${
-            isDragging
-              ? 'border-blue-600 bg-blue-50 scale-[1.01]'
-              : 'border-slate-200 hover:border-blue-600/60 bg-slate-50'
-          }`}
+          className={`border-2 border-dashed rounded-3xl p-8 text-center transition-all cursor-pointer ${isDragging
+            ? 'border-blue-600 bg-blue-50 scale-[1.01]'
+            : 'border-slate-200 hover:border-blue-600/60 bg-slate-50'
+            }`}
         >
           <input
             ref={fileInputRef}
@@ -380,6 +461,10 @@ export default function ProductImageUploader({
                   setUrlInput(e.target.value);
                   setUrlPreviewError(false);
                 }}
+                onPaste={(e) => {
+                  const pasted = e.clipboardData?.getData('text') || '';
+                  if (pasted) commitUrlPreviewImmediately(pasted);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -402,44 +487,15 @@ export default function ProductImageUploader({
             </p>
           </div>
 
-          {/* Live Preview */}
-          {urlInput.trim() && (
-            <div className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center gap-3.5 shadow-2xs">
-              <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                {urlPreviewError ? (
-                  <div className="text-center p-1 text-red-500">
-                    <AlertCircle className="w-4 h-4 mx-auto mb-0.5 text-red-400" />
-                    <span className="text-[9px]">Invalid URL</span>
-                  </div>
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={urlInput.trim()}
-                    alt="Live link preview"
-                    onError={() => setUrlPreviewError(true)}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-800">
-                  {urlPreviewError ? 'Unable to load image from this URL' : 'Live Image Preview'}
-                </p>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5 font-mono" title={urlInput}>
-                  {urlInput}
-                </p>
-                {!urlPreviewError && (
-                  <button
-                    type="button"
-                    onClick={handleAddUrl}
-                    className="mt-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    Click to add this image to gallery →
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Debounced Live Preview (only loads after valid complete URL is entered or pasted) */}
+          <ImageUrlPreviewCard
+            rawInput={urlInput}
+            previewUrl={validatedPreviewUrl}
+            previewError={urlPreviewError}
+            onPreviewError={() => setUrlPreviewError(true)}
+            actionLabel="Click to add this image to gallery →"
+            onApply={handleAddUrl}
+          />
         </div>
       )}
 
@@ -519,11 +575,10 @@ export default function ProductImageUploader({
           {images.map((img, idx) => (
             <div
               key={idx}
-              className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center gap-4 ${
-                idx === 0
-                  ? 'border-blue-500 shadow-xs bg-blue-50/50'
-                  : 'bg-slate-50 border-slate-200'
-              }`}
+              className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center gap-4 ${idx === 0
+                ? 'border-blue-500 shadow-xs bg-blue-50/50'
+                : 'bg-slate-50 border-slate-200'
+                }`}
             >
               {/* Thumbnail Container */}
               <div className="relative w-20 h-20 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 group">
@@ -561,10 +616,69 @@ export default function ProductImageUploader({
                     className="w-full max-w-md bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] text-slate-700 placeholder-[#61574F] focus:outline-none focus:border-blue-600"
                   />
                 </div>
+
+                {editingUrlIndex === idx && (
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <input
+                      type="url"
+                      value={editingUrlValue}
+                      onChange={(e) => setEditingUrlValue(e.target.value)}
+                      placeholder="Replacement image URL..."
+                      className="flex-1 bg-white border border-blue-300 rounded-lg px-2.5 py-1 text-[11px] text-slate-800 focus:outline-none focus:border-blue-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveEditedUrl(idx)}
+                      className="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-semibold cursor-pointer"
+                    >
+                      Save URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingUrlIndex(null);
+                        setEditingUrlValue('');
+                      }}
+                      className="px-2 py-1 rounded-lg border border-slate-200 text-slate-600 text-[11px] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+              <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplacingIndex(idx);
+                    replaceInputRef.current?.click();
+                  }}
+                  title="Replace image with upload"
+                  className="px-2 py-1.5 rounded-lg border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-600 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Replace</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingUrlIndex === idx) {
+                      setEditingUrlIndex(null);
+                      setEditingUrlValue('');
+                    } else {
+                      setEditingUrlIndex(idx);
+                      setEditingUrlValue(img.url);
+                    }
+                  }}
+                  title="Edit / replace image URL"
+                  className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 cursor-pointer"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+
                 {idx !== 0 && (
                   <button
                     type="button"
@@ -609,6 +723,15 @@ export default function ProductImageUploader({
             </div>
           ))}
         </div>
+
+        <input
+          ref={replaceInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleReplaceFileChange}
+          className="hidden"
+          aria-label="Replace product image file"
+        />
       </div>
     </div>
   );

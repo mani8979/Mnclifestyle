@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import mongoose from 'mongoose';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
-import { Product } from '@/models/Product';
-import { InventoryMovement } from '@/models/InventoryMovement';
 import { StockReservationSchema } from '@/lib/validations/inventory';
+import { reserveInventoryStock } from '@/services/inventoryService';
+import { revalidateCatalogPaths } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
-
-function findProductQuery(id: string) {
-  if (mongoose.Types.ObjectId.isValid(id)) {
-    return { _id: id };
-  }
-  return {
-    $or: [{ sku: id.toUpperCase() }, { slug: id.toLowerCase() }, { legacyId: id }],
-  };
-}
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     const admin = await requireAdminSession(undefined, request);
     await connectDB();
 
     const { id } = await context.params;
-    const body = await request.json().catch(() => ({}));
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid JSON request payload.' },
+        { status: 400 }
+      );
+    }
 
     const parsed = StockReservationSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,75 +36,20 @@ export async function POST(
       );
     }
 
-    const { quantity, reason, notes } = parsed.data;
+    const result = await reserveInventoryStock(id, parsed.data, admin);
 
-    const product = await Product.findOne(findProductQuery(id));
-    if (!product) {
-      return NextResponse.json({ success: false, message: 'Product not found.' }, { status: 404 });
-    }
-
-    if (product.trackInventory) {
-      if (product.availableQuantity < quantity) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Cannot reserve ${quantity} units. Only ${product.availableQuantity} units currently available.`,
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    const prevReserved = product.reservedQuantity || 0;
-    const newReserved = prevReserved + quantity;
-    const newAvailable = product.trackInventory
-      ? Math.max(0, product.stockQuantity - newReserved)
-      : product.stockQuantity;
-
-    product.reservedQuantity = newReserved;
-    product.availableQuantity = newAvailable;
-    product.inStock = product.trackInventory
-      ? (newAvailable > 0 || Boolean(product.allowBackorders))
-      : true;
-    product.inventoryUpdatedAt = new Date();
-
-    await product.save();
-
-    // Record movement audit
-    const movement = await InventoryMovement.create({
-      productId: product._id,
-      sku: product.sku,
-      productName: product.name,
-      previousQuantity: product.stockQuantity,
-      quantityChanged: 0,
-      newQuantity: product.stockQuantity,
-      previousReserved: prevReserved,
-      newReserved,
-      adjustmentType: 'Reservation',
-      reason,
-      notes: notes || `Reserved ${quantity} units`,
-      adminId: (admin as any).id || (admin as any)._id?.toString() || '',
-      adminName: (admin as any).name || (admin as any).email || 'Administrator',
-      timestamp: new Date(),
-    });
+    revalidateCatalogPaths(
+      result.category ? [result.category] : [],
+      result.slug ? [result.slug] : []
+    );
 
     return NextResponse.json({
       success: true,
-      message: `Successfully reserved ${quantity} units of ${product.name}.`,
-      product: {
-        id: product.legacyId || product._id.toString(),
-        sku: product.sku,
-        name: product.name,
-        stockQuantity: product.stockQuantity,
-        availableQuantity: product.availableQuantity,
-        reservedQuantity: product.reservedQuantity,
-      },
-      movement,
+      message: `Successfully reserved ${parsed.data.quantity} units of ${result.product?.name || 'product'}.`,
+      product: result.product,
+      movement: result.movement,
     });
-  } catch (error: any) {
-    if (error.status === 401 || error.message?.includes('Unauthorized')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'Failed to reserve inventory stock', '[Inventory Reserve Error]');
   }
 }

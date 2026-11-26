@@ -103,6 +103,7 @@ const InventoryMovementSchema = new Schema<IInventoryMovement>(
     adminId: {
       type: String,
       default: '',
+      index: true,
     },
     adminName: {
       type: String,

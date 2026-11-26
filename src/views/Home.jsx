@@ -28,29 +28,29 @@ import {
 
 export default function Home({ initialProducts, initialCategories }) {
   const [liveProducts, setLiveProducts] = useState(
-    initialProducts && initialProducts.length > 0 ? initialProducts : products
+    Array.isArray(initialProducts) ? initialProducts : products
   );
   const [liveCategories, setLiveCategories] = useState(
-    initialCategories && initialCategories.length > 0 ? initialCategories : categories
+    Array.isArray(initialCategories) ? initialCategories : categories
   );
 
   useEffect(() => {
-    if (initialProducts && initialProducts.length > 0) {
+    if (Array.isArray(initialProducts)) {
       setLiveProducts(initialProducts);
     }
   }, [initialProducts]);
 
   useEffect(() => {
-    if (initialCategories && initialCategories.length > 0) {
+    if (Array.isArray(initialCategories)) {
       setLiveCategories(initialCategories);
     }
   }, [initialCategories]);
 
   useEffect(() => {
-    fetch('/api/products?limit=20')
+    fetch('/api/products?isBestseller=true&limit=4')
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d?.products) && d.products.length > 0) {
+        if (d?.success && Array.isArray(d?.products)) {
           setLiveProducts(d.products);
         }
       })
@@ -59,7 +59,7 @@ export default function Home({ initialProducts, initialCategories }) {
     fetch('/api/categories')
       .then((r) => r.json())
       .then((d) => {
-        if (Array.isArray(d?.categories) && d.categories.length > 0) {
+        if (d?.success && Array.isArray(d?.categories)) {
           setLiveCategories(d.categories);
         }
       })
@@ -207,7 +207,7 @@ export default function Home({ initialProducts, initialCategories }) {
                 WhatsApp Concierge Service
               </h3>
               <p className="text-xs sm:text-sm text-[#38302A] leading-relaxed font-sans">
-                Order directly via WhatsApp with a senior design consultant to verify pin code delivery, customize fabric options, or scale dimensions.
+                Enquire directly via WhatsApp with a senior design consultant to confirm availability, customize fabric options, or scale dimensions.
               </p>
             </div>
           </ScrollReveal>
@@ -259,7 +259,7 @@ export default function Home({ initialProducts, initialCategories }) {
                   <div className="pt-4 border-t border-[#E9D8C5]/60">
                     <h4 className="font-serif text-base font-semibold text-[#211A15]">{t.name}</h4>
                     <p className="text-xs text-[#D69A4B] font-medium">{t.location}</p>
-                    <p className="text-[11px] text-[#77736D] mt-1">Purchased: {t.piece}</p>
+                    <p className="text-[11px] text-[#77736D] mt-1">Selected Piece: {t.piece}</p>
                   </div>
                 </div>
               </ScrollReveal>

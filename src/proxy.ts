@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/auth';
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/auth-token';
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

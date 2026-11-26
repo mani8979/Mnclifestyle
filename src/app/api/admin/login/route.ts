@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/mongodb';
 import { Admin } from '@/models/Admin';
 import {
@@ -9,6 +10,9 @@ import {
   clearLoginRateLimit,
   validateRequestOrigin,
 } from '@/lib/auth';
+
+// Constant-time fallback hash used when email does not exist to prevent user enumeration timing leaks.
+const DUMMY_PASSWORD_HASH = '$2b$10$CwTycUXWue0Thq9StjUM0uJ8u1q2lM9D8s7S5xP4oB2n8m2W9R6eC';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,8 +65,9 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const admin = await Admin.findOne({ email }).select('+passwordHash');
 
-    // 5. Verify credentials (constant-time check to prevent timing attacks)
+    // 5. Verify credentials (constant-time dummy check when account missing to prevent user enumeration timing leaks)
     if (!admin) {
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       recordFailedLogin(rateLimitKey);
       return NextResponse.json(
         { success: false, message: 'Invalid email or password' },
@@ -130,9 +135,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error: any) {
     console.error('[Admin Login Error]:', error);
-    const detail = error?.message || 'An internal server error occurred';
     return NextResponse.json(
-      { success: false, message: detail },
+      { success: false, message: 'Authentication service error' },
       { status: 500 }
     );
   }

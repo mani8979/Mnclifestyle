@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { slugify } from '@/lib/validations/product';
 import {
   Package,
   Plus,
   Search,
-  ArrowUpDown,
   Edit3,
   ExternalLink,
   Trash2,
+  RotateCcw,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
@@ -41,6 +41,7 @@ interface ProductItem {
   stockQuantity: number;
   inStock: boolean;
   isActive: boolean;
+  isArchived?: boolean;
   badge?: string | null;
   images: string[];
   updatedAt: string;
@@ -84,22 +85,41 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
 
   // Filter & Search states
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedSort, setSelectedSort] = useState('updated-desc');
+  const abortRef = useRef<AbortController | null>(null);
+  const reqSeqRef = useRef(0);
 
-  // Deletion modal state
+  useEffect(() => {
+    if (!search) {
+      setDebouncedSearch('');
+      return;
+    }
+    const timer = window.setTimeout(() => setDebouncedSearch(search), 220);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  // Archival & Restore modal state
   const [deleteModalProduct, setDeleteModalProduct] = useState<ProductItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [restoreModalProduct, setRestoreModalProduct] = useState<ProductItem | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const fetchProducts = useCallback(async () => {
+    const seq = ++reqSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
-        search,
+        search: debouncedSearch,
         category: selectedCategory,
         status: selectedStatus,
         sort: selectedSort,
@@ -107,8 +127,12 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         limit: '10',
       });
 
-      const res = await fetch(`/api/admin/products?${params.toString()}`);
+      const res = await fetch(`/api/admin/products?${params.toString()}`, {
+        signal: controller.signal,
+      });
       const data = await res.json();
+
+      if (controller.signal.aborted || seq !== reqSeqRef.current) return;
 
       if (res.ok && data.success) {
         setProducts(data.products || []);
@@ -118,15 +142,22 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         setNotification({ type: 'error', message: data.message || 'Failed to load products' });
       }
     } catch (e: any) {
+      if (e?.name === 'AbortError' || controller.signal.aborted) return;
       setNotification({ type: 'error', message: 'Network error loading products' });
     } finally {
-      setIsLoading(false);
+      if (seq === reqSeqRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, [search, selectedCategory, selectedStatus, selectedSort, page]);
+  }, [debouncedSearch, selectedCategory, selectedStatus, selectedSort, page]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   const handleDeleteConfirm = async () => {
     if (!deleteModalProduct) return;
@@ -139,16 +170,51 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setNotification({ type: 'success', message: data.message || 'Product unlisted successfully' });
+        setNotification({
+          type: 'success',
+          message: data.collectionNotice
+            ? `${data.message} ${data.collectionNotice}`
+            : data.message || 'Product archived successfully',
+        });
         setDeleteModalProduct(null);
         fetchProducts();
       } else {
         setNotification({ type: 'error', message: data.message || 'Failed to archive product' });
       }
-    } catch (e: any) {
+    } catch {
       setNotification({ type: 'error', message: 'Failed to archive product' });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!restoreModalProduct) return;
+    setIsRestoring(true);
+
+    try {
+      const res = await fetch(`/api/admin/products/${restoreModalProduct._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isArchived: false, isActive: true }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setNotification({
+          type: 'success',
+          message: `Product "${restoreModalProduct.name}" restored and published to storefront.`,
+        });
+        setRestoreModalProduct(null);
+        fetchProducts();
+      } else {
+        setNotification({ type: 'error', message: data.message || 'Failed to restore product' });
+        setRestoreModalProduct(null);
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Network error restoring product' });
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -260,9 +326,10 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               aria-label="Filter products by publication status"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition-colors"
             >
-              <option value="all">All Statuses</option>
+              <option value="all">All Active & Drafts</option>
               <option value="published">Published</option>
               <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
         </div>
@@ -409,7 +476,11 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
-                        {p.isActive ? (
+                        {p.isArchived ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+                            Archived
+                          </span>
+                        ) : p.isActive ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Published
                           </span>
@@ -423,15 +494,17 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* View on Storefront */}
-                          <Link
-                            href={`/product/${p.slug || slugify(p.name)}`}
-                            target="_blank"
-                            title="View on public storefront"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Link>
+                          {/* View on Storefront (active/non-archived) */}
+                          {!p.isArchived && (
+                            <Link
+                              href={`/product/${p.slug || slugify(p.name)}`}
+                              target="_blank"
+                              title="View on public storefront"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+                          )}
 
                           {/* Edit */}
                           <Link
@@ -442,14 +515,26 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                             <Edit3 className="w-3.5 h-3.5" />
                           </Link>
 
-                          {/* Delete/Archive */}
-                          <button
-                            onClick={() => setDeleteModalProduct(p)}
-                            title="Archive / Delete product"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {p.isArchived ? (
+                            <button
+                              type="button"
+                              onClick={() => setRestoreModalProduct(p)}
+                              title="Restore product"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Restore</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteModalProduct(p)}
+                              title="Archive / Delete product"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -534,6 +619,54 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                   </>
                 ) : (
                   <span>Confirm Archive</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Restore Confirmation Modal */}
+      {restoreModalProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative text-left">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+              <RotateCcw className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Restore Product?
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to restore <strong className="text-slate-900">&quot;{restoreModalProduct.name}&quot;</strong> back to the active catalog?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 mb-6">
+              This will publish the product again, re-sync its category item count and storefront routes, and restore public visibility across Search, Shop, Category, and Collections.
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isRestoring}
+                onClick={() => setRestoreModalProduct(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRestoring}
+                onClick={handleRestoreConfirm}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold tracking-wider transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-60"
+              >
+                {isRestoring ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Restoring...</span>
+                  </>
+                ) : (
+                  <span>Confirm Restore</span>
                 )}
               </button>
             </div>

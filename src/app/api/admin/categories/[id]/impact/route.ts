@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, handleApiError } from '@/lib/auth';
 import { buildCategoryLookupQuery, findAffectedProducts } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
@@ -49,14 +49,7 @@ export async function GET(
         image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : '',
       })),
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('GET /api/admin/categories/[id]/impact error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to inspect category products' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to inspect category products', '[Admin Category Impact Error]');
   }
 }

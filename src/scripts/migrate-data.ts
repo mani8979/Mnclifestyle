@@ -35,6 +35,14 @@ export async function runMigration(isDryRun: boolean = false) {
   console.log('=====================================================');
 
   const conn = await connectDB();
+  if (!isDryRun && !process.argv.includes('--force-legacy')) {
+    const existingCount = await Product.countDocuments();
+    if (existingCount > 0) {
+      throw new Error(
+        `SAFETY ABORT: Database "${conn.connection.name}" already has ${existingCount} product(s). Legacy seed migration requires explicit --force-legacy (and is superseded by src/scripts/phase1-migrate.ts).`
+      );
+    }
+  }
   console.log(`Connected to database: ${conn.connection.name}`);
   console.log(`Source static data: ${staticProducts.length} Products, ${staticCategories.length} Categories, ${staticCollections.length} Collections\n`);
 

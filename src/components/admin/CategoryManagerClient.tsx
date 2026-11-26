@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
 import CategoryRemovalModal from './CategoryRemovalModal';
+import ImageUrlPreviewCard, { useValidatedImagePreview } from './ImageUrlPreviewCard';
 
 interface CategoryItem {
   _id?: string;
@@ -77,7 +78,13 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
   const [isDragging, setIsDragging] = useState(false);
   const [imageTab, setImageTab] = useState<'upload' | 'url'>('upload');
   const [linkInput, setLinkInput] = useState('');
-  const [linkPreviewError, setLinkPreviewError] = useState(false);
+
+  const {
+    previewUrl: validatedLinkPreviewUrl,
+    previewError: linkPreviewError,
+    setPreviewError: setLinkPreviewError,
+    commitImmediately: commitLinkPreviewImmediately,
+  } = useValidatedImagePreview(linkInput);
 
   const handleApplyLink = () => {
     const trimmed = linkInput.trim();
@@ -332,7 +339,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
         title: formTitle.trim() || formName.trim(),
         description: formDescription.trim() || `Handcrafted ${formName.trim()} by MNC LifeStyle.`,
         image: formImage.trim() || '/hero-bg.webp',
-        imageKey: formImageKey.trim() || undefined,
+        imageKey: formImageKey.trim(),
         orderIndex: Number(formOrder) || 0,
         subcategories: formSubcategories,
       };
@@ -973,6 +980,10 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                                 setLinkInput(e.target.value);
                                 setLinkPreviewError(false);
                               }}
+                              onPaste={(e) => {
+                                const pasted = e.clipboardData?.getData('text') || '';
+                                if (pasted) commitLinkPreviewImmediately(pasted);
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
@@ -996,44 +1007,15 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
                           </p>
                         </div>
 
-                        {/* Live Preview for Category Link */}
-                        {linkInput.trim() && (
-                          <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center gap-3">
-                            <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                              {linkPreviewError ? (
-                                <div className="text-center p-1 text-red-500">
-                                  <AlertCircle className="w-4 h-4 mx-auto text-red-400" />
-                                  <span className="text-[9px] block">Error</span>
-                                </div>
-                              ) : (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src={linkInput.trim()}
-                                  alt="Live link preview"
-                                  onError={() => setLinkPreviewError(true)}
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-slate-800">
-                                {linkPreviewError ? 'Could not load image from this URL' : 'Live Image Preview'}
-                              </p>
-                              <p className="text-[11px] text-slate-500 truncate mt-0.5 font-mono" title={linkInput}>
-                                {linkInput}
-                              </p>
-                              {!linkPreviewError && (
-                                <button
-                                  type="button"
-                                  onClick={handleApplyLink}
-                                  className="mt-1 text-[11px] text-blue-600 hover:text-blue-700 hover:underline font-semibold"
-                                >
-                                  Apply this photo to category →
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                        {/* Debounced Live Preview for Category Link (only loads once valid complete URL entered/pasted) */}
+                        <ImageUrlPreviewCard
+                          rawInput={linkInput}
+                          previewUrl={validatedLinkPreviewUrl}
+                          previewError={linkPreviewError}
+                          onPreviewError={() => setLinkPreviewError(true)}
+                          actionLabel="Apply this photo to category →"
+                          onApply={handleApplyLink}
+                        />
                       </div>
                     )}
 
