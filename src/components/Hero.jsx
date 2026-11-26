@@ -72,15 +72,8 @@ export default function Hero() {
                 to="/shop"
                 className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 bg-[#D99B45] hover:bg-[#e2ac65] text-[#211710] text-xs sm:text-sm font-semibold rounded-full transition-all duration-300 shadow-lg hover:shadow-xl group text-center"
               >
-                <span>Explore Collection</span>
+                <span>Explore Furniture</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-
-              <Link
-                to="/collections"
-                className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-[#211710]/40 hover:bg-white/10 text-white text-xs sm:text-sm font-medium rounded-full border border-white/80 backdrop-blur-xs transition-all duration-300 text-center"
-              >
-                <span>Discover More</span>
               </Link>
             </div>
 

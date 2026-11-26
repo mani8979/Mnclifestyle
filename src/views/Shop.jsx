@@ -245,7 +245,7 @@ export default function Shop({ initialProducts, initialCategories }) {
         {/* 2. Compact Page Header */}
         <div className="mb-2.5 sm:mb-3 text-center max-w-xl mx-auto">
           <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-[#855214] font-bold block mb-0.5">
-            THE MNC COLLECTION
+            THE MNC CATALOG
           </span>
           <h1 className="font-serif text-2xl sm:text-[28px] text-[#211710] font-normal tracking-tight leading-tight mb-0.5">
             Discover Our Furniture
@@ -649,10 +649,10 @@ export default function Shop({ initialProducts, initialCategories }) {
                 </div>
               </div>
 
-              {/* Filter 4: Collection / Edition */}
+              {/* Filter 4: Edition */}
               <div className="pt-4 border-t border-[#E9D8C5]/70">
                 <label className="block text-xs uppercase tracking-wider font-bold text-[#211710] mb-3">
-                  Collection / Edition
+                  Featured Edition
                 </label>
                 <div className="grid grid-cols-1 gap-2">
                   {[

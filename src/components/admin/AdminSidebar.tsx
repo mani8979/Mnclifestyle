@@ -7,8 +7,6 @@ import {
   LayoutDashboard,
   Package,
   FolderTree,
-  Layers,
-  Boxes,
   X,
   ExternalLink,
   ShieldCheck,
@@ -23,8 +21,6 @@ const navLinks = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/categories', label: 'Categories & Subcategories', icon: FolderTree },
-  { href: '/admin/collections', label: 'Collections', icon: Layers },
-  { href: '/admin/inventory', label: 'Inventory & Stock', icon: Boxes },
 ];
 
 export default function AdminSidebar({ isMobileOpen, onCloseMobile }: AdminSidebarProps) {

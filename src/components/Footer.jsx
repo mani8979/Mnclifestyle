@@ -36,7 +36,7 @@ export default function Footer({ categories: initialCategories = [] }) {
   const leftFooterCategories = activeFooterCategories.slice(0, Math.ceil(activeFooterCategories.length / 2));
   const rightFooterCategories = activeFooterCategories.slice(Math.ceil(activeFooterCategories.length / 2));
   const whatsappDirectUrl = `https://wa.me/${businessConfig.contact.phoneRaw}?text=${encodeURIComponent(
-    'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
+    'Hello MNC LifeStyle, I would like to enquire about your handcrafted furniture.'
   )}`;
 
   return (
@@ -108,7 +108,7 @@ export default function Footer({ categories: initialCategories = [] }) {
             </div>
             
             <p className="text-xs sm:text-[13px] text-[#E9D8C5]/90 leading-relaxed mb-6 font-sans max-w-md">
-              MNC LifeStyle curates thoughtful, minimal and enduring furniture collections for Indian homes that value quiet elegance. We balance the architectural beauty of natural materials with comfort and lived-in warmth.
+              MNC LifeStyle curates thoughtful, minimal and enduring furniture pieces for Indian homes that value quiet elegance. We balance the architectural beauty of natural materials with comfort and lived-in warmth.
             </p>
 
             <div className="space-y-4 text-xs sm:text-[13px] text-[#E9D8C5] font-sans">
@@ -233,11 +233,6 @@ export default function Footer({ categories: initialCategories = [] }) {
               <li>
                 <Link to="/about" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
                   Our Heritage & Timber
-                </Link>
-              </li>
-              <li>
-                <Link to="/collections" className="hover:text-[#D69A4B] transition-colors py-0.5 block">
-                  Curated Collections
                 </Link>
               </li>
               <li>

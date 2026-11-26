@@ -642,7 +642,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
             </p>
 
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 mb-6">
-              This will publish the product again, re-sync its category item count and storefront routes, and restore public visibility across Search, Shop, Category, and Collections.
+              This will publish the product again, re-sync its category item count and storefront routes, and restore public visibility across Search, Shop, and Category pages.
             </div>
 
             <div className="flex items-center justify-end gap-3">

@@ -26,7 +26,7 @@ export default function CategoryGrid({ categories: customCategories }) {
           to="/shop"
           className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-[#211A15] hover:text-[#D69A4B] transition-colors pb-0.5 border-b border-[#211A15]/40 hover:border-[#D69A4B]"
         >
-          <span>Explore All Collections</span>
+          <span>Explore All Categories</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </ScrollReveal>

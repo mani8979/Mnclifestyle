@@ -91,8 +91,7 @@ export default function Header({ categories: initialCategories }) {
   const isHomeActive = location.pathname === '/';
   const isShopActive =
     location.pathname === '/shop' ||
-    location.pathname.startsWith('/category') ||
-    location.pathname === '/collections';
+    location.pathname.startsWith('/category');
 
   // Mega Menu Links derived dynamically from Database (Admin categories)
   const shopCategories = React.useMemo(() => {
@@ -115,33 +114,6 @@ export default function Header({ categories: initialCategories }) {
       { label: 'Centre Tables', path: '/category/centre-tables', desc: 'Travertine & Teak Tables' },
     ];
   }, [categoriesList]);
-
-  const shopCollections = [
-    {
-      title: 'Signature Collection',
-      path: '/collections',
-      desc: 'Bespoke Architectural Teak & Travertine Suites',
-      tag: 'Iconic Pieces'
-    },
-    {
-      title: 'Modern Collection',
-      path: '/collections#modern-living',
-      desc: 'Tactile Bouclé & Organic Minimalist Contours',
-      tag: 'Contemporary'
-    },
-    {
-      title: 'Premium Teak Collection',
-      path: '/collections#contemporary-bedroom',
-      desc: 'Kiln-Dried CP Teakwood Hand-Finished Joinery',
-      tag: 'Heritage Solid Wood'
-    },
-    {
-      title: 'New Arrivals',
-      path: '/shop',
-      desc: 'Latest Handcrafted Pieces for Indian Residences',
-      tag: '2026 Season'
-    },
-  ];
 
   return (
     <header className="sticky top-0 z-40 bg-[#F8F0E8] border-b border-[#E9D8C5] shadow-xs">
@@ -488,31 +460,6 @@ export default function Header({ categories: initialCategories }) {
                             className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium text-[#211A15] hover:bg-white hover:text-[#D69A4B] transition-colors flex items-center justify-between"
                           >
                             <span className="font-semibold">{item.label}</span>
-                            <span className="text-[10px] text-[#77736D]">&rarr;</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Section 2: Shop by Collection */}
-                    <div className="pt-2 border-t border-[#E9D8C5]/50">
-                      <div className="px-3 py-1 mb-1">
-                        <span className="text-[10px] uppercase tracking-widest text-[#855214] font-bold">
-                          Shop by Collection
-                        </span>
-                      </div>
-                      <div className="space-y-0.5">
-                        {shopCollections.map((col) => (
-                          <Link
-                            key={col.title}
-                            to={col.path}
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              setIsMobileShopOpen(false);
-                            }}
-                            className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-medium text-[#211A15] hover:bg-white hover:text-[#D69A4B] transition-colors flex items-center justify-between"
-                          >
-                            <span className="font-semibold">{col.title}</span>
                             <span className="text-[10px] text-[#77736D]">&rarr;</span>
                           </Link>
                         ))}
