@@ -851,6 +851,11 @@ export default function ProductForm({
                   />
                 </div>
               </div>
+              {!colorName.trim() && (linkedVariants.length > 0 || (colorHex.trim() && colorHex.trim().toUpperCase() !== '#211710')) && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mt-2">
+                  Enter a Colour Name (e.g. Walnut Brown, Navy Blue) so the storefront displays the exact finish name instead of a generic label.
+                </p>
+              )}
             </div>
           </div>
         </div>

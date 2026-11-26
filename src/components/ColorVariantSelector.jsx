@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
 import { formatINR } from '../utils/currency';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
-import { getProductPrimaryColor } from '../utils/colors';
+import { getProductPrimaryColor, inferColorNameFromHex } from '../utils/colors';
 
 export default function ColorVariantSelector({
   variants = [],
@@ -61,7 +61,7 @@ export default function ColorVariantSelector({
     activeVariant?.colorName ||
     selectedColorName ||
     primary?.name ||
-    currentProduct?.name ||
+    inferColorNameFromHex(currentProduct?.colorHex) ||
     'Standard';
 
   const cardWidthClass = compact ? 'w-[86px] sm:w-[94px]' : 'w-[96px] sm:w-[106px]';
@@ -129,7 +129,7 @@ export default function ColorVariantSelector({
         {/* Colour Name + Price + MRP */}
         <div className="px-2 py-1.5 bg-white text-left space-y-0.5">
           <div className="text-[11px] font-medium text-[#38302A] truncate leading-tight">
-            {variant.colorName || variant.name}
+            {variant.colorName || 'Standard'}
           </div>
           <div className="text-xs font-bold text-[#211710] font-sans tabular-nums leading-tight">
             {formatINR(variant.price)}

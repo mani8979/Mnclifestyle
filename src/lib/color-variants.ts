@@ -3,6 +3,8 @@ import { Category } from '@/models/Category';
 import { Product } from '@/models/Product';
 import { escapeRegex } from '@/lib/category-cleanup';
 
+import { inferColorNameFromHex } from '@/utils/colors';
+
 export interface SerializedColorVariant {
   id: string;
   _id: string;
@@ -78,15 +80,16 @@ export async function buildSameCategorySubcategoryQuery(
 export function serializeColorVariantSummary(doc: any): SerializedColorVariant {
   const idStr = doc._id?.toString() || doc.id || '';
   const fallbackColor = Array.isArray(doc.colors) && doc.colors[0] ? doc.colors[0] : null;
+  const rawHex =
+    (typeof doc.colorHex === 'string' && doc.colorHex.trim()) ||
+    (typeof fallbackColor?.hex === 'string' && fallbackColor.hex.trim()) ||
+    '';
   const colorName =
     (typeof doc.colorName === 'string' && doc.colorName.trim()) ||
     (typeof fallbackColor?.name === 'string' && fallbackColor.name.trim()) ||
-    doc.name ||
+    inferColorNameFromHex(rawHex) ||
     'Standard';
-  const colorHex =
-    (typeof doc.colorHex === 'string' && doc.colorHex.trim()) ||
-    (typeof fallbackColor?.hex === 'string' && fallbackColor.hex.trim()) ||
-    '#211710';
+  const colorHex = rawHex || '#211710';
 
   const trackInventory = Boolean(doc.trackInventory);
   const allowBackorders = Boolean(doc.allowBackorders);
@@ -94,8 +97,8 @@ export function serializeColorVariantSummary(doc: any): SerializedColorVariant {
     typeof doc.availableQuantity === 'number'
       ? doc.availableQuantity
       : typeof doc.stockQuantity === 'number'
-      ? doc.stockQuantity
-      : 1;
+        ? doc.stockQuantity
+        : 1;
   const inStock =
     doc.inStock !== false && (!trackInventory || allowBackorders || availableQty > 0);
 
