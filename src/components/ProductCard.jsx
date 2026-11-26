@@ -39,25 +39,24 @@ export default function ProductCard({ product, index }) {
       style={revealStyle}
       data-revealed={isVisible}
       aria-label={`View details of ${product.name}`}
-      className={`group relative flex flex-col min-w-0 bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 active:scale-[0.98] transition-all duration-300 h-full cursor-pointer ${
-        isVisible ? 'is-revealed' : 'is-hidden'
-      }`}
+      className={`group relative flex flex-col min-w-0 bg-white rounded-2xl overflow-hidden border border-[#E9D8C5] shadow-2xs hover:shadow-luxury hover:border-[#D69A4B]/60 active:scale-[0.98] transition-all duration-300 h-full cursor-pointer ${isVisible ? 'is-revealed' : 'is-hidden'
+        }`}
     >
       {/* 1. Product Image matching natural 16:10 catalog ratio with object-contain so zero pixels of furniture are ever cut */}
-      <div className="relative aspect-[16/10] w-full bg-white overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
+      <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full bg-white overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
         <Image
           src={cardImageSrc}
           alt={product.name}
           fill
           loading="lazy"
           unoptimized={shouldUnoptimizeImage(cardImageSrc)}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-contain transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-contain p-1 sm:p-1.5 transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Mobile Badge Overlay (Top-Left) */}
+        {/* Mobile Badge Overlay (Bottom-Right, compact) */}
         {product.badge && (
-          <span className="sm:hidden absolute top-1.5 left-1.5 z-10 text-[9px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm border border-[#E9D8C5]/60 max-w-[calc(100%-12px)] whitespace-nowrap truncate">
+          <span className="sm:hidden absolute bottom-2 right-2 z-10 text-[9px] font-semibold uppercase tracking-wider text-white bg-[#D69A4B] px-2 py-0.5 rounded shadow-xs max-w-[calc(100%-16px)] whitespace-nowrap truncate">
             {product.badge}
           </span>
         )}
@@ -78,15 +77,15 @@ export default function ProductCard({ product, index }) {
             )}
           </div>
 
-          {/* Mobile Category (Single clean line, no truncate squeezing with badges) */}
-          <div className="sm:hidden mb-1">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-[#855214] block truncate">
+          {/* Mobile Category (Ultra-compact single line) */}
+          <div className="sm:hidden mb-0.5">
+            <span className="text-[9px] uppercase tracking-wider font-semibold text-[#855214] block truncate">
               {product.categoryLabel || product.category}
             </span>
           </div>
 
-          {/* Product Name (Playfair Display with normal &) — Standardized height to keep cards aligned */}
-          <h3 className="font-serif text-[14px] sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.45rem] sm:min-h-[3em]">
+          {/* Product Name (Small & clean on mobile, Playfair Display on desktop) */}
+          <h3 className="font-serif text-[13px] sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 sm:min-h-[3em]">
             <FormattedTitle text={product.name} />
           </h3>
 
@@ -95,8 +94,8 @@ export default function ProductCard({ product, index }) {
             {product.shortDescription}
           </p>
 
-          {/* Available Finishes — No FINISHES: label on mobile, max 4 16px swatches +N */}
-          <div className="h-5 sm:h-7 flex items-center gap-1.5 my-1 sm:my-2">
+          {/* Available Finishes — Compact on mobile */}
+          <div className="h-4 sm:h-7 flex items-center gap-1.5 my-1 sm:my-2">
             {displaySwatches.length > 0 ? (
               <>
                 <span className="hidden sm:inline-block text-[10px] text-[#77736D] font-medium uppercase tracking-wider">
@@ -109,7 +108,7 @@ export default function ProductCard({ product, index }) {
                     <span
                       key={color.name}
                       title={color.name}
-                      className="w-4 h-4 sm:w-3 sm:h-3 rounded-full border border-black/15 shadow-2xs inline-block shrink-0"
+                      className="w-3 h-3 rounded-full border border-black/15 shadow-2xs inline-block shrink-0"
                       style={{ backgroundColor: color.hex }}
                     />
                   ))}
@@ -121,7 +120,7 @@ export default function ProductCard({ product, index }) {
                 </div>
               </>
             ) : (
-              <span className="text-[11px] sm:text-[10px] text-[#77736D] italic truncate pr-1">
+              <span className="text-[10px] text-[#77736D] italic truncate pr-1">
                 {product.materials?.[0] || 'Handcrafted Timber'}
               </span>
             )}
@@ -129,7 +128,7 @@ export default function ProductCard({ product, index }) {
         </div>
 
         {/* Bottom Section: Price & CTA (pinned to bottom with mt-auto) */}
-        <div className="mt-auto pt-2 sm:pt-3.5 border-t border-[#E9D8C5]/70">
+        <div className="mt-auto pt-1.5 sm:pt-3.5 border-t border-[#E9D8C5]/50 sm:border-[#E9D8C5]/70">
           <div className="space-y-0.5">
             <span className="hidden sm:block text-[9px] sm:text-[10px] uppercase tracking-wider text-[#77736D] font-medium">
               Selling Price
@@ -137,7 +136,7 @@ export default function ProductCard({ product, index }) {
 
             {/* Selling Price (prominent) + MRP struck-through + Discount */}
             <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5">
-              <span className="text-[15px] sm:text-xl lg:text-[22px] font-bold text-[#211710] font-sans tabular-nums tracking-tight leading-none">
+              <span className="text-[14px] sm:text-xl lg:text-[22px] font-bold text-[#211710] font-sans tabular-nums tracking-tight leading-none">
                 {formatINR(product.price)}
               </span>
               {hasDiscount && (
@@ -147,7 +146,7 @@ export default function ProductCard({ product, index }) {
               )}
               {hasDiscount && (
                 <span className="sm:hidden text-[10px] font-semibold text-emerald-700 font-sans">
-                  {discountPercent}% OFF
+                  ({discountPercent}% Off)
                 </span>
               )}
             </div>

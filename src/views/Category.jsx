@@ -137,12 +137,12 @@ export default function Category({ initialCategory, initialProducts, allCategori
     `Custom ${category.name} Selection & Interior Styling`
   );
 
-  // Balanced responsive grid classes depending on product count (2 columns side-by-side on mobile)
+  // Balanced responsive grid classes depending on product count (1 big card per row on mobile, 2+ on tablet/desktop)
   const getCategoryGridClasses = (count) => {
     if (count === 1) return 'max-w-md mx-auto';
-    if (count === 2) return 'grid grid-cols-2 max-w-4xl mx-auto gap-2.5 sm:gap-8';
-    if (count === 3) return 'grid grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-2.5 sm:gap-6';
-    return 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6';
+    if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-4 sm:gap-8';
+    if (count === 3) return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-4 sm:gap-6';
+    return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6';
   };
 
   return (
