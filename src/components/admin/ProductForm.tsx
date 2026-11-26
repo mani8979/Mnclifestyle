@@ -1209,7 +1209,7 @@ export default function ProductForm({
                     value={sec.content}
                     onChange={(e) => handleUpdateSection(i, 'content', e.target.value)}
                     placeholder="Detailed specifications, craftsmanship notes, or architectural guidelines for this accordion section..."
-                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-[#E0D8D0] placeholder-slate-400 focus:outline-none focus:border-blue-600 leading-relaxed resize-y font-sans"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 leading-relaxed resize-y font-sans"
                   />
                 </div>
               </div>
