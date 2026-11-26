@@ -2,13 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { NavLink, Link, useLocation } from '@/lib/router-bridge';
-import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle, ShoppingBag } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
 const logoImg = '/logo.png';
 import { businessConfig } from '../data/businessConfig';
-import { useCart } from '../context/CartContext';
 
 export default function Header({ onOpenSearch, categories: initialCategories }) {
-  const { totalItems, setIsCartOpen } = useCart();
   const [categoriesList, setCategoriesList] = useState(initialCategories || []);
 
   useEffect(() => {
@@ -339,7 +337,7 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
 
         </nav>
 
-        {/* Right Actions: Search + Selection Bag */}
+        {/* Right Actions: Search */}
         <div className="flex items-center gap-0.5 min-[375px]:gap-1 sm:gap-2 shrink-0">
           {/* Search Trigger */}
           <button
@@ -349,26 +347,6 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
             aria-label="Search furniture"
           >
             <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-          </button>
-
-          {/* Selection Bag Trigger */}
-          <button
-            type="button"
-            data-testid="header-cart-button"
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5 cursor-pointer"
-            title="View your selection bag"
-            aria-label="Open selection bag"
-          >
-            <ShoppingBag className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-            {totalItems > 0 && (
-              <span
-                data-testid="header-cart-count"
-                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#211710] text-[#D69A4B] text-[10px] font-bold flex items-center justify-center tabular-nums"
-              >
-                {totalItems}
-              </span>
-            )}
           </button>
         </div>
 
