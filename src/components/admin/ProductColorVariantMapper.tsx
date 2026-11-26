@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { formatINR } from '@/utils/currency';
 import { getSafeImageSrc } from '@/utils/image';
+import { inferColorNameFromHex } from '@/utils/colors';
 
 export interface MappedVariantItem {
   _id: string;
@@ -67,7 +68,10 @@ function toMappedVariant(p: any): MappedVariantItem {
     colorName:
       (typeof p.colorName === 'string' && p.colorName.trim()) ||
       (typeof firstColor?.name === 'string' && firstColor.name.trim()) ||
-      p.name ||
+      inferColorNameFromHex(
+        (typeof p.colorHex === 'string' && p.colorHex.trim()) ||
+          (typeof firstColor?.hex === 'string' && firstColor.hex.trim())
+      ) ||
       'Standard',
     colorHex:
       (typeof p.colorHex === 'string' && p.colorHex.trim()) ||

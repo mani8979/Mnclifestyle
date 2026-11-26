@@ -17,6 +17,50 @@ export interface AvailableColorFilterOption {
 
 const DEFAULT_FALLBACK_HEX = '#211710';
 
+const NAMED_PALETTE: Array<{ name: string; rgb: [number, number, number] }> = [
+  { name: 'Dark Walnut', rgb: [33, 23, 16] },
+  { name: 'Espresso', rgb: [54, 38, 28] },
+  { name: 'Teak Brown', rgb: [120, 74, 42] },
+  { name: 'Honey Oak', rgb: [181, 128, 76] },
+  { name: 'Warm Beige', rgb: [214, 194, 168] },
+  { name: 'Ivory White', rgb: [232, 227, 220] },
+  { name: 'Pure White', rgb: [250, 250, 250] },
+  { name: 'Charcoal', rgb: [45, 48, 52] },
+  { name: 'Slate Grey', rgb: [112, 118, 128] },
+  { name: 'Navy Blue', rgb: [37, 50, 91] },
+  { name: 'Royal Blue', rgb: [44, 82, 146] },
+  { name: 'Sage Green', rgb: [118, 138, 115] },
+  { name: 'Forest Green', rgb: [38, 78, 54] },
+  { name: 'Burgundy', rgb: [110, 34, 42] },
+  { name: 'Terracotta', rgb: [176, 86, 58] },
+];
+
+/**
+ * Infer a human-readable colour name from a hex code when an explicit colour name is missing.
+ */
+export function inferColorNameFromHex(hex?: string): string {
+  if (typeof hex !== 'string') return '';
+  const cleaned = hex.trim().replace(/^#/, '');
+  if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return '';
+  const r = parseInt(cleaned.slice(0, 2), 16);
+  const g = parseInt(cleaned.slice(2, 4), 16);
+  const b = parseInt(cleaned.slice(4, 6), 16);
+
+  let bestName = '';
+  let bestDist = Infinity;
+  for (const entry of NAMED_PALETTE) {
+    const dr = r - entry.rgb[0];
+    const dg = g - entry.rgb[1];
+    const db = b - entry.rgb[2];
+    const dist = dr * dr + dg * dg + db * db;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestName = entry.name;
+    }
+  }
+  return bestName;
+}
+
 export function getProductPrimaryColor(product: any): ColorSwatchItem | null {
   if (!product) return null;
   const directName = typeof product.colorName === 'string' ? product.colorName.trim() : '';
