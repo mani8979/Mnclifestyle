@@ -43,8 +43,8 @@ export default function ProductCard({ product, index }) {
         isVisible ? 'is-revealed' : 'is-hidden'
       }`}
     >
-      {/* 1. Product Image with aspect-[4/3] across mobile and desktop so wide furniture is not cropped */}
-      <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
+      {/* 1. Product Image matching natural 16:10 catalog ratio with object-contain so zero pixels of furniture are ever cut */}
+      <div className="relative aspect-[16/10] w-full bg-white overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
         <Image
           src={cardImageSrc}
           alt={product.name}
@@ -52,12 +52,12 @@ export default function ProductCard({ product, index }) {
           loading="lazy"
           unoptimized={shouldUnoptimizeImage(cardImageSrc)}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-contain transition-transform duration-500 group-hover:scale-105"
         />
 
         {/* Mobile Badge Overlay (Top-Left) */}
         {product.badge && (
-          <span className="sm:hidden absolute top-2 left-2 z-10 text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full shadow-2xs border border-[#E9D8C5]/60 max-w-[calc(100%-16px)] whitespace-nowrap truncate">
+          <span className="sm:hidden absolute top-1.5 left-1.5 z-10 text-[9px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm border border-[#E9D8C5]/60 max-w-[calc(100%-12px)] whitespace-nowrap truncate">
             {product.badge}
           </span>
         )}

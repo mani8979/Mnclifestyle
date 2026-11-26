@@ -137,12 +137,12 @@ export default function Category({ initialCategory, initialProducts, allCategori
     `Custom ${category.name} Selection & Interior Styling`
   );
 
-  // Balanced responsive grid classes depending on product count
+  // Balanced responsive grid classes depending on product count (2 columns side-by-side on mobile)
   const getCategoryGridClasses = (count) => {
     if (count === 1) return 'max-w-md mx-auto';
-    if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8';
-    if (count === 3) return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-5 sm:gap-6';
-    return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6';
+    if (count === 2) return 'grid grid-cols-2 max-w-4xl mx-auto gap-2.5 sm:gap-8';
+    if (count === 3) return 'grid grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-2.5 sm:gap-6';
+    return 'grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6';
   };
 
   return (
@@ -209,7 +209,7 @@ export default function Category({ initialCategory, initialProducts, allCategori
       </div>
 
       {/* 2. Main Content Container */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-[1360px] mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8">
 
         {/* Filter, Sort & Count Bar */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#E9D8C5] shadow-2xs mb-8">
