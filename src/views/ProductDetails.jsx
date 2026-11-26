@@ -49,7 +49,9 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     initialPrimaryColor?.name || product.colors?.[0]?.name || 'Standard'
   );
   const [quantity, setQuantity] = useState(1);
-  const [openAccordion, setOpenAccordion] = useState('dimensions');
+  const [openAccordion, setOpenAccordion] = useState(
+    Array.isArray(product.customSections) && product.customSections.length > 0 ? 'sec_0' : 'details'
+  );
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   if (trackedProductKey !== currentProductKey) {
@@ -558,7 +560,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 };
                 const IconComponent = iconMap[sec.icon] || CheckCircle2;
                 const sectionKey = `sec_${idx}`;
-                const isOpen = openAccordion === sectionKey || (idx === 0 && openAccordion === 'dimensions');
+                const isOpen = openAccordion === sectionKey;
 
                 return (
                   <div key={idx} className="border border-[#E9D8C5] rounded-xl overflow-hidden shadow-2xs">
