@@ -36,6 +36,9 @@ export const ColorVariantSchema = z.object({
   name: z.string().min(1, 'Color name is required'),
   hex: z.string().min(1, 'Hex color code is required'),
   inStock: z.boolean().default(true),
+  image: z.string().optional(),
+  price: z.coerce.number().min(0).optional(),
+  originalPrice: z.coerce.number().min(0).optional(),
 });
 
 export const ImageDetailSchema = z.object({
@@ -118,6 +121,9 @@ export const ProductInputSchema = z.object({
   })),
   materials: z.array(z.string()).optional().default(['Kiln-Dried Hardwood']),
   colors: z.array(ColorVariantSchema).optional().default([]),
+  colorName: z.string().max(80).optional().default(''),
+  colorHex: z.string().max(20).optional().default(''),
+  linkedVariantIds: z.array(z.string()).optional(),
   images: z
     .array(z.string().url('Each image must be a valid URL'))
     .optional()

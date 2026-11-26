@@ -5,6 +5,7 @@ import { requireAdminSession } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { getCategories } from '@/services/categoryService';
+import { getLinkedAdminVariants } from '@/lib/color-variants';
 import ProductForm from '@/components/admin/ProductForm';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +42,14 @@ export default async function EditProductPage({
 
   // Convert MongoDB document to plain JSON-serializable object
   const product = JSON.parse(JSON.stringify(productDoc));
+  const initialLinkedVariants = await getLinkedAdminVariants(productDoc);
 
-  return <ProductForm initialProduct={product} isEdit={true} initialCategories={categories} />;
+  return (
+    <ProductForm
+      initialProduct={product}
+      isEdit={true}
+      initialCategories={categories}
+      initialLinkedVariants={initialLinkedVariants}
+    />
+  );
 }

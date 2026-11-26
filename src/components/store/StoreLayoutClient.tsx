@@ -4,7 +4,10 @@ import AnnouncementBar from '../AnnouncementBar';
 import Header from '../Header';
 import Footer from '../Footer';
 import SearchModal from '../SearchModal';
+import ProductQuickViewModal from '../ProductQuickViewModal';
+import CartDrawer from '../CartDrawer';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
+import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../lib/router-bridge';
 
 export default function StoreLayoutClient({
@@ -15,6 +18,7 @@ export default function StoreLayoutClient({
   categories?: any[];
 }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { quickViewProduct, closeQuickView } = useCart();
   const { pathname, hash } = useLocation();
 
   // Scroll to top on route change or to hash anchor
@@ -53,8 +57,14 @@ export default function StoreLayoutClient({
       {/* 4. Footer */}
       <Footer categories={categories} />
 
-      {/* 5. Modals */}
+      {/* 5. Modals & Cart Drawer */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <ProductQuickViewModal
+        product={quickViewProduct}
+        isOpen={Boolean(quickViewProduct)}
+        onClose={closeQuickView}
+      />
+      <CartDrawer />
 
       {/* 6. WhatsApp Floating Quick Order / Chat Button */}
       <WhatsAppFloatingButton />

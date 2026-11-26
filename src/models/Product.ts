@@ -4,6 +4,9 @@ export interface IColorVariant {
   name: string;
   hex: string;
   inStock: boolean;
+  image?: string;
+  price?: number;
+  originalPrice?: number;
 }
 
 export interface IDimensions {
@@ -67,6 +70,9 @@ export interface IProduct extends Document {
   dimensions: IDimensions;
   materials: string[];
   colors: IColorVariant[];
+  colorName?: string;
+  colorHex?: string;
+  colorGroupId?: string;
   images: string[];
   imageDetails?: IProductImageDetail[];
   leadTime?: string;
@@ -84,6 +90,9 @@ const ColorVariantSchema = new Schema<IColorVariant>(
     name: { type: String, required: true },
     hex: { type: String, required: true },
     inStock: { type: Boolean, default: true },
+    image: { type: String, default: '' },
+    price: { type: Number, min: 0 },
+    originalPrice: { type: Number, min: 0 },
   },
   { _id: false }
 );
@@ -278,6 +287,23 @@ const ProductSchema = new Schema<IProduct>(
     },
     materials: [{ type: String, trim: true }],
     colors: [ColorVariantSchema],
+    colorName: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
+    colorHex: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    colorGroupId: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
     images: [{ type: String, required: true }],
     imageDetails: [ImageDetailSchema],
     leadTime: {

@@ -6,6 +6,8 @@ import { formatINR } from '../utils/currency';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { slugify } from '../data/products';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
+import { getProductDisplaySwatches } from '../utils/colors';
+import FormattedTitle from './shared/FormattedTitle';
 
 export default function ProductCard({ product, index }) {
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
@@ -28,11 +30,12 @@ export default function ProductCard({ product, index }) {
 
   const productSlug = product.slug || slugify(product.name);
   const cardImageSrc = getSafeImageSrc(product.images?.[0]);
+  const displaySwatches = getProductDisplaySwatches(product);
 
   return (
     <Link
-      to={`/product/${productSlug}`}
       ref={ref}
+      to={`/product/${productSlug}`}
       style={revealStyle}
       data-revealed={isVisible}
       aria-label={`View details of ${product.name}`}
@@ -40,8 +43,8 @@ export default function ProductCard({ product, index }) {
         isVisible ? 'is-revealed' : 'is-hidden'
       }`}
     >
-      {/* 1. Product Image with aspect-[4/5] on mobile, sm:aspect-[4/3] on desktop */}
-      <div className="relative aspect-[4/5] sm:aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
+      {/* 1. Product Image with aspect-[4/3] across mobile and desktop so wide furniture is not cropped */}
+      <div className="relative aspect-[4/3] w-full bg-[#F8F0E8]/40 overflow-hidden border-b border-[#E9D8C5]/60 rounded-t-2xl">
         <Image
           src={cardImageSrc}
           alt={product.name}
@@ -54,7 +57,7 @@ export default function ProductCard({ product, index }) {
 
         {/* Mobile Badge Overlay (Top-Left) */}
         {product.badge && (
-          <span className="sm:hidden absolute top-2 left-2 z-10 text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full shadow-2xs border border-[#E9D8C5]/60 max-w-[calc(100%-16px)] truncate">
+          <span className="sm:hidden absolute top-2 left-2 z-10 text-[10px] font-medium uppercase tracking-wider text-[#77736D] bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full shadow-2xs border border-[#E9D8C5]/60 max-w-[calc(100%-16px)] whitespace-nowrap truncate">
             {product.badge}
           </span>
         )}
@@ -82,9 +85,9 @@ export default function ProductCard({ product, index }) {
             </span>
           </div>
 
-          {/* Product Name (Playfair Display) — Standardized height to keep cards aligned */}
-          <h3 className="font-serif text-[15px] sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-tight sm:leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[3em] flex items-start">
-            {product.name}
+          {/* Product Name (Playfair Display with normal &) — Standardized height to keep cards aligned */}
+          <h3 className="font-serif text-[14px] sm:text-base lg:text-[17px] font-medium text-[#211A15] leading-snug group-hover:text-[#D69A4B] transition-colors line-clamp-2 min-h-[2.45rem] sm:min-h-[3em]">
+            <FormattedTitle text={product.name} />
           </h3>
 
           {/* Short Product Description — Hidden on mobile, visible on sm and above */}
@@ -94,13 +97,15 @@ export default function ProductCard({ product, index }) {
 
           {/* Available Finishes — No FINISHES: label on mobile, max 4 16px swatches +N */}
           <div className="h-5 sm:h-7 flex items-center gap-1.5 my-1 sm:my-2">
-            {product.colors && product.colors.length > 0 ? (
+            {displaySwatches.length > 0 ? (
               <>
                 <span className="hidden sm:inline-block text-[10px] text-[#77736D] font-medium uppercase tracking-wider">
-                  Finishes:
+                  {Array.isArray(product.colorVariants) && product.colorVariants.length > 1
+                    ? 'Colours:'
+                    : 'Finishes:'}
                 </span>
                 <div className="flex items-center gap-1">
-                  {product.colors.slice(0, 4).map((color) => (
+                  {displaySwatches.slice(0, 4).map((color) => (
                     <span
                       key={color.name}
                       title={color.name}
@@ -108,15 +113,15 @@ export default function ProductCard({ product, index }) {
                       style={{ backgroundColor: color.hex }}
                     />
                   ))}
-                  {product.colors.length > 4 && (
+                  {displaySwatches.length > 4 && (
                     <span className="text-[10px] text-[#77736D] font-medium leading-none pl-0.5">
-                      +{product.colors.length - 4}
+                      +{displaySwatches.length - 4}
                     </span>
                   )}
                 </div>
               </>
             ) : (
-              <span className="text-[11px] sm:text-[10px] text-[#77736D] italic truncate">
+              <span className="text-[11px] sm:text-[10px] text-[#77736D] italic truncate pr-1">
                 {product.materials?.[0] || 'Handcrafted Timber'}
               </span>
             )}
@@ -132,16 +137,16 @@ export default function ProductCard({ product, index }) {
 
             {/* Selling Price (prominent) + MRP struck-through + Discount */}
             <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5">
-              <span className="text-base sm:text-xl lg:text-[22px] font-bold text-[#211710] font-sans tabular-nums tracking-tight leading-none">
+              <span className="text-[15px] sm:text-xl lg:text-[22px] font-bold text-[#211710] font-sans tabular-nums tracking-tight leading-none">
                 {formatINR(product.price)}
               </span>
               {hasDiscount && (
-                <span className="text-xs text-gray-400 sm:text-[#766B61] line-through font-sans tabular-nums font-normal">
+                <span className="text-[11px] sm:text-xs text-gray-400 sm:text-[#766B61] line-through font-sans tabular-nums font-normal">
                   MRP {formatINR(product.originalPrice)}
                 </span>
               )}
               {hasDiscount && (
-                <span className="sm:hidden text-[11px] font-semibold text-emerald-700 font-sans">
+                <span className="sm:hidden text-[10px] font-semibold text-emerald-700 font-sans">
                   {discountPercent}% OFF
                 </span>
               )}

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Category } from '@/models/Category';
 import { Product } from '@/models/Product';
 import { Collection } from '@/models/Collection';
+import { cleanupSingletonColorGroup } from '@/lib/color-variants';
 
 export function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -55,7 +56,7 @@ export async function findAffectedProducts(
 ) {
   const query = buildCategoryProductQuery(category, subCategory);
   return Product.find(query)
-    .select('_id sku legacyId slug name category categoryLabel subCategory price isActive images')
+    .select('_id sku legacyId slug name category categoryLabel subCategory price isActive images colorGroupId')
     .sort({ updatedAt: -1 })
     .lean();
 }
@@ -66,6 +67,13 @@ export async function deleteProductsAndCleanupRefs(products: any[]) {
   }
 
   const productIds = products.map((p) => p._id);
+  const groupIds = Array.from(
+    new Set(
+      products
+        .map((p) => (typeof p.colorGroupId === 'string' ? p.colorGroupId.trim() : ''))
+        .filter(Boolean)
+    )
+  );
   const refs: string[] = [];
   for (const p of products) {
     if (p._id) refs.push(p._id.toString());
@@ -74,6 +82,10 @@ export async function deleteProductsAndCleanupRefs(products: any[]) {
   }
 
   const deleteRes = await Product.deleteMany({ _id: { $in: productIds } });
+
+  for (const gid of groupIds) {
+    await cleanupSingletonColorGroup(gid);
+  }
 
   if (refs.length > 0) {
     await Collection.updateMany({}, { $pull: { featuredProductIds: { $in: refs } } });

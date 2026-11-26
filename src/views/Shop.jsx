@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard';
 import { products } from '../data/products';
 import { categories } from '../data/categories';
 import { formatINR } from '../utils/currency';
+import { collectAvailableColors, matchesSelectedColor } from '../utils/colors';
 import {
   Search,
   SlidersHorizontal,
@@ -45,7 +46,7 @@ export default function Shop({ initialProducts, initialCategories }) {
       })
       .catch(() => {});
 
-    fetch('/api/products?limit=100')
+    fetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data?.products) && data.products.length > 0) {
@@ -57,8 +58,10 @@ export default function Shop({ initialProducts, initialCategories }) {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
+  const initialColor = searchParams.get('color') || 'all';
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedColor, setSelectedColor] = useState(initialColor);
   const [selectedSort, setSelectedSort] = useState('featured');
   const [priceRange, setPriceRange] = useState(300000);
   const [filterBadge, setFilterBadge] = useState('all');
@@ -71,6 +74,10 @@ export default function Shop({ initialProducts, initialCategories }) {
     const cat = searchParams.get('category');
     if (cat && cat !== selectedCategory) {
       setSelectedCategory(cat);
+    }
+    const col = searchParams.get('color');
+    if (col && col !== selectedColor) {
+      setSelectedColor(col);
     }
   }, [searchParams]);
 
@@ -109,39 +116,51 @@ export default function Shop({ initialProducts, initialCategories }) {
     ];
   }, [liveCategories]);
 
+  const categoryScopedProducts = useMemo(() => {
+    if (selectedCategory === 'all') return liveProducts;
+    const catObj = liveCategories.find(
+      (c) =>
+        c.id === selectedCategory ||
+        c.slug === selectedCategory ||
+        c.legacyId === selectedCategory ||
+        c.name?.toLowerCase() === selectedCategory.toLowerCase()
+    );
+    const allowedKeys = new Set(
+      [
+        selectedCategory.toLowerCase(),
+        ...(catObj
+          ? [
+              (catObj.id || '').toLowerCase(),
+              (catObj.slug || '').toLowerCase(),
+              (catObj.legacyId || '').toLowerCase(),
+              (catObj.name || '').toLowerCase(),
+            ]
+          : []),
+      ].filter(Boolean)
+    );
+    return liveProducts.filter((p) => {
+      const productCat = (p.category || '').toLowerCase();
+      const productCatLabel = (p.categoryLabel || '').toLowerCase();
+      return allowedKeys.has(productCat) || allowedKeys.has(productCatLabel);
+    });
+  }, [liveProducts, liveCategories, selectedCategory]);
+
+  const availableColors = useMemo(
+    () => collectAvailableColors(categoryScopedProducts),
+    [categoryScopedProducts]
+  );
+
+  const effectiveSelectedColor =
+    selectedColor !== 'all' && availableColors.some((c) => c.key === selectedColor.toLowerCase())
+      ? selectedColor
+      : 'all';
+
   const filteredProducts = useMemo(() => {
-    return liveProducts
+    return categoryScopedProducts
       .filter((p) => {
-        // Category filter
-        if (selectedCategory !== 'all') {
-          const catObj = liveCategories.find(
-            (c) =>
-              c.id === selectedCategory ||
-              c.slug === selectedCategory ||
-              c.legacyId === selectedCategory ||
-              c.name?.toLowerCase() === selectedCategory.toLowerCase()
-          );
-
-          const allowedKeys = new Set(
-            [
-              selectedCategory.toLowerCase(),
-              ...(catObj
-                ? [
-                    (catObj.id || '').toLowerCase(),
-                    (catObj.slug || '').toLowerCase(),
-                    (catObj.legacyId || '').toLowerCase(),
-                    (catObj.name || '').toLowerCase(),
-                  ]
-                : []),
-            ].filter(Boolean)
-          );
-
-          const productCat = (p.category || '').toLowerCase();
-          const productCatLabel = (p.categoryLabel || '').toLowerCase();
-
-          if (!allowedKeys.has(productCat) && !allowedKeys.has(productCatLabel)) {
-            return false;
-          }
+        // Color filter
+        if (effectiveSelectedColor !== 'all' && !matchesSelectedColor(p, effectiveSelectedColor)) {
+          return false;
         }
 
         // Material filter
@@ -169,8 +188,9 @@ export default function Shop({ initialProducts, initialCategories }) {
           const matchName = p.name.toLowerCase().includes(q);
           const matchDesc = p.shortDescription.toLowerCase().includes(q);
           const matchCat = p.categoryLabel.toLowerCase().includes(q);
+          const matchColor = (p.colorName || '').toLowerCase().includes(q);
           const matchMat = p.materials?.some((m) => m.toLowerCase().includes(q));
-          if (!matchName && !matchDesc && !matchCat && !matchMat) return false;
+          if (!matchName && !matchDesc && !matchCat && !matchColor && !matchMat) return false;
         }
 
         return true;
@@ -181,11 +201,12 @@ export default function Shop({ initialProducts, initialCategories }) {
         if (selectedSort === 'rating') return (b.rating || 0) - (a.rating || 0);
         return 0; // Default featured
       });
-  }, [liveProducts, liveCategories, selectedCategory, selectedSort, priceRange, filterBadge, selectedMaterial, searchTerm]);
+  }, [categoryScopedProducts, effectiveSelectedColor, selectedSort, priceRange, filterBadge, selectedMaterial, searchTerm]);
 
   // Count active filters (excluding defaults)
   const activeFilterCount =
     (selectedCategory !== 'all' ? 1 : 0) +
+    (effectiveSelectedColor !== 'all' ? 1 : 0) +
     (selectedMaterial !== 'all' ? 1 : 0) +
     (filterBadge !== 'all' ? 1 : 0) +
     (priceRange < 300000 ? 1 : 0) +
@@ -193,6 +214,7 @@ export default function Shop({ initialProducts, initialCategories }) {
 
   const handleResetFilters = () => {
     setSelectedCategory('all');
+    setSelectedColor('all');
     setSelectedSort('featured');
     setPriceRange(300000);
     setFilterBadge('all');
@@ -204,9 +226,9 @@ export default function Shop({ initialProducts, initialCategories }) {
   // Balanced responsive grid classes depending on product count
   const getShopGridClasses = (count) => {
     if (count === 1) return 'max-w-md mx-auto';
-    if (count === 2) return 'grid grid-cols-2 max-w-4xl mx-auto gap-3 sm:gap-8';
-    if (count === 3) return 'grid grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-3 sm:gap-6';
-    return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6';
+    if (count === 2) return 'grid grid-cols-2 max-w-4xl mx-auto gap-2.5 sm:gap-8';
+    if (count === 3) return 'grid grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-2.5 sm:gap-6';
+    return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6';
   };
 
   return (
@@ -345,6 +367,32 @@ export default function Shop({ initialProducts, initialCategories }) {
                   onClick={() => handleCategoryChange('all')}
                   className="text-[#766B61] hover:text-[#211710] font-bold"
                   aria-label="Remove category filter"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+
+            {effectiveSelectedColor !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E9D8C5] text-[#211710] shadow-2xs">
+                <span
+                  className="w-2.5 h-2.5 rounded-full border border-black/20"
+                  style={{
+                    backgroundColor:
+                      availableColors.find((c) => c.key === effectiveSelectedColor.toLowerCase())?.hex ||
+                      '#211710',
+                  }}
+                />
+                <span>
+                  Colour:{' '}
+                  {availableColors.find((c) => c.key === effectiveSelectedColor.toLowerCase())?.name ||
+                    effectiveSelectedColor}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedColor('all')}
+                  className="text-[#766B61] hover:text-[#211710] font-bold"
+                  aria-label="Remove colour filter"
                 >
                   ×
                 </button>
@@ -502,7 +550,53 @@ export default function Shop({ initialProducts, initialCategories }) {
                 </div>
               </div>
 
-              {/* Filter 2: Material */}
+              {/* Filter 2: Colour */}
+              {availableColors.length > 0 && (
+                <div className="pt-4 border-t border-[#E9D8C5]/70">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-xs uppercase tracking-wider font-bold text-[#211710]">
+                      Colour
+                    </label>
+                    {selectedColor !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedColor('all')}
+                        className="text-[11px] font-semibold text-[#D69A4B] hover:text-[#211710]"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableColors.map((col) => {
+                      const isSelected = selectedColor.toLowerCase() === col.key;
+                      return (
+                        <button
+                          key={col.key}
+                          type="button"
+                          onClick={() => setSelectedColor(isSelected ? 'all' : col.key)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-[#211710] text-white font-semibold'
+                              : 'bg-[#F8F0E8] text-[#211710] hover:bg-[#E9D8C5]'
+                          }`}
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                            style={{ backgroundColor: col.hex }}
+                          />
+                          <span>{col.name}</span>
+                          <span className={`text-[10px] ${isSelected ? 'text-white/75' : 'text-[#766B61]'}`}>
+                            ({col.count})
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Filter 3: Material */}
               <div className="pt-4 border-t border-[#E9D8C5]/70">
                 <label className="block text-xs uppercase tracking-wider font-bold text-[#211710] mb-3">
                   Material

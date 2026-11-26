@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "description": "Authorized catalog import template mapped strictly to MNC LifeStyle's existing Product schema and MongoDB Category structure. Replace placeholders with verified authorized product data before running --execute.",
+  "exampleRecord": {
+    "sourceCategory": "Sofas",
+    "sourceSubCategory": "3-Seater Sofas",
+    "name": "Example Authorized Product Name",
+    "sku": "DMR-EXAMPLE-001",
+    "price": 45000,
+    "originalPrice": 52000,
+    "shortDescription": "Verified product summary from authorized catalog.",
+    "fullDescription": "Verified full product description, construction notes, and finish details from authorized catalog.",
+    "dimensions": {
+      "width": "210 cm",
+      "depth": "90 cm",
+      "height": "82 cm",
+      "seatHeight": "45 cm",
+      "bedBaseHeight": "",
+      "weight": "48 kg"
+    },
+    "materials": ["Kiln-Dried Timber", "High-Resiliency Foam"],
+    "colors": [
+      {
+        "name": "Natural Walnut",
+        "hex": "#5C4033",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://example.com/authorized-product-image-1.jpg"
+    ],
+    "badge": null,
+    "leadTime": "Complimentary White-Glove In-Home Delivery across AP (3–7 Days)",
+    "warranty": "10-Year Structural Frame & Termite Warranty",
+    "stockQuantity": 10,
+    "isActive": true,
+    "isFeatured": false,
+    "isBestseller": false
+  },
+  "products": []
+}

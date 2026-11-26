@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { getProductPrimaryColor } from '../utils/colors';
 
 const CartContext = createContext();
 
@@ -15,8 +16,17 @@ export function CartProvider({ children }) {
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [notification, setNotification] = useState(null);
   const toastTimerRef = useRef(null);
+
+  const openQuickView = (product) => {
+    setQuickViewProduct(product || null);
+  };
+
+  const closeQuickView = () => {
+    setQuickViewProduct(null);
+  };
 
   useEffect(() => {
     try {
@@ -33,22 +43,31 @@ export function CartProvider({ children }) {
   }, []);
 
   const addToCart = (product, quantity = 1, selectedColor = null) => {
-    const color = selectedColor || product.colors?.[0]?.name || 'Standard';
+    const color =
+      selectedColor ||
+      getProductPrimaryColor(product)?.name ||
+      product.colors?.[0]?.name ||
+      'Standard';
+    const productId = product.id || product._id || product.slug;
+    const normalizedProduct = { ...product, id: productId };
     
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
-        (item) => item.product.id === product.id && item.selectedColor === color
+        (item) =>
+          (item.product.id || item.product._id) === productId &&
+          item.selectedColor === color
       );
 
       if (existingIndex > -1) {
         const next = [...prevItems];
         next[existingIndex] = {
           ...next[existingIndex],
+          product: normalizedProduct,
           quantity: next[existingIndex].quantity + quantity,
         };
         return next;
       } else {
-        return [...prevItems, { product, quantity, selectedColor: color }];
+        return [...prevItems, { product: normalizedProduct, quantity, selectedColor: color }];
       }
     });
 
@@ -106,6 +125,9 @@ export function CartProvider({ children }) {
         subtotal,
         isCartOpen,
         setIsCartOpen,
+        quickViewProduct,
+        openQuickView,
+        closeQuickView,
         notification,
         setNotification,
       }}

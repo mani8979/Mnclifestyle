@@ -7,6 +7,13 @@ import { Category } from '@/models/Category';
 import { Collection } from '@/models/Collection';
 import { requireAdminSession } from '@/lib/auth';
 import { ProductUpdateSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
+import {
+  ColorVariantValidationError,
+  cleanupSingletonColorGroup,
+  getLinkedAdminVariants,
+  syncProductColorGroup,
+  validateLinkedVariantCandidates,
+} from '@/lib/color-variants';
 import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +47,9 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, product });
+    const linkedVariants = await getLinkedAdminVariants(product);
+
+    return NextResponse.json({ success: true, product, linkedVariants });
   } catch (error: any) {
     if (error.message?.startsWith('UNAUTHORIZED')) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
@@ -85,18 +94,31 @@ export async function PATCH(
 
     // Validate partial update
     const validatedData = ProductUpdateSchema.parse(body);
+    const { linkedVariantIds, ...productUpdates } = validatedData;
 
     // If updating category, keep categoryLabel in sync
-    if (validatedData.category && !validatedData.categoryLabel) {
+    if (productUpdates.category && !productUpdates.categoryLabel) {
       const catDoc = await Category.findOne({
-        $or: [{ slug: validatedData.category }, { legacyId: validatedData.category }],
+        $or: [{ slug: productUpdates.category }, { legacyId: productUpdates.category }],
       }).lean();
-      validatedData.categoryLabel = catDoc?.name || getCategoryLabel(validatedData.category);
+      productUpdates.categoryLabel = catDoc?.name || getCategoryLabel(productUpdates.category);
+    }
+
+    // Validate linked color variants against target category + subcategory before writing
+    const nextCategory = productUpdates.category ?? product.category;
+    const nextSubCategory = productUpdates.subCategory ?? product.subCategory;
+    if (Array.isArray(linkedVariantIds) && linkedVariantIds.length > 0) {
+      await validateLinkedVariantCandidates({
+        linkedVariantIds,
+        category: nextCategory,
+        subCategory: nextSubCategory,
+        excludeProductId: product._id.toString(),
+      });
     }
 
     // If updating name and slug not explicitly provided, update slug
-    if (validatedData.name && !validatedData.slug) {
-      let candidateSlug = slugify(validatedData.name);
+    if (productUpdates.name && !productUpdates.slug) {
+      let candidateSlug = slugify(productUpdates.name);
       let suffix = 1;
       let existingSlug = await Product.findOne({
         slug: candidateSlug,
@@ -104,31 +126,31 @@ export async function PATCH(
       });
       while (existingSlug) {
         suffix++;
-        candidateSlug = `${slugify(validatedData.name)}-${suffix}`;
+        candidateSlug = `${slugify(productUpdates.name)}-${suffix}`;
         existingSlug = await Product.findOne({
           slug: candidateSlug,
           _id: { $ne: product._id },
         });
       }
-      validatedData.slug = candidateSlug;
+      productUpdates.slug = candidateSlug;
     }
 
     // Check and auto-resolve duplicate SKU if changed
-    if (validatedData.sku && validatedData.sku !== product.sku) {
-      let candidateSku = validatedData.sku;
+    if (productUpdates.sku && productUpdates.sku !== product.sku) {
+      let candidateSku = productUpdates.sku;
       let existingSku = await Product.findOne({
         sku: candidateSku,
         _id: { $ne: product._id },
       });
       if (existingSku) {
         candidateSku = `${candidateSku}-${Math.floor(100 + Math.random() * 900)}`;
-        validatedData.sku = candidateSku;
+        productUpdates.sku = candidateSku;
       }
     }
 
     // Check and auto-resolve duplicate Slug if changed
-    if (validatedData.slug && validatedData.slug !== product.slug) {
-      let candidateSlug = validatedData.slug;
+    if (productUpdates.slug && productUpdates.slug !== product.slug) {
+      let candidateSlug = productUpdates.slug;
       let suffix = 1;
       let existingSlug = await Product.findOne({
         slug: candidateSlug,
@@ -136,27 +158,50 @@ export async function PATCH(
       });
       while (existingSlug) {
         suffix++;
-        candidateSlug = `${validatedData.slug}-${suffix}`;
+        candidateSlug = `${productUpdates.slug}-${suffix}`;
         existingSlug = await Product.findOne({
           slug: candidateSlug,
           _id: { $ne: product._id },
         });
       }
-      validatedData.slug = candidateSlug;
+      productUpdates.slug = candidateSlug;
     }
 
     // Apply updates
     const oldSlug = product.slug;
     const oldCategory = product.category;
+    const oldSubCategory = product.subCategory;
 
-    Object.assign(product, validatedData);
+    Object.assign(product, productUpdates);
+
+    const effectiveColorName = typeof product.colorName === 'string' ? product.colorName.trim() : '';
+    if (effectiveColorName && (!product.colors || product.colors.length === 0)) {
+      product.colors = [
+        {
+          name: effectiveColorName,
+          hex: product.colorHex?.trim() || '#211710',
+          inStock: product.inStock ?? true,
+        },
+      ];
+    }
+
     await product.save();
 
+    const categoryOrSubChanged =
+      oldCategory !== product.category ||
+      (oldSubCategory || '').trim().toLowerCase() !== (product.subCategory || '').trim().toLowerCase();
+
+    const { affectedSlugs } = await syncProductColorGroup({
+      product,
+      linkedVariantIds,
+      categoryOrSubCategoryChanged: categoryOrSubChanged,
+    });
+
     // Automatically sync subcategory to Category document in MongoDB
-    if (validatedData.subCategory && product.category) {
+    if (productUpdates.subCategory && product.category) {
       await Category.updateOne(
         { $or: [{ slug: product.category }, { legacyId: product.category }] },
-        { $addToSet: { subcategories: validatedData.subCategory.trim() } }
+        { $addToSet: { subcategories: productUpdates.subCategory.trim() } }
       );
     }
 
@@ -172,6 +217,9 @@ export async function PATCH(
       revalidatePath(`/category/${product.category}`);
       revalidatePath(`/product/${oldSlug}`);
       revalidatePath(`/product/${product.slug}`);
+      for (const relSlug of affectedSlugs) {
+        revalidatePath(`/product/${relSlug}`);
+      }
     } catch (e) {
       // Revalidation warning non-blocking
     }
@@ -184,6 +232,9 @@ export async function PATCH(
   } catch (error: any) {
     if (error.message?.startsWith('UNAUTHORIZED')) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof ColorVariantValidationError) {
+      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
     }
     if (error instanceof ZodError) {
       const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
@@ -229,10 +280,14 @@ export async function DELETE(
       },
     }).select('title slug').lean();
 
-    // Perform soft deletion / archive
+    // Perform soft deletion / archive and detach from any color variant group
+    const previousGroupId = product.colorGroupId;
     product.isArchived = true;
     product.isActive = false;
+    product.colorGroupId = '';
     await product.save();
+
+    const cleanedGroupSlugs = await cleanupSingletonColorGroup(previousGroupId);
 
     // Revalidate storefront cache
     try {
@@ -241,6 +296,9 @@ export async function DELETE(
       revalidatePath(`/category/${product.category}`);
       revalidatePath(`/product/${product.slug}`);
       revalidatePath('/collections');
+      for (const relSlug of cleanedGroupSlugs) {
+        revalidatePath(`/product/${relSlug}`);
+      }
     } catch (e) {
       // Revalidation warning non-blocking
     }

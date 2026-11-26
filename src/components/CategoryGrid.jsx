@@ -6,6 +6,7 @@ import { categories } from '../data/categories';
 import { ArrowRight } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
+import FormattedTitle from './shared/FormattedTitle';
 
 export default function CategoryGrid({ categories: customCategories }) {
   const allCategories = customCategories && customCategories.length > 0 ? customCategories : categories;
@@ -59,7 +60,7 @@ export default function CategoryGrid({ categories: customCategories }) {
 
                 {/* Category Name */}
                 <h3 className="font-serif text-sm sm:text-base font-semibold text-[#211A15] text-center group-hover:text-[#D69A4B] transition-colors leading-tight">
-                  {cat.name}
+                  <FormattedTitle text={cat.name} />
                 </h3>
               </Link>
             </ScrollReveal>

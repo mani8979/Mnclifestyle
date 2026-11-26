@@ -31,6 +31,11 @@ interface ProductItem {
   category: string;
   categoryLabel?: string;
   subCategory?: string;
+  colorName?: string;
+  colorHex?: string;
+  colorGroupId?: string;
+  linkedVariantCount?: number;
+  colors?: Array<{ name: string; hex: string }>;
   price: number;
   originalPrice?: number;
   stockQuantity: number;
@@ -362,8 +367,22 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">
-                              {p.subCategory || p.category}
+                            <div className="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
+                              <span>{p.subCategory || p.category}</span>
+                              {(p.colorName || p.colors?.[0]?.name) && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] text-slate-700 font-medium">
+                                  <span
+                                    className="w-2 h-2 rounded-full border border-black/20"
+                                    style={{ backgroundColor: p.colorHex || p.colors?.[0]?.hex || '#211710' }}
+                                  />
+                                  <span>{p.colorName || p.colors?.[0]?.name}</span>
+                                </span>
+                              )}
+                              {p.linkedVariantCount && p.linkedVariantCount > 1 ? (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+                                  {p.linkedVariantCount} colors mapped
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -404,6 +423,15 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Add Another Color Variant */}
+                          <Link
+                            href={`/admin/products/new?variantOf=${p._id}`}
+                            title="Add another color variant in same category & subcategory"
+                            className="p-1.5 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </Link>
+
                           {/* View on Storefront */}
                           <Link
                             href={`/product/${p.slug || slugify(p.name)}`}

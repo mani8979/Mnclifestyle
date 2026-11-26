@@ -9,6 +9,8 @@ import { categories, findCategoryById } from '../data/categories';
 import { products } from '../data/products';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
+import { collectAvailableColors, matchesSelectedColor } from '../utils/colors';
+import FormattedTitle from '../components/shared/FormattedTitle';
 import {
   SlidersHorizontal,
   X,
@@ -24,6 +26,7 @@ export default function Category({ initialCategory, initialProducts, allCategori
   const params = useParams();
   const categoryId = params?.categorySlug || params?.categoryId;
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
+  const [selectedColor, setSelectedColor] = useState('all');
   const [selectedPriceRange, setSelectedPriceRange] = useState('all');
   const [sortOption, setSortOption] = useState('featured');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -31,6 +34,7 @@ export default function Category({ initialCategory, initialProducts, allCategori
   // Reset filters when category route changes
   useEffect(() => {
     setSelectedSubcategory('all');
+    setSelectedColor('all');
     setSelectedPriceRange('all');
     setSortOption('featured');
     setIsMobileFilterOpen(false);
@@ -60,6 +64,20 @@ export default function Category({ initialCategory, initialProducts, allCategori
     return Array.from(subs);
   }, [baseCategoryProducts]);
 
+  // Colors available within active category (+ subcategory if selected)
+  const availableColors = useMemo(() => {
+    const scoped =
+      selectedSubcategory === 'all'
+        ? baseCategoryProducts
+        : baseCategoryProducts.filter((p) => p.subCategory === selectedSubcategory);
+    return collectAvailableColors(scoped);
+  }, [baseCategoryProducts, selectedSubcategory]);
+
+  const effectiveSelectedColor =
+    selectedColor !== 'all' && availableColors.some((c) => c.key === selectedColor.toLowerCase())
+      ? selectedColor
+      : 'all';
+
   // Filter & Sort
   const filteredProducts = useMemo(() => {
     let prods = [...baseCategoryProducts];
@@ -67,6 +85,11 @@ export default function Category({ initialCategory, initialProducts, allCategori
     // Subcategory Filter
     if (selectedSubcategory !== 'all') {
       prods = prods.filter((p) => p.subCategory === selectedSubcategory);
+    }
+
+    // Color Filter
+    if (effectiveSelectedColor !== 'all') {
+      prods = prods.filter((p) => matchesSelectedColor(p, effectiveSelectedColor));
     }
 
     // Price Filter
@@ -90,16 +113,20 @@ export default function Category({ initialCategory, initialProducts, allCategori
       }
       return 0;
     });
-  }, [baseCategoryProducts, selectedSubcategory, selectedPriceRange, sortOption]);
+  }, [baseCategoryProducts, selectedSubcategory, effectiveSelectedColor, selectedPriceRange, sortOption]);
 
   const resetFilters = () => {
     setSelectedSubcategory('all');
+    setSelectedColor('all');
     setSelectedPriceRange('all');
     setSortOption('featured');
   };
 
   const hasActiveFilters =
-    selectedSubcategory !== 'all' || selectedPriceRange !== 'all' || sortOption !== 'featured';
+    selectedSubcategory !== 'all' ||
+    effectiveSelectedColor !== 'all' ||
+    selectedPriceRange !== 'all' ||
+    sortOption !== 'featured';
 
   const activeCategoriesList =
     Array.isArray(allCategories) && allCategories.length > 0 ? allCategories : categories;
@@ -153,7 +180,7 @@ export default function Category({ initialCategory, initialProducts, allCategori
 
           {/* Main Title */}
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white tracking-tight leading-tight mb-3">
-            {category.title || category.name}
+            <FormattedTitle text={category.title || category.name} />
           </h1>
 
           {/* Meaningful Description */}
@@ -269,6 +296,48 @@ export default function Category({ initialCategory, initialProducts, allCategori
 
           </div>
 
+          {/* Desktop Color Filter Row */}
+          {availableColors.length > 0 && (
+            <div className="hidden lg:flex items-center flex-wrap gap-2 pt-3 mt-3 border-t border-[#E9D8C5]/60">
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-[#766B61] mr-1">
+                Colour:
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedColor('all')}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                  selectedColor === 'all'
+                    ? 'bg-[#211710] text-white'
+                    : 'bg-[#F8F0E8] text-[#211A15] hover:bg-[#E9D8C5] border border-[#E9D8C5]'
+                }`}
+              >
+                All Colours
+              </button>
+              {availableColors.map((col) => {
+                const active = selectedColor.toLowerCase() === col.key;
+                return (
+                  <button
+                    key={col.key}
+                    type="button"
+                    onClick={() => setSelectedColor(active ? 'all' : col.key)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer border ${
+                      active
+                        ? 'bg-white border-[#007185] ring-2 ring-[#007185]/20 text-[#211710] font-semibold'
+                        : 'bg-white border-[#E9D8C5] text-[#211A15] hover:border-[#211710]/40'
+                    }`}
+                  >
+                    <span
+                      className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                      style={{ backgroundColor: col.hex }}
+                    />
+                    <span>{col.name}</span>
+                    <span className="text-[10px] text-[#766B61]">({col.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Results Summary Row */}
           <div className="hidden lg:flex items-center justify-between pt-3 mt-3 border-t border-[#E9D8C5]/60 text-xs text-[#766B61]">
             <div>
@@ -305,6 +374,31 @@ export default function Category({ initialCategory, initialProducts, allCategori
                   onClick={() => setSelectedSubcategory('all')}
                   className="text-[#766B61] hover:text-[#211710] font-bold"
                   aria-label="Remove subcategory filter"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {effectiveSelectedColor !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E9D8C5] text-[#211A15] shadow-2xs">
+                <span
+                  className="w-2.5 h-2.5 rounded-full border border-black/20"
+                  style={{
+                    backgroundColor:
+                      availableColors.find((c) => c.key === effectiveSelectedColor.toLowerCase())?.hex ||
+                      '#211710',
+                  }}
+                />
+                <span>
+                  Colour:{' '}
+                  {availableColors.find((c) => c.key === effectiveSelectedColor.toLowerCase())?.name ||
+                    effectiveSelectedColor}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedColor('all')}
+                  className="text-[#766B61] hover:text-[#211710] font-bold"
+                  aria-label="Remove colour filter"
                 >
                   ×
                 </button>
@@ -390,7 +484,7 @@ export default function Category({ initialCategory, initialProducts, allCategori
                 <div className="absolute inset-0 bg-gradient-to-t from-[#211710]/85 via-transparent to-transparent flex flex-col justify-end p-5 text-white">
                   <span className="text-[10px] uppercase tracking-widest text-[#D69A4B] font-semibold">Category</span>
                   <h4 className="font-serif text-xl text-white group-hover:text-[#D69A4B] transition-colors">
-                    {c.name}
+                    <FormattedTitle text={c.name} />
                   </h4>
                   <div className="flex items-center gap-1 text-xs text-[#E9D8C5] mt-1">
                     <span>Explore &rarr;</span>
@@ -451,6 +545,49 @@ export default function Category({ initialCategory, initialProducts, allCategori
                 ))}
               </div>
             </div>
+
+            {/* Color Filter (Mobile Drawer) */}
+            {availableColors.length > 0 && (
+              <div className="mb-6">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#766B61] block mb-3">
+                  Colour
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedColor('all')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      selectedColor === 'all'
+                        ? 'bg-[#211710] text-[#D69A4B]'
+                        : 'bg-white text-[#211A15] border border-[#E9D8C5]'
+                    }`}
+                  >
+                    All Colours
+                  </button>
+                  {availableColors.map((col) => {
+                    const active = selectedColor.toLowerCase() === col.key;
+                    return (
+                      <button
+                        key={col.key}
+                        type="button"
+                        onClick={() => setSelectedColor(active ? 'all' : col.key)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          active
+                            ? 'bg-[#211710] text-[#D69A4B]'
+                            : 'bg-white text-[#211A15] border border-[#E9D8C5]'
+                        }`}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
+                          style={{ backgroundColor: col.hex }}
+                        />
+                        <span>{col.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Price Range */}
             <div className="mb-6">

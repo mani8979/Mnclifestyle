@@ -108,6 +108,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
+      data-scroll-behavior="smooth"
       className={`scroll-smooth ${playfair.variable} ${inter.variable}`}
     >
       <head>

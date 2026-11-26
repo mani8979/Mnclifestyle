@@ -6,6 +6,7 @@ import { Search, X, ArrowRight } from 'lucide-react';
 import { products, slugify } from '../data/products';
 import { formatINR } from '../utils/currency';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
+import FormattedTitle from './shared/FormattedTitle';
 
 export default function SearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
@@ -159,7 +160,7 @@ export default function SearchModal({ isOpen, onClose }) {
                     )}
                   </div>
                   <h4 className="text-sm md:text-base font-serif font-medium text-charcoal truncate group-hover:text-bronze transition-colors">
-                    {prod.name}
+                    <FormattedTitle text={prod.name} />
                   </h4>
                   <p className="text-xs text-warmgrey truncate">{prod.shortDescription}</p>
                 </div>

@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || undefined;
     const subCategory = searchParams.get('subCategory') || undefined;
+    const color = searchParams.get('color') || undefined;
     const isBestseller = searchParams.get('isBestseller') === 'true';
     const isFeatured = searchParams.get('isFeatured') === 'true';
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : undefined;
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
     const products = await getProducts({
       category,
       subCategory,
+      color,
       isBestseller,
       isFeatured,
       limit,

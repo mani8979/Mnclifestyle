@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 import React from 'react';
 import { Link } from '@/lib/router-bridge';
 import { ArrowRight } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';
+import FormattedTitle from './shared/FormattedTitle';
 
 export default function SectionHeading({
   subtitle,
@@ -32,7 +33,7 @@ export default function SectionHeading({
         <h2 className={`font-serif text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight leading-[1.15] ${
           dark ? 'text-white' : 'text-charcoal'
         }`}>
-          {title}
+          <FormattedTitle text={title} />
         </h2>
         {description && (
           <p className={`mt-3.5 text-sm sm:text-base leading-relaxed font-sans ${

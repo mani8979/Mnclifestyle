@@ -1,6 +1,10 @@
 import React from 'react';
+import mongoose from 'mongoose';
 import { requireAdminSession } from '@/lib/auth';
+import { connectDB } from '@/lib/mongodb';
+import { Product } from '@/models/Product';
 import { getCategories } from '@/services/categoryService';
+import { getLinkedAdminVariants, serializeColorVariantSummary } from '@/lib/color-variants';
 import ProductForm from '@/components/admin/ProductForm';
 
 export const dynamic = 'force-dynamic';
@@ -9,9 +13,62 @@ export const metadata = {
   title: 'Add New Furniture Piece | MNC LifeStyle Admin',
 };
 
-export default async function NewProductPage() {
+export default async function NewProductPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ variantOf?: string }>;
+}) {
   await requireAdminSession();
-  const categories = await getCategories();
+  const [{ variantOf }, categories] = await Promise.all([
+    searchParams,
+    getCategories(),
+  ]);
 
-  return <ProductForm isEdit={false} initialCategories={categories} />;
+  let variantTemplate: any = null;
+  let prelinkedVariants: any[] = [];
+
+  if (variantOf && variantOf.trim()) {
+    await connectDB();
+    const id = variantOf.trim();
+    const lookupQuery = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { $or: [{ legacyId: id }, { slug: id }, { sku: id.toUpperCase() }] };
+
+    const sourceDoc: any = await Product.findOne({
+      ...lookupQuery,
+      isArchived: { $ne: true },
+    }).lean();
+
+    if (sourceDoc) {
+      const existingSiblings = await getLinkedAdminVariants(sourceDoc);
+      prelinkedVariants = [serializeColorVariantSummary(sourceDoc), ...existingSiblings];
+      variantTemplate = JSON.parse(
+        JSON.stringify({
+          name: sourceDoc.name,
+          category: sourceDoc.category,
+          categoryLabel: sourceDoc.categoryLabel,
+          subCategory: sourceDoc.subCategory,
+          price: sourceDoc.price,
+          originalPrice: sourceDoc.originalPrice,
+          shortDescription: sourceDoc.shortDescription,
+          fullDescription: sourceDoc.fullDescription,
+          dimensions: sourceDoc.dimensions,
+          materials: sourceDoc.materials,
+          warranty: sourceDoc.warranty,
+          leadTime: sourceDoc.leadTime,
+          customSections: sourceDoc.customSections,
+        })
+      );
+    }
+  }
+
+  return (
+    <ProductForm
+      isEdit={false}
+      initialCategories={categories}
+      initialProduct={variantTemplate}
+      initialLinkedVariants={prelinkedVariants}
+      isColorVariantClone={Boolean(variantTemplate)}
+    />
+  );
 }

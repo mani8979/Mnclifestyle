@@ -31,16 +31,32 @@ export default async function ProductPage({
   }
 
   // Related products query inherently depends on resolved product category
-  const relatedProducts = await getProducts({ category: product.category, limit: 4 });
+  const relatedPool = await getProducts({ category: product.category, limit: 12 });
+
+  const variantIdSet = new Set(
+    [
+      product.id,
+      product.legacyId,
+      ...(Array.isArray(product.colorVariants)
+        ? product.colorVariants.map((v: any) => v.id)
+        : []),
+    ].filter(Boolean)
+  );
+
+  const nonVariantRelated = relatedPool.filter(
+    (p: any) => !variantIdSet.has(p.id) && !variantIdSet.has(p.legacyId)
+  );
+
+  const relatedProducts = (
+    nonVariantRelated.length > 0
+      ? nonVariantRelated
+      : relatedPool.filter(
+          (p: any) => p.id !== product.id && p.legacyId !== product.legacyId
+        )
+  ).slice(0, 4);
 
   const cleanProduct = JSON.parse(JSON.stringify(product));
-  const cleanRelated = JSON.parse(
-    JSON.stringify(
-      relatedProducts.filter(
-        (p: any) => p.id !== product.id && p.legacyId !== product.legacyId
-      )
-    )
-  );
+  const cleanRelated = JSON.parse(JSON.stringify(relatedProducts));
 
   return (
     <ProductDetails

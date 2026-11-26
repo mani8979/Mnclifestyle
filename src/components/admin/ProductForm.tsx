@@ -24,6 +24,7 @@ import {
 import { slugify } from '@/lib/validations/product';
 import { formatINR, calculateDiscount } from '@/utils/currency';
 import ProductImageUploader, { UploadedImageItem } from './ProductImageUploader';
+import ProductColorVariantMapper, { MappedVariantItem } from './ProductColorVariantMapper';
 
 export interface CategoryOption {
   _id?: string;
@@ -80,12 +81,16 @@ interface ProductFormProps {
   initialProduct?: any;
   isEdit?: boolean;
   initialCategories?: CategoryOption[];
+  initialLinkedVariants?: MappedVariantItem[];
+  isColorVariantClone?: boolean;
 }
 
 export default function ProductForm({
   initialProduct,
   isEdit = false,
   initialCategories = [],
+  initialLinkedVariants = [],
+  isColorVariantClone = false,
 }: ProductFormProps) {
   const router = useRouter();
 
@@ -217,19 +222,47 @@ export default function ProductForm({
 
   const [imageItems, setImageItems] = useState<UploadedImageItem[]>(initialImagesList);
 
-  // Colors
-  const [colors, setColors] = useState<Array<{ name: string; hex: string; inStock: boolean }>>(
-    Array.isArray(initialProduct?.colors) && initialProduct.colors.length > 0
+  // Primary Product Color + Linked Sibling Variants (Same Category & Subcategory)
+  const [colorName, setColorName] = useState(
+    isColorVariantClone
+      ? ''
+      : initialProduct?.colorName || initialProduct?.colors?.[0]?.name || ''
+  );
+  const [colorHex, setColorHex] = useState(
+    isColorVariantClone
+      ? '#211710'
+      : initialProduct?.colorHex || initialProduct?.colors?.[0]?.hex || '#211710'
+  );
+  const [linkedVariants, setLinkedVariants] = useState<MappedVariantItem[]>(
+    Array.isArray(initialLinkedVariants) ? initialLinkedVariants : []
+  );
+
+  // Additional finish swatches (optional single-product color variants with photo & price)
+  const [colors, setColors] = useState<
+    Array<{
+      name: string;
+      hex: string;
+      inStock: boolean;
+      image?: string;
+      price?: number;
+      originalPrice?: number;
+    }>
+  >(
+    !isColorVariantClone && Array.isArray(initialProduct?.colors) && initialProduct.colors.length > 0
       ? initialProduct.colors
-      : [{ name: 'Warm Cream', hex: '#F4EBE1', inStock: true }]
+      : []
   );
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#2563EB');
+  const [newColorImage, setNewColorImage] = useState('');
+  const [newColorPrice, setNewColorPrice] = useState('');
+  const [newColorOriginalPrice, setNewColorOriginalPrice] = useState('');
 
-  // Publication & Badges
+  // Publication & Stock Badges
   const [isActive, setIsActive] = useState(initialProduct?.isActive ?? true);
   const [isFeatured, setIsFeatured] = useState(initialProduct?.isFeatured ?? false);
   const [isBestseller, setIsBestseller] = useState(initialProduct?.isBestseller ?? false);
+  const [inStock, setInStock] = useState(initialProduct?.inStock ?? true);
   const [badge, setBadge] = useState(initialProduct?.badge || '');
 
   // Warranty & Delivery
@@ -307,8 +340,21 @@ export default function ProductForm({
   // Color helpers
   const handleAddColor = () => {
     if (newColorName.trim()) {
-      setColors([...colors, { name: newColorName.trim(), hex: newColorHex, inStock: true }]);
+      setColors([
+        ...colors,
+        {
+          name: newColorName.trim(),
+          hex: newColorHex,
+          inStock: true,
+          ...(newColorImage.trim() ? { image: newColorImage.trim() } : {}),
+          ...(newColorPrice ? { price: Number(newColorPrice) } : {}),
+          ...(newColorOriginalPrice ? { originalPrice: Number(newColorOriginalPrice) } : {}),
+        },
+      ]);
       setNewColorName('');
+      setNewColorImage('');
+      setNewColorPrice('');
+      setNewColorOriginalPrice('');
     }
   };
 
@@ -383,6 +429,27 @@ export default function ProductForm({
       height: img.height,
     }));
 
+    const cleanColorName = colorName.trim();
+    const cleanColorHex = colorHex.trim() || '#211710';
+    let effectiveColors = [...colors];
+    if (cleanColorName) {
+      const existingIdx = effectiveColors.findIndex(
+        (c) => c.name.trim().toLowerCase() === cleanColorName.toLowerCase()
+      );
+      if (existingIdx >= 0) {
+        effectiveColors[existingIdx] = {
+          ...effectiveColors[existingIdx],
+          name: cleanColorName,
+          hex: cleanColorHex,
+        };
+      } else {
+        effectiveColors = [
+          { name: cleanColorName, hex: cleanColorHex, inStock: true },
+          ...effectiveColors,
+        ];
+      }
+    }
+
     const payload = {
       name: name.trim(),
       slug: finalSlug,
@@ -396,12 +463,16 @@ export default function ProductForm({
       isBestseller,
       isFeatured,
       isActive: activeState,
-      stockQuantity: 100,
-      lowStockThreshold: 5,
-      costPrice: 0,
-      trackInventory: false,
-      allowBackorders: true,
-      inStock: true,
+      stockQuantity: inStock
+        ? initialProduct?.stockQuantity && initialProduct.stockQuantity > 0
+          ? initialProduct.stockQuantity
+          : 100
+        : 0,
+      lowStockThreshold: initialProduct?.lowStockThreshold ?? 5,
+      costPrice: initialProduct?.costPrice ?? 0,
+      trackInventory: inStock ? Boolean(initialProduct?.trackInventory) : true,
+      allowBackorders: inStock ? (initialProduct?.allowBackorders ?? true) : false,
+      inStock,
       shortDescription: derivedShortDescription,
       fullDescription: derivedFullDescription,
       dimensions: {
@@ -413,7 +484,10 @@ export default function ProductForm({
         weight: weight.trim(),
       },
       materials: materialsArray.length > 0 ? materialsArray : ['Kiln-Dried Hardwood', 'High-Density Foam'],
-      colors,
+      colorName: cleanColorName,
+      colorHex: cleanColorHex,
+      linkedVariantIds: linkedVariants.map((v) => v._id || v.id).filter(Boolean),
+      colors: effectiveColors,
       images: finalImages,
       imageDetails: finalImageDetails,
       leadTime: leadTime.trim() || 'Complimentary White-Glove In-Home Delivery across AP (3–7 Days)',
@@ -497,7 +571,16 @@ export default function ProductForm({
         </div>
 
         {/* Action Buttons Top */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {isEdit && initialProduct && (
+            <Link
+              href={`/admin/products/new?variantOf=${encodeURIComponent(initialProduct._id || initialProduct.id)}`}
+              className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Another Color</span>
+            </Link>
+          )}
           <button
             type="button"
             disabled={isSubmitting}
@@ -526,6 +609,21 @@ export default function ProductForm({
           </button>
         </div>
       </div>
+
+      {/* Variant Clone Info Banner */}
+      {isColorVariantClone && (
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-3">
+          <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">
+              Adding a New Color Variant in {activeCategoryObj?.name || category} → {subCategory || 'General'}
+            </p>
+            <p className="text-blue-700 mt-0.5">
+              Specifications, Category, and Subcategory have been copied and sibling colors are pre-linked. Upload the new color&apos;s photos, set its Color Name &amp; Price, and publish.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Notifications */}
       {errorMessage && (
@@ -644,13 +742,25 @@ export default function ProductForm({
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 transition-colors cursor-pointer"
                   >
                     {availableSubcategories.length === 0 ? (
-                      <option value="">No subcategories configured for {activeCategoryObj?.name || 'this category'}</option>
+                      <option value={subCategory || ''}>
+                        {subCategory || `No subcategories configured for ${activeCategoryObj?.name || 'this category'}`}
+                      </option>
                     ) : (
-                      availableSubcategories.map((sub) => (
-                        <option key={sub} value={sub} className="bg-white">
-                          {sub}
-                        </option>
-                      ))
+                      <>
+                        {subCategory &&
+                          !availableSubcategories.some(
+                            (s) => s.toLowerCase() === subCategory.toLowerCase()
+                          ) && (
+                            <option value={subCategory} className="bg-white">
+                              {subCategory}
+                            </option>
+                          )}
+                        {availableSubcategories.map((sub) => (
+                          <option key={sub} value={sub} className="bg-white">
+                            {sub}
+                          </option>
+                        ))}
+                      </>
                     )}
                     <option value="__add_new__" className="bg-white text-blue-600 font-semibold">
                       + Add New Subcategory to {activeCategoryObj?.name || 'Category'}...
@@ -808,6 +918,16 @@ export default function ProductForm({
               />
               <span>Bestseller Piece</span>
             </label>
+
+            <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={inStock}
+                onChange={(e) => setInStock(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-50 border-slate-200"
+              />
+              <span>In Stock (Available for Order)</span>
+            </label>
           </div>
 
           {/* Product Badge Pill */}
@@ -936,26 +1056,65 @@ export default function ProductForm({
             />
           </div>
 
-          {/* Color Swatches */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-3">
-              Color & Fabric Variants
+          {/* Amazon-Style Color Identity & Same-Category/Subcategory Variant Mapping */}
+          <ProductColorVariantMapper
+            currentProductId={isEdit ? (initialProduct?._id || initialProduct?.id) : undefined}
+            category={category}
+            categoryLabel={activeCategoryObj?.name || category}
+            subCategory={
+              isCustomSubcategory
+                ? customSubcategoryText
+                : subCategory || availableSubcategories[0] || ''
+            }
+            colorName={colorName}
+            colorHex={colorHex}
+            onColorNameChange={setColorName}
+            onColorHexChange={setColorHex}
+            selectedVariants={linkedVariants}
+            onSelectedVariantsChange={setLinkedVariants}
+            previewProduct={{
+              name,
+              price: Number(price) || 0,
+              originalPrice: Number(originalPrice) || 0,
+              image: imageItems[0]?.url || '',
+            }}
+          />
+
+          {/* Additional Custom Color / Finish Swatches (Optional single-product variants) */}
+          <div className="pt-4 border-t border-slate-100">
+            <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-1">
+              Single-Product Color &amp; Fabric Swatch Cards (Optional)
             </label>
+            <p className="text-[11px] text-slate-500 mb-3">
+              Add color swatches right inside this single product with optional swatch photo &amp; price overrides (automatically shown as visual Colour cards on the storefront).
+            </p>
             <div className="flex flex-wrap gap-2.5 mb-3">
               {colors.map((c, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900"
                 >
+                  {c.image ? (
+                    <img
+                      src={c.image}
+                      alt={c.name}
+                      className="w-6 h-6 rounded-md object-cover border border-slate-200 shrink-0"
+                    />
+                  ) : null}
                   <span
                     className="w-3.5 h-3.5 rounded-full border border-black/30 shrink-0"
                     style={{ backgroundColor: c.hex }}
                   />
-                  <span>{c.name}</span>
+                  <span className="font-medium">{c.name}</span>
+                  {c.price && c.price > 0 ? (
+                    <span className="text-[11px] text-blue-700 font-semibold tabular-nums">
+                      {formatINR(c.price)}
+                    </span>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => handleRemoveColor(i)}
-                    className="text-slate-400 hover:text-red-400 ml-1"
+                    className="text-slate-400 hover:text-red-500 ml-1 cursor-pointer"
                   >
                     ×
                   </button>
@@ -963,27 +1122,58 @@ export default function ProductForm({
               ))}
             </div>
 
-            <div className="flex items-center gap-2 max-w-sm">
-              <input
-                type="color"
-                value={newColorHex}
-                onChange={(e) => setNewColorHex(e.target.value)}
-                className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer p-0"
-              />
-              <input
-                type="text"
-                placeholder="Variant Name (e.g. Oatmeal Bouclé)"
-                value={newColorName}
-                onChange={(e) => setNewColorName(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
-              />
-              <button
-                type="button"
-                onClick={handleAddColor}
-                className="px-3 py-2 rounded-xl bg-slate-100 border border-blue-200 text-blue-600 text-xs font-semibold cursor-pointer"
-              >
-                Add
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 max-w-3xl items-center">
+              <div className="sm:col-span-4 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={newColorHex}
+                  onChange={(e) => setNewColorHex(e.target.value)}
+                  className="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer p-0 shrink-0"
+                />
+                <input
+                  type="text"
+                  placeholder="Colour Name (e.g. Oatmeal Bouclé)"
+                  value={newColorName}
+                  onChange={(e) => setNewColorName(e.target.value)}
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-4">
+                <input
+                  type="text"
+                  placeholder="Swatch Photo URL (optional)"
+                  value={newColorImage}
+                  onChange={(e) => setNewColorImage(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Price ₹"
+                  value={newColorPrice}
+                  onChange={(e) => setNewColorPrice(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="sm:col-span-2 flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="MRP ₹"
+                  value={newColorOriginalPrice}
+                  onChange={(e) => setNewColorOriginalPrice(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddColor}
+                  className="px-3 py-2 rounded-xl bg-slate-100 border border-blue-200 text-blue-600 text-xs font-semibold cursor-pointer shrink-0"
+                >
+                  Add
+                </button>
+              </div>
             </div>
           </div>
         </div>

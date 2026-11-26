@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Category } from '@/models/Category';
 import { requireAdminSession } from '@/lib/auth';
 import { ProductInputSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
+import { escapeRegex } from '@/lib/category-cleanup';
+import {
+  ColorVariantValidationError,
+  getCategoryKeySet,
+  syncProductColorGroup,
+  validateLinkedVariantCandidates,
+} from '@/lib/color-variants';
 import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -21,42 +29,61 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.trim() || '';
     const category = searchParams.get('category')?.trim() || 'all';
+    const subCategory = searchParams.get('subCategory')?.trim() || '';
+    const excludeId = searchParams.get('excludeId')?.trim() || '';
     const status = searchParams.get('status')?.trim() || 'all'; // all, published, draft
     const stock = searchParams.get('stock')?.trim() || 'all'; // all, in-stock, out-of-stock
     const sort = searchParams.get('sort')?.trim() || 'updated-desc';
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
 
-    const query: any = { isArchived: { $ne: true } };
+    const andConditions: any[] = [{ isArchived: { $ne: true } }];
 
-    // Search filter
+    // Search filter (matches name, SKU, legacyId, or colorName)
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { sku: { $regex: search, $options: 'i' } },
-        { legacyId: { $regex: search, $options: 'i' } },
-      ];
+      andConditions.push({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { sku: { $regex: search, $options: 'i' } },
+          { legacyId: { $regex: search, $options: 'i' } },
+          { colorName: { $regex: search, $options: 'i' } },
+        ],
+      });
     }
 
-    // Category filter
+    // Category filter (supports slug, legacyId, or name match)
     if (category !== 'all') {
-      query.category = category;
+      const catKeys = await getCategoryKeySet(category);
+      andConditions.push({ category: { $in: catKeys } });
+    }
+
+    // Subcategory filter (case-insensitive exact match)
+    if (subCategory && subCategory !== 'all') {
+      andConditions.push({
+        subCategory: new RegExp(`^${escapeRegex(subCategory)}$`, 'i'),
+      });
+    }
+
+    // Optional exclude current product id (used in variant mapping picker)
+    if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
+      andConditions.push({ _id: { $ne: new mongoose.Types.ObjectId(excludeId) } });
     }
 
     // Status filter
     if (status === 'published') {
-      query.isActive = true;
+      andConditions.push({ isActive: true });
     } else if (status === 'draft') {
-      query.isActive = false;
+      andConditions.push({ isActive: false });
     }
 
     // Stock filter
     if (stock === 'in-stock') {
-      query.inStock = true;
-      query.stockQuantity = { $gt: 0 };
+      andConditions.push({ inStock: true, stockQuantity: { $gt: 0 } });
     } else if (stock === 'out-of-stock') {
-      query.$or = [{ inStock: false }, { stockQuantity: { $lte: 0 } }];
+      andConditions.push({ $or: [{ inStock: false }, { stockQuantity: { $lte: 0 } }] });
     }
+
+    const query: any = andConditions.length === 1 ? andConditions[0] : { $and: andConditions };
 
     // Sorting
     let sortQuery: any = { updatedAt: -1 };
@@ -79,15 +106,40 @@ export async function GET(request: NextRequest) {
       Product.find(query).sort(sortQuery).skip(skip).limit(limit).lean(),
     ]);
 
+    // Attach color group member counts so admin list & variant mapper display existing groups cleanly
+    const groupIds = Array.from(
+      new Set(
+        products
+          .map((p: any) => (typeof p.colorGroupId === 'string' ? p.colorGroupId.trim() : ''))
+          .filter(Boolean)
+      )
+    );
+
+    const groupCountMap = new Map<string, number>();
+    if (groupIds.length > 0) {
+      const groupedCounts = await Product.aggregate([
+        { $match: { colorGroupId: { $in: groupIds }, isArchived: { $ne: true } } },
+        { $group: { _id: '$colorGroupId', count: { $sum: 1 } } },
+      ]);
+      for (const row of groupedCounts) {
+        groupCountMap.set(row._id, row.count);
+      }
+    }
+
+    const enrichedProducts = products.map((p: any) => ({
+      ...p,
+      linkedVariantCount: p.colorGroupId ? groupCountMap.get(p.colorGroupId) || 1 : 0,
+    }));
+
     const totalPages = Math.ceil(total / limit) || 1;
 
     return NextResponse.json({
       success: true,
-      count: products.length,
+      count: enrichedProducts.length,
       total,
       page,
       totalPages,
-      products,
+      products: enrichedProducts,
     });
   } catch (error: any) {
     if (error.message?.startsWith('UNAUTHORIZED')) {
@@ -149,45 +201,73 @@ export async function POST(request: NextRequest) {
 
     // Zod schema validation
     const validatedData = ProductInputSchema.parse(body);
+    const { linkedVariantIds, ...productFields } = validatedData;
 
-    if (!validatedData.categoryLabel) {
-      validatedData.categoryLabel = catDoc?.name || getCategoryLabel(validatedData.category);
+    if (!productFields.categoryLabel) {
+      productFields.categoryLabel = catDoc?.name || getCategoryLabel(productFields.category);
+    }
+
+    // Keep product.colors synced when colorName is provided and colors list was empty
+    if (productFields.colorName?.trim() && (!productFields.colors || productFields.colors.length === 0)) {
+      productFields.colors = [
+        {
+          name: productFields.colorName.trim(),
+          hex: productFields.colorHex?.trim() || '#211710',
+          inStock: productFields.inStock ?? true,
+          image: productFields.images?.[0] || '',
+        },
+      ];
+    }
+
+    // Pre-validate linked color variant products BEFORE inserting to prevent half-saved writes
+    if (Array.isArray(linkedVariantIds) && linkedVariantIds.length > 0) {
+      await validateLinkedVariantCandidates({
+        linkedVariantIds,
+        category: productFields.category,
+        subCategory: productFields.subCategory,
+      });
     }
 
     // Auto-derive slug from product name if not supplied or ensure uniqueness
-    let targetSlug = validatedData.slug || slugify(validatedData.name);
+    let targetSlug = productFields.slug || slugify(productFields.name);
     let slugSuffix = 1;
     let existingSlug = await Product.findOne({ slug: targetSlug });
     while (existingSlug) {
       slugSuffix++;
-      targetSlug = `${validatedData.slug || slugify(validatedData.name)}-${slugSuffix}`;
+      targetSlug = `${productFields.slug || slugify(productFields.name)}-${slugSuffix}`;
       existingSlug = await Product.findOne({ slug: targetSlug });
     }
-    validatedData.slug = targetSlug;
+    productFields.slug = targetSlug;
 
     // Auto-derive SKU if not supplied or ensure uniqueness
-    let targetSku = validatedData.sku || `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let targetSku = productFields.sku || `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
     let existingSku = await Product.findOne({ sku: targetSku });
     while (existingSku) {
       targetSku = `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
       existingSku = await Product.findOne({ sku: targetSku });
     }
-    validatedData.sku = targetSku;
+    productFields.sku = targetSku;
 
     // Build and save new product
     const newProduct = new Product({
-      ...validatedData,
-      legacyId: validatedData.sku.toLowerCase(),
+      ...productFields,
+      legacyId: productFields.sku.toLowerCase(),
       isArchived: false,
     });
 
     await newProduct.save();
 
+    // Sync mapped color variant group if sibling products were selected
+    const { affectedSlugs } = await syncProductColorGroup({
+      product: newProduct,
+      linkedVariantIds,
+    });
+
     // Automatically sync subcategory to Category document in MongoDB
-    if (validatedData.subCategory && catDoc) {
+    if (productFields.subCategory && catDoc) {
       await Category.updateOne(
         { _id: catDoc._id },
-        { $addToSet: { subcategories: validatedData.subCategory.trim() } }
+        { $addToSet: { subcategories: productFields.subCategory.trim() } }
       );
     }
 
@@ -199,8 +279,11 @@ export async function POST(request: NextRequest) {
       revalidatePath('/admin/products');
       revalidatePath('/admin/categories');
       revalidatePath('/admin/inventory');
-      revalidatePath(`/category/${validatedData.category}`);
-      revalidatePath(`/product/${validatedData.slug}`);
+      revalidatePath(`/category/${productFields.category}`);
+      revalidatePath(`/product/${productFields.slug}`);
+      for (const relSlug of affectedSlugs) {
+        revalidatePath(`/product/${relSlug}`);
+      }
     } catch (e) {
       // Revalidation warning non-blocking
     }
@@ -216,6 +299,9 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     if (error.message?.startsWith('UNAUTHORIZED')) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof ColorVariantValidationError) {
+      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
     }
     if (error instanceof ZodError) {
       const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');

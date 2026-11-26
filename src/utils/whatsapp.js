@@ -47,16 +47,21 @@ Please share availability and delivery details.`;
 /**
  * Pre-filled message when a customer clicks "Ask About This Product" or "Enquire on WhatsApp"
  */
-export const getWhatsAppInquiryUrl = ({ product, topic = 'Product Enquiry' }) => {
+export const getWhatsAppInquiryUrl = ({ product, selectedColor, topic = 'Product Enquiry' }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
 
   const currentUrl = `https://mnclifestyle.in/product/${product.slug || slugify(product.name)}`;
   const price = formatINR(product.price);
+  const variant =
+    selectedColor ||
+    (typeof product.colorName === 'string' && product.colorName.trim()) ||
+    product.colors?.[0]?.name ||
+    '';
 
   const message = `Hello MNC LifeStyle Team,
 
 I have an enquiry regarding ${product.name}:
-• Price: ${price}
+• Price: ${price}${variant ? `\n• Finish/Colour: ${variant}` : ''}
 • Topic: ${topic}
 • Product Link: ${currentUrl}
 

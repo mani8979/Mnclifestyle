@@ -2,11 +2,16 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { useParams, Link, Navigate } from '@/lib/router-bridge';
+import { useParams, Link } from '@/lib/router-bridge';
 import { products, slugify } from '../data/products';
 import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
+import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../utils/colors';
+import { useCart } from '../context/CartContext';
+import ColorVariantSelector from '../components/ColorVariantSelector';
+import FormattedTitle from '../components/shared/FormattedTitle';
+import WhatsAppIcon from '../components/shared/WhatsAppIcon';
 import ScrollReveal from '../components/ScrollReveal';
 import {
   Star,
@@ -15,7 +20,6 @@ import {
   Ruler,
   Layers,
   PhoneCall,
-  MessageCircle,
   HelpCircle,
   ChevronDown,
   ChevronUp,
@@ -24,7 +28,8 @@ import {
   CheckCircle2,
   Minus,
   Plus,
-  Sparkles
+  Sparkles,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function ProductDetails({ initialProduct, initialRelatedProducts }) {
@@ -37,13 +42,25 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     notFound();
   }
 
+  const { addToCart } = useCart();
+  const initialPrimaryColor = getProductPrimaryColor(product);
+  const currentProductKey = product?.id || product?.slug || '';
+  const [trackedProductKey, setTrackedProductKey] = useState(currentProductKey);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [swatchImageOverride, setSwatchImageOverride] = useState('');
   const [selectedColor, setSelectedColor] = useState(
-    product.colors?.[0]?.name || 'Standard'
+    initialPrimaryColor?.name || product.colors?.[0]?.name || 'Standard'
   );
   const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState('dimensions');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  if (trackedProductKey !== currentProductKey) {
+    setTrackedProductKey(currentProductKey);
+    setActiveImageIndex(0);
+    setSwatchImageOverride('');
+    setSelectedColor(initialPrimaryColor?.name || product.colors?.[0]?.name || 'Standard');
+  }
 
   // Helper to format title and prevent orphan single-word wrapping
   const formatBalancedTitle = (title) => {
@@ -57,17 +74,70 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     return title;
   };
 
-  const discount = calculateDiscount(product.price, product.originalPrice);
+  const hasMappedVariants =
+    Array.isArray(product.colorVariants) && product.colorVariants.length > 1;
+  const singleProductSwatchVariants = !hasMappedVariants
+    ? buildSingleProductSwatchVariants(product, 'swatch')
+    : [];
+
+  const activeSwatch = singleProductSwatchVariants.find(
+    (s) => s.colorName.trim().toLowerCase() === (selectedColor || '').trim().toLowerCase()
+  );
+  const effectivePrice = activeSwatch ? activeSwatch.price : Number(product.price) || 0;
+  const effectiveOriginalPrice = activeSwatch
+    ? activeSwatch.originalPrice
+    : Number(product.originalPrice) || 0;
+  const activeProductForCart =
+    effectivePrice !== Number(product.price) || swatchImageOverride
+      ? {
+          ...product,
+          price: effectivePrice,
+          originalPrice: effectiveOriginalPrice,
+          ...(swatchImageOverride
+            ? { images: [swatchImageOverride, ...(product.images || [])] }
+            : {}),
+        }
+      : product;
+
+  const discount = calculateDiscount(effectivePrice, effectiveOriginalPrice);
+  const isOutOfStock =
+    product.inStock === false ||
+    (Boolean(product.trackInventory) &&
+      !product.allowBackorders &&
+      typeof product.availableQuantity === 'number' &&
+      product.availableQuantity <= 0) ||
+    Boolean(activeSwatch && activeSwatch.inStock === false);
+
+  const handleSelectSwatchVariant = (variant, idx) => {
+    setSelectedColor(variant.colorName);
+    if (variant.image) {
+      const matchIdx = Array.isArray(product.images)
+        ? product.images.findIndex((img) => img === variant.image)
+        : -1;
+      if (matchIdx >= 0) {
+        setSwatchImageOverride('');
+        setActiveImageIndex(matchIdx);
+      } else {
+        setSwatchImageOverride(variant.image);
+      }
+    } else if (Array.isArray(product.images) && product.images[idx]) {
+      setSwatchImageOverride('');
+      setActiveImageIndex(idx);
+    } else {
+      setSwatchImageOverride('');
+    }
+  };
 
   // WhatsApp Order & Inquiry URLs
   const whatsappOrderUrl = getWhatsAppOrderUrl({
-    product,
+    product: activeProductForCart,
     selectedColor,
     quantity
   });
 
   const whatsappInquiryUrl = getWhatsAppInquiryUrl({
-    product,
+    product: activeProductForCart,
+    selectedColor,
     topic: 'Custom Dimensions & Finish Enquiry'
   });
 
@@ -135,10 +205,10 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           <div className="lg:col-span-7 space-y-2.5 sm:space-y-3">
             
             {/* 2. Main Active Image — Clean without overlays obstructing furniture */}
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
+            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-[#EAE2D8] border border-[#E9D8C5] shadow-soft group">
               <Image
-                src={getSafeImageSrc(product.images?.[activeImageIndex] || product.images?.[0])}
-                unoptimized={shouldUnoptimizeImage(getSafeImageSrc(product.images?.[activeImageIndex] || product.images?.[0]))}
+                src={getSafeImageSrc(swatchImageOverride || product.images?.[activeImageIndex] || product.images?.[0])}
+                unoptimized={shouldUnoptimizeImage(getSafeImageSrc(swatchImageOverride || product.images?.[activeImageIndex] || product.images?.[0]))}
                 alt={`${product.name} - View ${activeImageIndex + 1}`}
                 fill
                 priority
@@ -153,9 +223,12 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
+                    onClick={() => {
+                      setSwatchImageOverride('');
+                      setActiveImageIndex(idx);
+                    }}
                     className={`relative w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
-                      activeImageIndex === idx
+                      !swatchImageOverride && activeImageIndex === idx
                         ? 'border-[#D69A4B] shadow-sm scale-102'
                         : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
@@ -178,22 +251,22 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
           {/* Right Column: Purchasing & Information (Col 5) */}
           <div className="lg:col-span-5 flex flex-col justify-start">
             
-            {/* 1. Product Category and Bestseller Badge */}
-            <div className="flex items-center gap-2 mb-1 sm:mb-1.5">
-              <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-bold text-[#855214]">
+            {/* 1. Product Category and Badge (prevents multi-word badges wrapping onto 2 stacked lines on 360px mobile) */}
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 mb-1.5">
+              <span className="text-[11px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-[0.2em] font-bold text-[#855214] min-w-0 leading-snug">
                 {product.categoryLabel}
                 {product.subCategory && ` — ${product.subCategory}`}
               </span>
               {product.badge && (
-                <span className="px-2 py-0.5 rounded-full bg-[#211710] text-[#D69A4B] text-[10px] font-semibold uppercase tracking-wider">
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full bg-[#211710] text-[#D69A4B] text-[10px] font-semibold uppercase tracking-wider leading-none">
                   {product.badge}
                 </span>
               )}
             </div>
 
-            {/* 2. Product Title — Balanced typography with lining numerals for consistency */}
+            {/* 2. Product Title — Balanced typography with normal upright & */}
             <h1 className="font-serif text-2xl sm:text-[26px] lg:text-[28px] text-[#211710] font-normal tracking-tight leading-[1.25] mb-2 [text-wrap:balance] hyphens-none [font-variant-numeric:lining-nums]">
-              {formatBalancedTitle(product.name)}
+              <FormattedTitle text={formatBalancedTitle(product.name)} />
             </h1>
 
             {/* 3. Rating and Customer Reviews */}
@@ -215,53 +288,49 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               </span>
               <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3">
                 <span className="font-sans font-bold tabular-nums text-2xl sm:text-3xl lg:text-[34px] text-[#211710] tracking-tight leading-none">
-                  {formatINR(product.price)}
+                  {formatINR(effectivePrice)}
                 </span>
-                {product.originalPrice && product.originalPrice > product.price && (
+                {effectiveOriginalPrice > effectivePrice && (
                   <span className="text-xs sm:text-sm text-[#766B61] line-through font-sans tabular-nums">
-                    MRP {formatINR(product.originalPrice)}
+                    MRP {formatINR(effectiveOriginalPrice)}
                   </span>
                 )}
-                {product.originalPrice && product.originalPrice > product.price && discount && (
+                {effectiveOriginalPrice > effectivePrice && discount && (
                   <span className="inline-block px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-sans tabular-nums font-semibold">
-                    Save {formatINR(product.originalPrice - product.price)} ({discount})
+                    Save {formatINR(effectiveOriginalPrice - effectivePrice)} ({discount})
                   </span>
                 )}
               </div>
               <p className="text-[10.5px] text-[#766B61] mt-1">
                 Price includes applicable GST. Complimentary white-glove placement in AP.
               </p>
+              {isOutOfStock && (
+                <div
+                  data-testid="out-of-stock-banner"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold"
+                >
+                  <span>Currently Out of Stock in {selectedColor} — select another colour option or enquire for restock</span>
+                </div>
+              )}
             </div>
 
-            {/* 7. Finish / Fabric Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[11px] uppercase tracking-wider font-bold text-[#211710]">
-                    FINISH / FABRIC: <span className="text-[#D69A4B] font-semibold">{selectedColor}</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={() => setSelectedColor(c.name)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-medium transition-all ${
-                        selectedColor === c.name
-                          ? 'border-[#D69A4B] bg-white text-[#211710] ring-2 ring-[#D69A4B] shadow-2xs'
-                          : 'border-[#E9D8C5] bg-white/70 text-[#766B61] hover:border-[#211710]/40 hover:text-[#211710]'
-                      }`}
-                    >
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0 shadow-2xs"
-                        style={{ backgroundColor: c.hex }}
-                      />
-                      <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* 7. Amazon-Style Mapped Colour Variants OR Single-Product Visual Colour Cards */}
+            {hasMappedVariants ? (
+              <ColorVariantSelector
+                variants={product.colorVariants.map((v) => ({ ...v, isProductVariant: true }))}
+                currentProduct={product}
+                mode="link"
+              />
+            ) : (
+              singleProductSwatchVariants.length > 0 && (
+                <ColorVariantSelector
+                  variants={singleProductSwatchVariants}
+                  currentProduct={product}
+                  selectedColorName={selectedColor}
+                  onVariantSelect={handleSelectSwatchVariant}
+                  mode="swatch"
+                />
+              )
             )}
 
             {/* 8. Purchasing Actions: Integrated Quantity Selector + Buy Now + Add to Cart with Uniform 48px Heights */}
@@ -272,20 +341,21 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 <div className="flex items-center justify-between border-2 border-[#E9D8C5] rounded-xl bg-white shadow-2xs shrink-0 h-12 px-1">
                   <button
                     type="button"
-                    disabled={quantity <= 1}
+                    disabled={isOutOfStock || quantity <= 1}
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-[#211710] disabled:cursor-not-allowed rounded-lg transition-all focus:outline-none"
+                    className="w-8 sm:w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-[#211710] disabled:cursor-not-allowed rounded-lg transition-all focus:outline-none"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="w-4 h-4 stroke-[2.2]" />
                   </button>
-                  <span className="w-9 text-center text-sm font-bold text-[#211710] select-none font-sans tabular-nums">
+                  <span className="w-7 sm:w-9 text-center text-sm font-bold text-[#211710] select-none font-sans tabular-nums">
                     {quantity}
                   </span>
                   <button
                     type="button"
+                    disabled={isOutOfStock}
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 rounded-lg transition-all focus:outline-none cursor-pointer"
+                    className="w-8 sm:w-10 h-10 flex items-center justify-center text-[#211710] hover:text-[#D69A4B] hover:bg-[#F8F0E8] active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg transition-all focus:outline-none cursor-pointer"
                     aria-label="Increase quantity"
                   >
                     <Plus className="w-4 h-4 stroke-[2.2]" />
@@ -297,13 +367,36 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   href={whatsappOrderUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-12 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs sm:text-[13px] uppercase tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.99] text-center"
-                  title="Order directly on WhatsApp"
+                  className={`flex-1 min-w-0 h-12 px-3.5 sm:px-5 text-white text-[11px] sm:text-[13px] uppercase tracking-[0.04em] sm:tracking-wider font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:shadow-md active:scale-[0.99] whitespace-nowrap ${
+                    isOutOfStock
+                      ? 'bg-[#49301F] hover:bg-[#211710]'
+                      : 'bg-[#169E49] hover:bg-[#12833C]'
+                  }`}
+                  title={isOutOfStock ? 'Check restock availability on WhatsApp' : 'Order directly on WhatsApp'}
                 >
-                  <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-                  <span>BUY NOW VIA WHATSAPP</span>
+                  <WhatsAppIcon className="w-4 h-4 sm:w-[18px] sm:h-[18px] shrink-0" />
+                  {isOutOfStock ? (
+                    <>
+                      <span className="sm:hidden">ENQUIRE RESTOCK</span>
+                      <span className="hidden sm:inline">OUT OF STOCK — ENQUIRE RESTOCK</span>
+                    </>
+                  ) : (
+                    <span>BUY NOW VIA WHATSAPP</span>
+                  )}
                 </a>
               </div>
+
+              {/* Add to Selection Bag + Quick Inquiry & Showroom Links */}
+              <button
+                type="button"
+                data-testid="pdp-add-to-cart"
+                disabled={isOutOfStock}
+                onClick={() => addToCart(activeProductForCart, quantity, selectedColor)}
+                className="w-full h-11 px-4 bg-[#211710] hover:bg-[#D69A4B] hover:text-[#211710] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span>{isOutOfStock ? 'Currently Out of Stock' : 'Add to Selection Bag'}</span>
+              </button>
 
               {/* Quick Inquiry & Showroom Links */}
               <div className="flex gap-2 pt-0.5">
@@ -360,7 +453,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
 
             {/* 10. WhatsApp Concierge Reassurance Note */}
             <div className="p-3 bg-[#F8F0E8] rounded-xl border border-[#E9D8C5] text-xs text-[#49301F] leading-relaxed flex items-start gap-2.5 mb-3">
-              <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
+              <WhatsAppIcon className="w-4 h-4 text-[#169E49] shrink-0 mt-0.5" />
               <span>
                 <strong className="text-[#211710]">Direct WhatsApp Concierge:</strong> Immediate pin code delivery confirmation, high-resolution finish swatches, and bespoke sizing assistance from our Visakhapatnam atelier.
               </span>
@@ -433,7 +526,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                           className="font-serif text-xs sm:text-sm font-medium text-[#211710] group-hover:text-[#D69A4B] transition-colors line-clamp-1 block mb-1.5"
                           title={p.name}
                         >
-                          {p.name}
+                          <FormattedTitle text={p.name} />
                         </h4>
                         <div className="flex flex-wrap items-baseline gap-1.5">
                           <span className="font-sans font-bold tabular-nums text-sm sm:text-base text-[#211710]">
@@ -461,7 +554,7 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               ARCHITECTURAL INTEGRITY
             </span>
             <h3 className="font-serif text-xl sm:text-2xl text-[#211710] font-medium">
-              Detailed Specifications & Craftsmanship
+              <FormattedTitle text="Detailed Specifications & Craftsmanship" />
             </h3>
           </div>
 
@@ -755,21 +848,21 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
       </div>
 
       {/* Mobile Sticky Bottom Purchase Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#211710]/95 backdrop-blur-md border-t border-[#49301F] px-4 py-2.5 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] shadow-2xl transition-all">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#211710]/95 backdrop-blur-md border-t border-[#49301F] px-3.5 sm:px-4 py-2.5 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] shadow-2xl transition-all">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-2.5">
           
           {/* Price & Savings Display */}
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-[#C9BBAE] font-medium leading-none mb-1">
               PRICE
             </span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-sans font-bold tabular-nums text-lg sm:text-xl text-white leading-none">
-                {formatINR(product.price)}
+            <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5">
+              <span className="font-sans font-bold tabular-nums text-base sm:text-xl text-white leading-none">
+                {formatINR(effectivePrice)}
               </span>
-              {product.originalPrice && product.originalPrice > product.price && (
+              {effectiveOriginalPrice > effectivePrice && (
                 <span className="text-[11px] text-[#C9BBAE] line-through font-sans tabular-nums">
-                  {formatINR(product.originalPrice)}
+                  {formatINR(effectiveOriginalPrice)}
                 </span>
               )}
             </div>
@@ -786,11 +879,22 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               href={whatsappOrderUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0"
+              className={`flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2.5 active:scale-95 text-white text-[11px] sm:text-xs font-bold uppercase tracking-wide sm:tracking-wider rounded-xl shadow-md transition-all shrink-0 whitespace-nowrap ${
+                isOutOfStock
+                  ? 'bg-[#49301F] hover:bg-[#211710]'
+                  : 'bg-[#169E49] hover:bg-[#12833C]'
+              }`}
               aria-label={`Buy ${product.name} on WhatsApp`}
             >
-              <MessageCircle className="w-4 h-4 fill-current shrink-0" />
-              <span>Buy Now via WhatsApp</span>
+              <WhatsAppIcon className="w-4 h-4 shrink-0" />
+              {isOutOfStock ? (
+                <span>Enquire Restock</span>
+              ) : (
+                <>
+                  <span className="min-[390px]:hidden">Buy on WhatsApp</span>
+                  <span className="hidden min-[390px]:inline">Buy Now via WhatsApp</span>
+                </>
+              )}
             </a>
           </div>
 
