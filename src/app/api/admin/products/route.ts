@@ -85,18 +85,18 @@ export async function GET(request: NextRequest) {
 
     const query: any = andConditions.length === 1 ? andConditions[0] : { $and: andConditions };
 
-    // Sorting
-    let sortQuery: any = { updatedAt: -1 };
+    // Sorting (always include _id tie-breaker so paginated requests never repeat items)
+    let sortQuery: any = { updatedAt: -1, _id: -1 };
     if (sort === 'updated-asc') {
-      sortQuery = { updatedAt: 1 };
+      sortQuery = { updatedAt: 1, _id: 1 };
     } else if (sort === 'price-low') {
-      sortQuery = { price: 1 };
+      sortQuery = { price: 1, _id: 1 };
     } else if (sort === 'price-high') {
-      sortQuery = { price: -1 };
+      sortQuery = { price: -1, _id: -1 };
     } else if (sort === 'name-asc') {
-      sortQuery = { name: 1 };
+      sortQuery = { name: 1, _id: 1 };
     } else if (sort === 'name-desc') {
-      sortQuery = { name: -1 };
+      sortQuery = { name: -1, _id: -1 };
     }
 
     const skip = (page - 1) * limit;
@@ -226,6 +226,30 @@ export async function POST(request: NextRequest) {
         category: productFields.category,
         subCategory: productFields.subCategory,
       });
+    }
+
+    // Prevent silent duplicate creation for identical (name, colorName) pairs
+    const duplicateCandidates = await Product.find({
+      name: { $regex: new RegExp(`^${escapeRegex(productFields.name.trim())}$`, 'i') },
+      isArchived: { $ne: true },
+    })
+      .select('name colorName slug')
+      .lean();
+
+    const normalizedNewColor = (productFields.colorName || '').trim().toLowerCase();
+    const existingDuplicate = duplicateCandidates.find(
+      (doc: any) => (doc.colorName || '').trim().toLowerCase() === normalizedNewColor
+    );
+    if (existingDuplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: normalizedNewColor
+            ? `A "${productFields.name}" product in "${productFields.colorName}" colour already exists. Edit the existing product instead.`
+            : `A product named "${productFields.name}" already exists. Edit the existing product instead of creating a duplicate.`,
+        },
+        { status: 409 }
+      );
     }
 
     // Auto-derive slug from product name if not supplied or ensure uniqueness

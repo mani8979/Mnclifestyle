@@ -423,15 +423,6 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Add Another Color Variant */}
-                          <Link
-                            href={`/admin/products/new?variantOf=${p._id}`}
-                            title="Add another color variant in same category & subcategory"
-                            className="p-1.5 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </Link>
-
                           {/* View on Storefront */}
                           <Link
                             href={`/product/${p.slug || slugify(p.name)}`}
