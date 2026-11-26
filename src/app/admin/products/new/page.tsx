@@ -4,7 +4,7 @@ import { requireAdminSession } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { getCategories } from '@/services/categoryService';
-import { getLinkedAdminVariants, serializeColorVariantSummary } from '@/lib/color-variants';
+import { getLinkedAdminVariants } from '@/lib/color-variants';
 import ProductForm from '@/components/admin/ProductForm';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +41,7 @@ export default async function NewProductPage({
 
     if (sourceDoc) {
       const existingSiblings = await getLinkedAdminVariants(sourceDoc);
-      prelinkedVariants = [serializeColorVariantSummary(sourceDoc), ...existingSiblings];
+      prelinkedVariants = existingSiblings;
       variantTemplate = JSON.parse(
         JSON.stringify({
           name: sourceDoc.name,

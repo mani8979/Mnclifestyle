@@ -195,19 +195,22 @@ export default function ProductColorVariantMapper({
     [selectedVariants]
   );
 
-  // Merge candidates and currently selected variants so existing links remain visible cleanly
+  // Merge candidates and currently selected variants, excluding any product with the exact same name as the current product
+  const currentNameLower = (previewProduct.name || '').trim().toLowerCase();
   const allOptions = useMemo(() => {
     const byId = new Map<string, MappedVariantItem>();
     for (const c of candidates) {
+      if (currentNameLower && c.name.trim().toLowerCase() === currentNameLower) continue;
       byId.set(c._id, c);
     }
     for (const sel of selectedVariants) {
+      if (currentNameLower && sel.name.trim().toLowerCase() === currentNameLower) continue;
       if (sel._id && !byId.has(sel._id)) {
         byId.set(sel._id, sel);
       }
     }
     return Array.from(byId.values());
-  }, [candidates, selectedVariants]);
+  }, [candidates, selectedVariants, currentNameLower]);
 
   const filteredOptions = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -318,11 +321,10 @@ export default function ProductColorVariantMapper({
                   onColorNameChange(preset.name);
                   onColorHexChange(preset.hex);
                 }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-colors cursor-pointer ${
-                  active
-                    ? 'bg-blue-50 border-blue-400 text-blue-700 font-semibold'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
-                }`}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-colors cursor-pointer ${active
+                  ? 'bg-blue-50 border-blue-400 text-blue-700 font-semibold'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                  }`}
               >
                 <span
                   className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
@@ -455,11 +457,10 @@ export default function ProductColorVariantMapper({
                   key={item._id}
                   type="button"
                   onClick={() => toggleVariantSelection(item)}
-                  className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                    isSelected
-                      ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
-                  }`}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${isSelected
+                    ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                    }`}
                 >
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                     <img
@@ -501,11 +502,10 @@ export default function ProductColorVariantMapper({
                     </div>
                   </div>
                   <div
-                    className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
-                      isSelected
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'border-slate-300 bg-white'
-                    }`}
+                    className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${isSelected
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'border-slate-300 bg-white'
+                      }`}
                   >
                     {isSelected && <Check className="w-3.5 h-3.5" />}
                   </div>
@@ -531,11 +531,10 @@ export default function ProductColorVariantMapper({
               {previewCards.map((card) => (
                 <div
                   key={card.key}
-                  className={`w-[96px] rounded-xl overflow-hidden bg-white ${
-                    card.isCurrent
-                      ? 'border-2 border-[#007185] ring-2 ring-[#007185]/20 shadow-xs'
-                      : 'border border-slate-300'
-                  }`}
+                  className={`w-[96px] rounded-xl overflow-hidden bg-white ${card.isCurrent
+                    ? 'border-2 border-[#007185] ring-2 ring-[#007185]/20 shadow-xs'
+                    : 'border border-slate-300'
+                    }`}
                 >
                   <div className="aspect-square bg-slate-100 border-b border-slate-200 overflow-hidden relative">
                     <img
