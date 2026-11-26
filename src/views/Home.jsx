@@ -106,7 +106,7 @@ export default function Home({ initialProducts, initialCategories }) {
 
       <div className="space-y-10 sm:space-y-14 mt-8 sm:mt-12">
         {/* 3. Bestselling Furniture */}
-        <section className="max-w-[1672px] mx-auto px-4 sm:px-8 lg:px-[50px]">
+        <section className="max-w-[1672px] mx-auto px-3 sm:px-8 lg:px-[50px]">
         <SectionHeading
           subtitle="Celebrated Works"
           title="Bestselling Furniture"
@@ -116,7 +116,7 @@ export default function Home({ initialProducts, initialCategories }) {
           align="left"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
           {bestsellers.map((product, idx) => (
             <ProductCard key={product.id} product={product} index={idx} />
           ))}
