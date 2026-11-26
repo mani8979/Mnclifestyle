@@ -387,6 +387,12 @@ export default function ProductForm({
       return;
     }
 
+    if (imageItems.length === 0) {
+      setErrorMessage('Please upload at least one product image before saving.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const activeState = publishStatus !== undefined ? publishStatus : isActive;
