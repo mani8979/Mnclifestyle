@@ -1,9 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { NavLink, Link, useLocation } from '@/lib/router-bridge';
 import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
-const logoImg = '/logo.png';
 import { businessConfig } from '../data/businessConfig';
 
 export default function Header({ onOpenSearch, categories: initialCategories }) {
@@ -160,21 +158,54 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
           </button>
         </div>
 
-        {/* Left / Center on Mobile: MNC LifeStyle Logo */}
+        {/* Left / Center on Mobile: MNC LIFE STYLE DAMRO Brand Lockup */}
         <div className="shrink min-w-0 flex items-center">
           <Link
             to="/"
             onMouseEnter={closeShopDropdown}
-            className="inline-flex items-center group max-w-full"
+            aria-label="MNC LIFE STYLE DAMRO — Furniture & Contemporary Living"
+            className="inline-flex items-center gap-2 sm:gap-2.5 lg:gap-3 group max-w-full transition-opacity duration-200 hover:opacity-95"
           >
-            <Image
-              src="/logo.png"
-              alt="MNC LifeStyle — Furniture & Contemporary Living"
-              width={366}
-              height={68}
-              priority
-              className="h-8 min-[375px]:h-9 sm:h-11 lg:h-[66px] max-w-[140px] min-[375px]:max-w-[185px] sm:max-w-none w-auto object-contain transition-opacity duration-200 group-hover:opacity-95"
-            />
+            {/* Architectural House Icon */}
+            <svg
+              viewBox="0 0 48 42"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-7 h-6 sm:w-9 sm:h-8 lg:w-12 lg:h-10 shrink-0 text-[#C88A3B]"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 19L24 3.5L44 19"
+                stroke="currentColor"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M11 19.5V38.5M37 19.5V38.5"
+                stroke="currentColor"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M11 17.5C13.5 16.8 15.2 15.6 16.5 13.8"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            {/* Brand Typography */}
+            <div className="flex flex-col leading-none min-w-0">
+              <span className="font-serif text-[13px] min-[375px]:text-[15px] sm:text-xl lg:text-[26px] tracking-tight whitespace-nowrap flex items-baseline gap-1 sm:gap-1.5">
+                <span className="font-semibold text-[#211A15]">MNC</span>
+                <span className="font-medium text-[#C88A3B]">LIFE STYLE</span>
+                <span className="font-semibold text-[#211A15]">DAMRO</span>
+              </span>
+              <span className="text-[6.5px] min-[375px]:text-[7.5px] sm:text-[9px] lg:text-[10.5px] uppercase tracking-[0.18em] sm:tracking-[0.22em] text-[#4A433D] font-sans font-medium mt-0.5 sm:mt-1 whitespace-nowrap truncate">
+                Furniture &amp; Contemporary Living
+              </span>
+            </div>
           </Link>
         </div>
 
