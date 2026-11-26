@@ -57,6 +57,8 @@ export default async function NewProductPage({
           warranty: sourceDoc.warranty,
           leadTime: sourceDoc.leadTime,
           customSections: sourceDoc.customSections,
+          images: Array.isArray(sourceDoc.images) ? sourceDoc.images : [],
+          imageDetails: Array.isArray(sourceDoc.imageDetails) ? sourceDoc.imageDetails : [],
         })
       );
     }
