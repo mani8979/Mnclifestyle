@@ -151,14 +151,14 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
           
           {/* Left Column: Gallery */}
           <div className="p-6 md:p-8 bg-beige-200/50 flex flex-col justify-between">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-white border border-beige-300 shadow-soft mb-4">
+            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white border border-beige-300 shadow-soft mb-4">
               <Image
                 src={mainImageSrc}
                 alt={activeProduct.name}
                 fill
                 unoptimized={shouldUnoptimizeImage(mainImageSrc)}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                className="object-contain"
               />
               <div className="absolute top-3 left-3 flex flex-col gap-1">
                 {activeProduct.badge && (
@@ -198,7 +198,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                         fill
                         unoptimized={shouldUnoptimizeImage(thumbSrc)}
                         sizes="64px"
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </button>
                   );
