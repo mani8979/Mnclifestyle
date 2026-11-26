@@ -1,30 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Collection } from '@/models/Collection';
+import { Category } from '@/models/Category';
+import { escapeRegex } from '@/lib/category-cleanup';
 import { deleteCloudinaryImage } from '@/lib/storage/cloudinary';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
   try {
-    // 1. Authenticate admin
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
     const body = await request.json().catch(() => null);
-    if (!body || !body.publicId) {
+    if (!body || typeof body.publicId !== 'string' || !body.publicId.trim()) {
       return NextResponse.json(
         { success: false, message: 'publicId is required in request body.' },
         { status: 400 }
       );
     }
 
-    const { publicId, currentProductId } = body;
+    const publicId = body.publicId.trim();
+    const currentProductId = typeof body.currentProductId === 'string' ? body.currentProductId.trim() : '';
 
-    // 2. Validate folder scope
     if (!publicId.startsWith('mnc-lifestyle/products/')) {
       return NextResponse.json(
         {
@@ -35,12 +37,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 3. Shared Image Protection Check
-    // Check if another product in Atlas references this publicId or URL
+    const safePublicIdPattern = escapeRegex(publicId);
+
     const productQuery: any = {
+      isArchived: { $ne: true },
       $or: [
         { 'imageDetails.key': publicId },
-        { images: { $regex: publicId } },
+        { images: { $regex: safePublicIdPattern } },
+        { 'colors.image': { $regex: safePublicIdPattern } },
+        { 'seoMeta.ogImage': { $regex: safePublicIdPattern } },
       ],
     };
 
@@ -48,15 +53,22 @@ export async function DELETE(request: NextRequest) {
       productQuery._id = { $ne: currentProductId };
     }
 
-    const [sharedProduct, sharedCollection] = await Promise.all([
+    const [sharedProduct, sharedCollection, sharedCategory] = await Promise.all([
       Product.findOne(productQuery).select('name sku').lean(),
-      Collection.findOne({ image: { $regex: publicId } }).select('title slug').lean(),
+      Collection.findOne({ image: { $regex: safePublicIdPattern } }).select('title slug').lean(),
+      Category.findOne({
+        $or: [{ imageKey: publicId }, { image: { $regex: safePublicIdPattern } }],
+      })
+        .select('name slug')
+        .lean(),
     ]);
 
-    if (sharedProduct || sharedCollection) {
+    if (sharedProduct || sharedCollection || sharedCategory) {
       const referencedIn = sharedProduct
         ? `Product "${sharedProduct.name}" (${sharedProduct.sku})`
-        : `Curated Collection "${sharedCollection?.title}"`;
+        : sharedCollection
+          ? `Curated Collection "${sharedCollection.title}"`
+          : `Category "${sharedCategory?.name}"`;
 
       return NextResponse.json({
         success: true,
@@ -65,14 +77,13 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    // 4. Safe Cloudinary deletion
     const deleteResult = await deleteCloudinaryImage(publicId);
 
     if (!deleteResult.success) {
       return NextResponse.json(
         {
           success: false,
-          message: `Cloudinary deletion response: ${deleteResult.result}`,
+          message: 'Cloudinary deletion could not be completed.',
         },
         { status: 500 }
       );
@@ -83,14 +94,7 @@ export async function DELETE(request: NextRequest) {
       message: `Image "${publicId}" deleted from Cloudinary successfully.`,
       result: deleteResult.result,
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[Upload DELETE Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to delete asset' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to delete uploaded media asset', '[Upload DELETE Error]');
   }
 }

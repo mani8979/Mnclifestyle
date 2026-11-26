@@ -35,25 +35,36 @@ async function runReview() {
 
   // 3. Service Layer — Category Filter
   console.log('\n--- 3. Service Layer: Category Filter ---');
-  const sofaProducts = await getProducts({ category: 'sofas' });
-  console.log(`getProducts({ category: 'sofas' }) returned: ${sofaProducts.length} items`);
+  const sofaProducts = await getProducts({ category: 'sectional-sofas' });
+  console.log(`getProducts({ category: 'sectional-sofas' }) returned: ${sofaProducts.length} items`);
   const bedsProducts = await getProducts({ category: 'beds' });
   console.log(`getProducts({ category: 'beds' }) returned: ${bedsProducts.length} items`);
 
   // 4. Slug & Legacy ID Resolution
   console.log('\n--- 4. Slug & Legacy ID Resolution ---');
-  const bySlug = await getProductByIdOrSlug('aura-curved-boucle-sofa');
-  const byLegacyId = await getProductByIdOrSlug('mnc-sof-01');
+  const sampleWithLegacy = await Product.findOne({
+    isActive: true,
+    isArchived: { $ne: true },
+    legacyId: { $exists: true, $ne: '' },
+  })
+    .select('slug legacyId name')
+    .lean();
+  if (!sampleWithLegacy?.slug || !sampleWithLegacy?.legacyId) {
+    throw new Error('No active product with legacyId found in database.');
+  }
+  const bySlug = await getProductByIdOrSlug(sampleWithLegacy.slug);
+  const byLegacyId = await getProductByIdOrSlug(sampleWithLegacy.legacyId);
+  const resolutionMatch = Boolean(bySlug?.id && byLegacyId?.id && bySlug.id === byLegacyId.id);
   console.log(`By slug: found="${bySlug?.name}" (ID: ${bySlug?.id}, legacyId: ${bySlug?.legacyId})`);
   console.log(`By legacyId: found="${byLegacyId?.name}" (ID: ${byLegacyId?.id}, legacyId: ${byLegacyId?.legacyId})`);
-  console.log(`Resolution matches: ${bySlug?.id === byLegacyId?.id}`);
+  console.log(`Resolution matches: ${resolutionMatch}`);
 
   // 5. Service Layer — Categories
   console.log('\n--- 5. Service Layer: Categories ---');
   const categories = await getCategories();
   console.log(`getCategories() returned: ${categories.length} categories`);
-  const sofaCategory = await getCategoryBySlug('sofas');
-  console.log(`getCategoryBySlug('sofas'): found="${sofaCategory?.name}", slug="${sofaCategory?.slug}"`);
+  const sofaCategory = await getCategoryBySlug('sectional-sofas');
+  console.log(`getCategoryBySlug('sectional-sofas'): found="${sofaCategory?.name}", slug="${sofaCategory?.slug}"`);
 
   // 6. Service Layer — Collections
   console.log('\n--- 6. Service Layer: Collections ---');
@@ -79,6 +90,11 @@ async function runReview() {
   }));
   for (const item of imageSamples) {
     console.log(`[${item.name}] has ${item.imagesCount} images. Primary: ${item.firstImage?.slice(0, 60)}...`);
+  }
+
+  if (allProducts.length === 0 || sofaProducts.length === 0 || !resolutionMatch || !sofaCategory) {
+    console.error('Review verification failed required non-empty assertions.');
+    process.exit(1);
   }
 
   console.log('\n=====================================================');

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, handleApiError } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { InventoryMovement } from '@/models/InventoryMovement';
+import { escapeRegex } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,17 +16,18 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')?.trim() || '';
     const startDate = searchParams.get('startDate')?.trim();
     const endDate = searchParams.get('endDate')?.trim();
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '25', 10)));
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '25', 10) || 25));
     const skip = (page - 1) * limit;
 
     const query: any = {};
 
     if (search) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { sku: { $regex: search, $options: 'i' } },
-        { productName: { $regex: search, $options: 'i' } },
-        { reason: { $regex: search, $options: 'i' } },
+        { sku: { $regex: safeSearch, $options: 'i' } },
+        { productName: { $regex: safeSearch, $options: 'i' } },
+        { reason: { $regex: safeSearch, $options: 'i' } },
       ];
     }
 
@@ -36,12 +38,25 @@ export async function GET(request: NextRequest) {
     if (startDate || endDate) {
       query.timestamp = {};
       if (startDate) {
-        query.timestamp.$gte = new Date(startDate);
+        const parsedStart = new Date(startDate);
+        if (Number.isNaN(parsedStart.getTime())) {
+          return NextResponse.json(
+            { success: false, message: 'Invalid startDate parameter format' },
+            { status: 400 }
+          );
+        }
+        query.timestamp.$gte = parsedStart;
       }
       if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        query.timestamp.$lte = end;
+        const parsedEnd = new Date(endDate);
+        if (Number.isNaN(parsedEnd.getTime())) {
+          return NextResponse.json(
+            { success: false, message: 'Invalid endDate parameter format' },
+            { status: 400 }
+          );
+        }
+        parsedEnd.setHours(23, 59, 59, 999);
+        query.timestamp.$lte = parsedEnd;
       }
     }
 
@@ -60,10 +75,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit) || 1,
       },
     });
-  } catch (error: any) {
-    if (error.status === 401 || error.message?.includes('Unauthorized')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'Failed to load inventory movement history', '[Inventory History Error]');
   }
 }

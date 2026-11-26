@@ -56,9 +56,9 @@ async function runInventoryTests() {
     name: 'Artisan Atelier Inventory Test Chair',
     slug: testSlug,
     sku: testSku,
-    category: 'study-tables',
-    categoryLabel: 'Study Tables',
-    subCategory: 'Executive Chairs',
+    category: 'study-and-computer-tables',
+    categoryLabel: 'Study and Computer Tables',
+    subCategory: 'Compact Study Desks',
     price: 45000,
     costPrice: 20000,
     stockQuantity: 10,
@@ -83,11 +83,15 @@ async function runInventoryTests() {
   try {
     const res = await fetch(`${BASE_URL}/admin/inventory`, { headers: authHeaders });
     const text = await res.text();
+    const hasWorkspace =
+      res.url.includes('/admin/inventory') &&
+      text.includes('Inventory Management') &&
+      text.includes('Export Stock CSV');
     results.push({
       id: 1,
       title: 'Admin can access inventory dashboard',
-      passed: res.status === 200 && text.includes('Inventory'),
-      notes: `HTTP ${res.status}, page rendered successfully`,
+      passed: res.status === 200 && hasWorkspace,
+      notes: `HTTP ${res.status} (${res.url}), dedicated Inventory Management workspace rendered`,
     });
   } catch (e: any) {
     results.push({ id: 1, title: 'Admin can access inventory dashboard', passed: false, notes: e.message });
@@ -163,9 +167,9 @@ async function runInventoryTests() {
   // Check 6: Admin can filter by category
   // --------------------------------------------------------------------------
   try {
-    const res = await fetch(`${BASE_URL}/api/admin/inventory?category=study-tables`, { headers: authHeaders });
+    const res = await fetch(`${BASE_URL}/api/admin/inventory?category=study-and-computer-tables`, { headers: authHeaders });
     const json = await res.json();
-    const allStudy = json.products?.every((p: any) => p.category === 'study-tables' || p.categoryLabel === 'Study Tables');
+    const allStudy = json.products?.every((p: any) => p.category === 'study-and-computer-tables' || p.categoryLabel === 'Study and Computer Tables');
     results.push({
       id: 6,
       title: 'Admin can filter by category',
@@ -611,11 +615,23 @@ async function runInventoryTests() {
     const jsonList = await resList.json();
     const listLeaksCost = jsonList.products?.some((p: any) => p.costPrice !== undefined);
 
-    const resSingle = await fetch(`${BASE_URL}/api/products/aura-curved-boucle-sofa`);
+    const activeSample = await Product.findOne({ isActive: true, isArchived: { $ne: true } })
+      .select('slug')
+      .lean();
+    if (!activeSample?.slug) {
+      throw new Error('No active product found for public costPrice leakage verification');
+    }
+
+    const resSingle = await fetch(`${BASE_URL}/api/products/${activeSample.slug}`);
     const jsonSingle = await resSingle.json();
     const singleLeaksCost = jsonSingle.product?.costPrice !== undefined;
 
-    const noCostLeak = !listLeaksCost && !singleLeaksCost;
+    const noCostLeak =
+      resList.status === 200 &&
+      resSingle.status === 200 &&
+      Boolean(jsonSingle.product) &&
+      !listLeaksCost &&
+      !singleLeaksCost;
     results.push({
       id: 24,
       title: 'Public APIs do not expose private cost information',

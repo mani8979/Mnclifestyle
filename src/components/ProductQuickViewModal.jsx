@@ -5,7 +5,7 @@ import { Link } from '@/lib/router-bridge';
 import { X, Star, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from './shared/WhatsAppIcon';
 import { formatINR, calculateDiscount } from '../utils/currency';
-import { getWhatsAppOrderUrl } from '../utils/whatsapp';
+import { getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../utils/colors';
 import ColorVariantSelector from './ColorVariantSelector';
@@ -21,7 +21,6 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
   const [selectedColor, setSelectedColor] = useState(
     getProductPrimaryColor(product)?.name || product?.colors?.[0]?.name || 'Standard'
   );
-  const [quantity, setQuantity] = useState(1);
 
   if (trackedPropProduct !== product) {
     setTrackedPropProduct(product);
@@ -31,7 +30,6 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
     setSelectedColor(
       getProductPrimaryColor(product)?.name || product?.colors?.[0]?.name || 'Standard'
     );
-    setQuantity(1);
     setIsLoadingVariant(false);
   }
 
@@ -51,7 +49,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
   const effectiveOriginalPrice = activeSwatch
     ? activeSwatch.originalPrice
     : Number(activeProduct.originalPrice) || 0;
-  const productForCartAndWa =
+  const productForInquiry =
     effectivePrice !== Number(activeProduct.price) || swatchImageOverride
       ? {
           ...activeProduct,
@@ -119,10 +117,10 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
       activeProduct.availableQuantity <= 0) ||
     Boolean(activeSwatch && activeSwatch.inStock === false);
 
-  const whatsappOrderUrl = getWhatsAppOrderUrl({
-    product: productForCartAndWa,
+  const whatsappInquiryUrl = getWhatsAppInquiryUrl({
+    product: productForInquiry,
     selectedColor,
-    quantity
+    topic: isOutOfStock ? 'Restock & Lead Time Enquiry' : 'Product Enquiry',
   });
 
   return (
@@ -270,40 +268,18 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
               )}
             </div>
 
-            {/* Actions: Add to Cart + Direct WhatsApp Order */}
+            {/* Actions: Direct WhatsApp Enquiry & Full Specifications */}
             <div className="space-y-2.5 pt-4 border-t border-beige-200">
               <div className="flex gap-2.5">
-                <div className="flex items-center border border-beige-300 rounded-lg bg-ivory px-2 shrink-0">
-                  <button
-                    type="button"
-                    disabled={isOutOfStock || quantity <= 1}
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-1.5 text-charcoal hover:text-bronze font-bold text-sm disabled:opacity-30 cursor-pointer"
-                    aria-label="Decrease quantity"
-                  >
-                    -
-                  </button>
-                  <span className="px-3 text-xs font-semibold tabular-nums">{quantity}</span>
-                  <button
-                    type="button"
-                    disabled={isOutOfStock}
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-1.5 text-charcoal hover:text-bronze font-bold text-sm disabled:opacity-30 cursor-pointer"
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Primary WhatsApp Order Button */}
+                {/* Primary WhatsApp Enquiry Button */}
                 <a
-                  href={whatsappOrderUrl}
+                  href={whatsappInquiryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-3 px-4 bg-[#169E49] hover:bg-[#12833C] text-white rounded-lg text-xs uppercase tracking-wider font-bold transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                 >
                   <WhatsAppIcon className="w-4 h-4 shrink-0" />
-                  <span>{isOutOfStock ? 'Enquire Restock on WhatsApp' : 'Order on WhatsApp'}</span>
+                  <span>{isOutOfStock ? 'Enquire Restock on WhatsApp' : 'WhatsApp Enquiry'}</span>
                 </a>
               </div>
 
@@ -313,7 +289,7 @@ export default function ProductQuickViewModal({ product, isOpen, onClose }) {
                   onClick={onClose}
                   className="text-xs font-semibold text-bronze hover:text-bronze-dark flex items-center gap-1"
                 >
-                  <span>Full Specifications & Measurements</span>
+                  <span>View Details & Measurements</span>
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>

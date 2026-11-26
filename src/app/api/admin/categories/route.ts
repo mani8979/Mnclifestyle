@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { slugify } from '@/lib/validations/product';
+import { CategoryCreateSchema, normalizeSubcategoriesInput } from '@/lib/validations/category';
+import { escapeRegex, revalidateCatalogPaths } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,69 +24,74 @@ export async function GET(request: NextRequest) {
         id: c._id.toString(),
       })),
     });
-  } catch (error: any) {
-    console.error('GET /api/admin/categories error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to fetch categories' },
-      { status: error.status || 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch categories', '[Admin Categories GET Error]');
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
-    const body = await request.json();
-    const { name, slug, title, description, image, imageKey, subcategories, orderIndex } = body;
-
-    if (!name || !name.trim()) {
+    const rawBody = await request.json().catch(() => null);
+    if (!rawBody || typeof rawBody !== 'object') {
       return NextResponse.json(
-        { success: false, message: 'Category name is required' },
+        { success: false, message: 'Invalid JSON request payload' },
         { status: 400 }
       );
     }
 
-    let cleanSlug = (slug || slugify(name));
+    const validated = CategoryCreateSchema.parse(rawBody);
+    const duplicateName = await Category.findOne({
+      name: new RegExp(`^${escapeRegex(validated.name)}$`, 'i'),
+    }).lean();
+
+    if (duplicateName) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `A category named "${duplicateName.name}" already exists.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    const baseSlug = validated.slug || slugify(validated.name);
+    let cleanSlug = baseSlug;
     let existing = await Category.findOne({ slug: cleanSlug });
     let count = 1;
     while (existing) {
       count++;
-      cleanSlug = `${slug || slugify(name)}-${count}`;
+      cleanSlug = `${baseSlug}-${count}`;
       existing = await Category.findOne({ slug: cleanSlug });
     }
 
-    const cleanSubcategories = Array.isArray(subcategories)
-      ? subcategories.map((s: string) => s.trim()).filter(Boolean)
-      : typeof subcategories === 'string'
-      ? subcategories.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
+    const cleanSubcategories = normalizeSubcategoriesInput(validated.subcategories);
 
-    // Ensure sequential unique orderIndex if not explicitly given or <= 0
-    let assignedOrder = typeof orderIndex === 'number' && orderIndex > 0 ? orderIndex : undefined;
+    let assignedOrder =
+      typeof validated.orderIndex === 'number' && validated.orderIndex > 0
+        ? validated.orderIndex
+        : undefined;
     if (!assignedOrder) {
       const highest = await Category.findOne({}).sort({ orderIndex: -1 }).select('orderIndex').lean();
       assignedOrder = (highest?.orderIndex || 0) + 1;
     }
 
     const newCategory = await Category.create({
-      name: name.trim(),
+      name: validated.name,
       slug: cleanSlug,
-      title: title?.trim() || name.trim(),
-      description: description?.trim() || `Handcrafted ${name.trim()} by MNC LifeStyle.`,
-      image: image?.trim() || '/hero-bg.webp',
-      imageKey: imageKey?.trim() || undefined,
+      title: validated.title || validated.name,
+      description: validated.description || `Handcrafted ${validated.name} by MNC LifeStyle.`,
+      image: validated.image || '/hero-bg.webp',
+      imageKey: validated.imageKey || undefined,
       subcategories: cleanSubcategories,
       orderIndex: assignedOrder,
-      isActive: true,
+      isActive: validated.isActive ?? true,
     });
 
-    revalidatePath('/admin/categories');
-    revalidatePath('/');
-    revalidatePath('/shop');
-    revalidatePath('/collections');
-    revalidatePath(`/category/${newCategory.slug}`);
+    revalidateCatalogPaths([newCategory.slug]);
 
     return NextResponse.json(
       {
@@ -98,11 +104,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    console.error('POST /api/admin/categories error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to create category' },
-      { status: error.status || 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to create category', '[Admin Categories POST Error]');
   }
 }

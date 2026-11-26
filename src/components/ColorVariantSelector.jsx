@@ -24,9 +24,9 @@ export default function ColorVariantSelector({
     if (!variant) continue;
     const rawKey = variant.isProductVariant
       ? (variant._id || variant.id || variant.slug || variant.colorName || variant.name || '')
-          .toString()
-          .trim()
-          .toLowerCase()
+        .toString()
+        .trim()
+        .toLowerCase()
       : (variant.colorName || variant.name || variant._id || '').toString().trim().toLowerCase();
     if (!rawKey || seenKeys.has(rawKey)) continue;
     seenKeys.add(rawKey);
@@ -51,7 +51,7 @@ export default function ColorVariantSelector({
     const vid = (v._id || v.id || '').toString();
     return Boolean(
       (currentId && vid && vid === currentId) ||
-        (currentSlug && v.slug && v.slug === currentSlug)
+      (currentSlug && v.slug && v.slug === currentSlug)
     );
   };
 
@@ -83,10 +83,10 @@ export default function ColorVariantSelector({
           style={
             !imgSrc
               ? {
-                  backgroundColor: variant.colorHex || '#E5E7EB',
-                  backgroundImage:
-                    'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.34), rgba(0,0,0,0.12) 85%)',
-                }
+                backgroundColor: variant.colorHex || '#E5E7EB',
+                backgroundImage:
+                  'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.34), rgba(0,0,0,0.12) 85%)',
+              }
               : undefined
           }
         >
@@ -97,15 +97,13 @@ export default function ColorVariantSelector({
               fill
               sizes="110px"
               unoptimized={shouldUnoptimizeImage(imgSrc)}
-              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
-                variant.inStock === false ? 'opacity-55' : ''
-              }`}
+              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${variant.inStock === false ? 'opacity-55' : ''
+                }`}
             />
           ) : (
             <div
-              className={`w-full h-full flex items-center justify-center ${
-                variant.inStock === false ? 'opacity-55' : ''
-              }`}
+              className={`w-full h-full flex items-center justify-center ${variant.inStock === false ? 'opacity-55' : ''
+                }`}
             >
               <span className="px-2 py-0.5 rounded-full bg-white/90 text-[#211710] text-[9px] font-semibold uppercase tracking-wider shadow-2xs border border-black/10">
                 Finish
@@ -165,11 +163,10 @@ export default function ColorVariantSelector({
       <div className="flex overflow-x-auto sm:flex-wrap gap-2 sm:gap-2.5 pb-1 no-scrollbar">
         {uniqueVariants.map((variant, idx) => {
           const selected = isSelectedVariant(variant);
-          const cardClasses = `group shrink-0 ${cardWidthClass} rounded-xl bg-white overflow-hidden transition-all block cursor-pointer ${
-            selected
-              ? 'border-2 border-[#007185] ring-2 ring-[#007185]/20 shadow-xs'
-              : 'border border-[#D5D9D9] hover:border-[#007185]/80 hover:shadow-xs'
-          } ${isLoadingVariant ? 'opacity-70 pointer-events-none' : ''}`;
+          const cardClasses = `group shrink-0 ${cardWidthClass} rounded-xl bg-white overflow-hidden transition-all block cursor-pointer ${selected
+            ? 'border-2 border-[#007185] ring-2 ring-[#007185]/20 shadow-xs'
+            : 'border border-[#D5D9D9] hover:border-[#007185]/80 hover:shadow-xs'
+            } ${isLoadingVariant ? 'opacity-70 pointer-events-none' : ''}`;
 
           if (onVariantSelect) {
             return (

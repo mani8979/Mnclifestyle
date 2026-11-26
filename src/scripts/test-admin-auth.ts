@@ -3,6 +3,7 @@ dotenv.config({ path: '.env.local' });
 
 import { connectDB } from '../lib/mongodb';
 import { Admin, hashAdminPassword } from '../models/Admin';
+import { Product } from '../models/Product';
 import { signAdminToken, verifyAdminToken, ADMIN_COOKIE_NAME } from '../lib/auth';
 
 const BASE_URL = 'http://127.0.0.1:3007';
@@ -23,8 +24,11 @@ async function runTests() {
 
   await connectDB();
 
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@mnclifestyle.in';
-  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD || 'MncLuxury@2026!';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  if (!adminEmail || !adminPassword) {
+    throw new Error('Set ADMIN_EMAIL and ADMIN_INITIAL_PASSWORD in .env.local before running auth tests.');
+  }
 
   // --- UNIT / MODEL LEVEL CHECKS ---
   console.log('--- Step 1: Mongoose Model & Cryptography Tests ---');
@@ -254,10 +258,17 @@ async function runTests() {
 
   // 10. Existing customer storefront still works
   try {
+    const activeSample = await Product.findOne({ isActive: true, isArchived: { $ne: true } })
+      .select('slug')
+      .lean();
+    if (!activeSample?.slug) {
+      throw new Error('No active product found in database for storefront verification.');
+    }
+
     const homeRes = await fetch(`${BASE_URL}/`);
     const shopRes = await fetch(`${BASE_URL}/shop`);
-    const categoryRes = await fetch(`${BASE_URL}/category/sofas`);
-    const prodRes = await fetch(`${BASE_URL}/product/aura-curved-boucle-sofa`);
+    const categoryRes = await fetch(`${BASE_URL}/category/sectional-sofas`);
+    const prodRes = await fetch(`${BASE_URL}/product/${activeSample.slug}`);
 
     const allStorefront200 =
       homeRes.status === 200 &&
@@ -269,7 +280,7 @@ async function runTests() {
       id: 10,
       title: 'Existing customer storefront still works',
       passed: allStorefront200,
-      notes: `Home: ${homeRes.status}, Shop: ${shopRes.status}, Category: ${categoryRes.status}, Product: ${prodRes.status}`,
+      notes: `Home: ${homeRes.status}, Shop: ${shopRes.status}, Category: ${categoryRes.status}, Product (${activeSample.slug}): ${prodRes.status}`,
     });
   } catch (e: any) {
     results.push({ id: 10, title: 'Existing customer storefront still works', passed: false, notes: e.message });

@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Category } from '@/models/Category';
 import { Collection } from '@/models/Collection';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { ProductUpdateSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
+import { revalidateCatalogPaths, syncCategoryItemCounts } from '@/lib/category-cleanup';
 import {
-  ColorVariantValidationError,
   cleanupSingletonColorGroup,
   getLinkedAdminVariants,
   syncProductColorGroup,
   validateLinkedVariantCandidates,
 } from '@/lib/color-variants';
-import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,15 +48,8 @@ export async function GET(
     const linkedVariants = await getLinkedAdminVariants(product);
 
     return NextResponse.json({ success: true, product, linkedVariants });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[Admin Product GET [id] Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch product details', '[Admin Product GET [id] Error]');
   }
 }
 
@@ -71,6 +62,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
@@ -85,27 +77,96 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => null);
-    if (!body) {
+    if (!body || typeof body !== 'object') {
       return NextResponse.json(
         { success: false, message: 'Invalid JSON request payload' },
         { status: 400 }
       );
     }
 
-    // Validate partial update
+    // Validate partial update and strip undefined keys so unprovided fields are not overwritten
     const validatedData = ProductUpdateSchema.parse(body);
-    const { linkedVariantIds, ...productUpdates } = validatedData;
+    const { linkedVariantIds, ...rawUpdates } = validatedData;
+    const productUpdates = Object.fromEntries(
+      Object.entries(rawUpdates).filter(([, value]) => value !== undefined)
+    ) as typeof rawUpdates;
 
-    // If updating category, keep categoryLabel in sync
-    if (productUpdates.category && !productUpdates.categoryLabel) {
+    // Preserve untouched nested fields when a partial dimensions or seoMeta object is sent
+    if (productUpdates.dimensions) {
+      const existingDimensions =
+        typeof (product.dimensions as any)?.toObject === 'function'
+          ? (product.dimensions as any).toObject()
+          : product.dimensions || {};
+      productUpdates.dimensions = {
+        ...existingDimensions,
+        ...Object.fromEntries(
+          Object.entries(productUpdates.dimensions).filter(([, value]) => value !== undefined)
+        ),
+      };
+    }
+    if (productUpdates.seoMeta) {
+      const existingSeoMeta =
+        typeof (product.seoMeta as any)?.toObject === 'function'
+          ? (product.seoMeta as any).toObject()
+          : product.seoMeta || {};
+      productUpdates.seoMeta = {
+        ...existingSeoMeta,
+        ...Object.fromEntries(
+          Object.entries(productUpdates.seoMeta).filter(([, value]) => value !== undefined)
+        ),
+      };
+    }
+
+    // Enforce category existence when updating category
+    if (productUpdates.category) {
       const catDoc = await Category.findOne({
-        $or: [{ slug: productUpdates.category }, { legacyId: productUpdates.category }],
+        $or: [
+          { slug: productUpdates.category },
+          { slug: productUpdates.category.toLowerCase() },
+          { legacyId: productUpdates.category },
+        ],
       }).lean();
-      productUpdates.categoryLabel = catDoc?.name || getCategoryLabel(productUpdates.category);
+
+      if (!catDoc) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Referenced category "${productUpdates.category}" does not exist.`,
+          },
+          { status: 400 }
+        );
+      }
+      productUpdates.category = catDoc.slug;
+      if (!productUpdates.categoryLabel) {
+        productUpdates.categoryLabel = catDoc.name || getCategoryLabel(catDoc.slug);
+      }
+    }
+
+    // Validate category exists before un-archiving / restoring
+    const nextCategory = productUpdates.category ?? product.category;
+    if (product.isArchived && productUpdates.isArchived === false && !productUpdates.category) {
+      const catDoc = await Category.findOne({
+        $or: [
+          { slug: nextCategory },
+          { slug: nextCategory.toLowerCase() },
+          { legacyId: nextCategory },
+        ],
+      })
+        .select('slug name')
+        .lean();
+
+      if (!catDoc) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Referenced category "${nextCategory}" no longer exists. Edit product and assign an active category before restoring.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate linked color variants against target category + subcategory before writing
-    const nextCategory = productUpdates.category ?? product.category;
     const nextSubCategory = productUpdates.subCategory ?? product.subCategory;
     if (Array.isArray(linkedVariantIds) && linkedVariantIds.length > 0) {
       await validateLinkedVariantCandidates({
@@ -135,57 +196,116 @@ export async function PATCH(
       productUpdates.slug = candidateSlug;
     }
 
-    // Check and auto-resolve duplicate SKU if changed
+    // Reject conflicting duplicate SKU when explicitly changed
     if (productUpdates.sku && productUpdates.sku !== product.sku) {
-      let candidateSku = productUpdates.sku;
-      let existingSku = await Product.findOne({
-        sku: candidateSku,
+      const existingSku = await Product.findOne({
+        sku: productUpdates.sku,
         _id: { $ne: product._id },
-      });
+      })
+        .select('_id')
+        .lean();
       if (existingSku) {
-        candidateSku = `${candidateSku}-${Math.floor(100 + Math.random() * 900)}`;
-        productUpdates.sku = candidateSku;
+        return NextResponse.json(
+          {
+            success: false,
+            message: `A product with SKU "${productUpdates.sku}" already exists.`,
+          },
+          { status: 409 }
+        );
       }
     }
 
-    // Check and auto-resolve duplicate Slug if changed
+    // Reject conflicting explicit slug unless name-derived auto-slug
     if (productUpdates.slug && productUpdates.slug !== product.slug) {
-      let candidateSlug = productUpdates.slug;
-      let suffix = 1;
-      let existingSlug = await Product.findOne({
-        slug: candidateSlug,
+      const baseNameSlug = productUpdates.name ? slugify(productUpdates.name) : '';
+      const existingSlug = await Product.findOne({
+        slug: productUpdates.slug,
         _id: { $ne: product._id },
-      });
-      while (existingSlug) {
-        suffix++;
-        candidateSlug = `${productUpdates.slug}-${suffix}`;
-        existingSlug = await Product.findOne({
-          slug: candidateSlug,
-          _id: { $ne: product._id },
-        });
+      })
+        .select('_id')
+        .lean();
+      if (existingSlug) {
+        if (!productUpdates.name || productUpdates.slug !== baseNameSlug) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `A product with slug "${productUpdates.slug}" already exists.`,
+            },
+            { status: 409 }
+          );
+        }
+        let candidateSlug = productUpdates.slug;
+        let suffix = 1;
+        let dupCheck: any = existingSlug;
+        while (dupCheck) {
+          suffix++;
+          candidateSlug = `${productUpdates.slug}-${suffix}`;
+          dupCheck = await Product.findOne({
+            slug: candidateSlug,
+            _id: { $ne: product._id },
+          })
+            .select('_id')
+            .lean();
+        }
+        productUpdates.slug = candidateSlug;
       }
-      productUpdates.slug = candidateSlug;
     }
 
     // Apply updates
     const oldSlug = product.slug;
     const oldCategory = product.category;
     const oldSubCategory = product.subCategory;
+    const oldColorName = typeof product.colorName === 'string' ? product.colorName.trim() : '';
 
     Object.assign(product, productUpdates);
 
     const effectiveColorName = typeof product.colorName === 'string' ? product.colorName.trim() : '';
-    if (effectiveColorName && (!product.colors || product.colors.length === 0)) {
-      product.colors = [
-        {
+    const effectiveColorHex = product.colorHex?.trim() || '#211710';
+    if (effectiveColorName && productUpdates.colors === undefined) {
+      const primaryImage = Array.isArray(product.images) && product.images[0] ? product.images[0] : '';
+      if (!Array.isArray(product.colors) || product.colors.length === 0) {
+        product.colors = [
+          {
+            name: effectiveColorName,
+            hex: effectiveColorHex,
+            inStock: product.inStock ?? true,
+            image: primaryImage,
+          },
+        ];
+      } else if (
+        product.colors.length === 1 &&
+        (!oldColorName || product.colors[0].name?.trim().toLowerCase() === oldColorName.toLowerCase())
+      ) {
+        product.colors[0] = {
+          ...(typeof (product.colors[0] as any)?.toObject === 'function'
+            ? (product.colors[0] as any).toObject()
+            : product.colors[0]),
           name: effectiveColorName,
-          hex: product.colorHex?.trim() || '#211710',
+          hex: effectiveColorHex,
           inStock: product.inStock ?? true,
-        },
-      ];
+        };
+      }
+    } else if (
+      productUpdates.colorName === '' &&
+      productUpdates.colors === undefined &&
+      oldColorName &&
+      Array.isArray(product.colors) &&
+      product.colors.length === 1 &&
+      product.colors[0].name?.trim().toLowerCase() === oldColorName.toLowerCase()
+    ) {
+      product.colors = [];
+    } else if (productUpdates.colorHex !== undefined && !effectiveColorName && Array.isArray(product.colors) && product.colors.length === 1) {
+      product.colors[0].hex = effectiveColorHex;
     }
 
     await product.save();
+
+    if (oldSlug && product.slug && oldSlug !== product.slug) {
+      await Collection.updateMany(
+        { featuredProductIds: oldSlug },
+        { $set: { 'featuredProductIds.$': product.slug } }
+      );
+    }
 
     const categoryOrSubChanged =
       oldCategory !== product.category ||
@@ -197,69 +317,41 @@ export async function PATCH(
       categoryOrSubCategoryChanged: categoryOrSubChanged,
     });
 
-    // Automatically sync subcategory to Category document in MongoDB
+    // Automatically sync subcategory to Category document & refresh Category.itemCount values
     if (productUpdates.subCategory && product.category) {
       await Category.updateOne(
         { $or: [{ slug: product.category }, { legacyId: product.category }] },
         { $addToSet: { subcategories: productUpdates.subCategory.trim() } }
       );
     }
+    await syncCategoryItemCounts();
 
-    // Revalidate public storefront caches
-    try {
-      revalidatePath('/');
-      revalidatePath('/shop');
-      revalidatePath('/collections');
-      revalidatePath('/admin/products');
-      revalidatePath('/admin/categories');
-      revalidatePath('/admin/inventory');
-      revalidatePath(`/category/${oldCategory}`);
-      revalidatePath(`/category/${product.category}`);
-      revalidatePath(`/product/${oldSlug}`);
-      revalidatePath(`/product/${product.slug}`);
-      for (const relSlug of affectedSlugs) {
-        revalidatePath(`/product/${relSlug}`);
-      }
-    } catch (e) {
-      // Revalidation warning non-blocking
-    }
+    // Revalidate public storefront caches including /search & root layout
+    revalidateCatalogPaths(
+      [oldCategory, product.category],
+      [oldSlug, product.slug, ...affectedSlugs]
+    );
 
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
       product,
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    if (error instanceof ColorVariantValidationError) {
-      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
-    }
-    if (error instanceof ZodError) {
-      const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
-      return NextResponse.json(
-        { success: false, message: `Validation failed: ${issues}` },
-        { status: 400 }
-      );
-    }
-    console.error('[Admin Product PATCH Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to update product' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to update product', '[Admin Product PATCH Error]');
   }
 }
 
 /**
  * DELETE /api/admin/products/[id]
- * Soft-delete / archive a product safely.
+ * Soft-delete / archive a product safely while preserving historical InventoryMovement records.
  */
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
@@ -273,53 +365,45 @@ export async function DELETE(
       );
     }
 
-    // Check references in curated collections
-    const referencedCollections = await Collection.find({
-      featuredProductIds: {
-        $in: [product._id.toString(), product.legacyId, product.slug],
-      },
-    }).select('title slug').lean();
+    const archiveRefs = [product._id.toString(), product.legacyId, product.slug, product.sku].filter(Boolean);
 
-    // Perform soft deletion / archive and detach from any color variant group
+    // Check references in curated collections before pruning them cleanly
+    const referencedCollections = await Collection.find({
+      featuredProductIds: { $in: archiveRefs },
+    })
+      .select('title slug')
+      .lean();
+
+    // Perform soft deletion / archive and detach from any color variant group & collections
     const previousGroupId = product.colorGroupId;
     product.isArchived = true;
     product.isActive = false;
     product.colorGroupId = '';
     await product.save();
 
-    const cleanedGroupSlugs = await cleanupSingletonColorGroup(previousGroupId);
-
-    // Revalidate storefront cache
-    try {
-      revalidatePath('/');
-      revalidatePath('/shop');
-      revalidatePath(`/category/${product.category}`);
-      revalidatePath(`/product/${product.slug}`);
-      revalidatePath('/collections');
-      for (const relSlug of cleanedGroupSlugs) {
-        revalidatePath(`/product/${relSlug}`);
-      }
-    } catch (e) {
-      // Revalidation warning non-blocking
+    if (archiveRefs.length > 0) {
+      await Collection.updateMany({}, { $pull: { featuredProductIds: { $in: archiveRefs } } });
     }
+
+    const cleanedGroupSlugs = await cleanupSingletonColorGroup(previousGroupId);
+    await syncCategoryItemCounts();
+
+    // Revalidate storefront & admin caches including /search
+    revalidateCatalogPaths(
+      [product.category],
+      [product.slug, ...cleanedGroupSlugs]
+    );
 
     return NextResponse.json({
       success: true,
       message: `Product "${product.name}" (${product.sku}) was archived successfully.`,
       collectionNotice:
         referencedCollections.length > 0
-          ? `Note: This product is referenced in ${referencedCollections.length} curated collection(s): ${referencedCollections.map((c) => c.title).join(', ')}.`
+          ? `Removed archived reference from ${referencedCollections.length} curated collection(s): ${referencedCollections.map((c) => c.title).join(', ')}.`
           : null,
       archived: true,
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[Admin Product DELETE Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to archive product' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to archive product', '[Admin Product DELETE Error]');
   }
 }

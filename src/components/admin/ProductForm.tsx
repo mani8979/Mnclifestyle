@@ -34,17 +34,17 @@ export interface CategoryOption {
 }
 
 const FALLBACK_CATEGORIES: CategoryOption[] = [
-  { id: 'sofas', slug: 'sofas', name: 'Sofas' },
+  { id: 'recliners', slug: 'recliners', name: 'Recliners' },
   { id: 'beds', slug: 'beds', name: 'Beds' },
   { id: 'dining-sets', slug: 'dining-sets', name: 'Dining Sets' },
-  { id: 'study-tables', slug: 'study-tables', name: 'Study Tables' },
-  { id: 'centre-tables', slug: 'centre-tables', name: 'Centre Tables' },
-  { id: 'recliners', slug: 'recliners', name: 'Recliners' },
+  { id: 'sectional-sofas', slug: 'sectional-sofas', name: 'Sofas' },
+  { id: 'chairs', slug: 'chairs', name: 'Chairs' },
   { id: 'wardrobes', slug: 'wardrobes', name: 'Wardrobes' },
-  { id: 'cabinets-sideboards', slug: 'cabinets-sideboards', name: 'Cabinets & Sideboards' },
-  { id: 'office-furniture', slug: 'office-furniture', name: 'Office Furniture' },
-  { id: 'shoe-racks', slug: 'shoe-racks', name: 'Shoe Racks' },
-  { id: 'bar-furniture', slug: 'bar-furniture', name: 'Bar Furniture' },
+  { id: 'centre-tables', slug: 'centre-tables', name: 'Centre Tables' },
+  { id: 'tv-stands-and-wall-units', slug: 'tv-stands-and-wall-units', name: 'TV Stands and Wall Units' },
+  { id: 'office-tables', slug: 'office-tables', name: 'Office Tables' },
+  { id: 'study-and-computer-tables', slug: 'study-and-computer-tables', name: 'Study and Computer Tables' },
+  { id: 'mattresses', slug: 'mattresses', name: 'Mattresses' },
 ];
 
 const DEFAULT_SECTIONS = [
@@ -125,8 +125,8 @@ export default function ProductForm({
   const [category, setCategory] = useState(
     initialProduct?.category ||
     (initialCategories && initialCategories[0]
-      ? initialCategories[0].slug || initialCategories[0].id || 'sofas'
-      : 'sofas')
+      ? initialCategories[0].slug || initialCategories[0].id || 'recliners'
+      : 'recliners')
   );
   const [subCategory, setSubCategory] = useState(initialProduct?.subCategory || '');
   const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
@@ -137,7 +137,7 @@ export default function ProductForm({
     if (!initialProduct?.category && categories.length > 0) {
       const exists = categories.some((c) => (c.slug || c.id) === category);
       if (!exists) {
-        const defaultCat = categories[0].slug || categories[0].id || 'sofas';
+        const defaultCat = categories[0].slug || categories[0].id || 'recliners';
         setCategory(defaultCat);
         const targetCat = categories[0];
         if (Array.isArray(targetCat?.subcategories) && targetCat.subcategories.length > 0) {
@@ -361,7 +361,10 @@ export default function ProductForm({
       .map((m) => m.trim())
       .filter(Boolean);
 
-    const finalSlug = slugify(name) || (slug ? slug.trim() : '');
+    const finalSlug =
+      isEdit && initialProduct?.slug && name.trim() === (initialProduct?.name || '').trim()
+        ? initialProduct.slug
+        : slugify(name) || (slug ? slug.trim() : '');
     const finalSku =
       sku.trim() ||
       initialProduct?.sku ||
@@ -396,6 +399,7 @@ export default function ProductForm({
 
     const cleanColorName = colorName.trim();
     const cleanColorHex = colorHex.trim() || '#211710';
+    const prevPrimaryName = (initialProduct?.colorName || '').trim().toLowerCase();
     let effectiveColors = [...colors];
     if (cleanColorName) {
       const existingIdx = effectiveColors.findIndex(
@@ -407,12 +411,32 @@ export default function ProductForm({
           name: cleanColorName,
           hex: cleanColorHex,
         };
+      } else if (
+        isEdit &&
+        effectiveColors.length === 1 &&
+        (!prevPrimaryName || effectiveColors[0].name.trim().toLowerCase() === prevPrimaryName)
+      ) {
+        effectiveColors = [
+          {
+            ...effectiveColors[0],
+            name: cleanColorName,
+            hex: cleanColorHex,
+            inStock,
+          },
+        ];
       } else {
         effectiveColors = [
-          { name: cleanColorName, hex: cleanColorHex, inStock: true },
+          { name: cleanColorName, hex: cleanColorHex, inStock },
           ...effectiveColors,
         ];
       }
+    } else if (
+      isEdit &&
+      effectiveColors.length === 1 &&
+      prevPrimaryName &&
+      effectiveColors[0].name.trim().toLowerCase() === prevPrimaryName
+    ) {
+      effectiveColors = [];
     }
 
     const payload = {
@@ -720,11 +744,10 @@ export default function ProductForm({
                             setSubCategory(sub);
                             setIsCustomSubcategory(false);
                           }}
-                          className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${
-                            subCategory.toLowerCase() === sub.toLowerCase()
-                              ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                          }`}
+                          className={`text-[11px] px-2.5 py-0.5 rounded-lg border transition-colors cursor-pointer ${subCategory.toLowerCase() === sub.toLowerCase()
+                            ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }`}
                         >
                           {sub}
                         </button>

@@ -17,20 +17,20 @@ import {
 
 export default function Shop({ initialProducts, initialCategories }) {
   const [liveProducts, setLiveProducts] = useState(
-    initialProducts && initialProducts.length > 0 ? initialProducts : products
+    Array.isArray(initialProducts) ? initialProducts : products
   );
   const [liveCategories, setLiveCategories] = useState(
-    initialCategories && initialCategories.length > 0 ? initialCategories : categories
+    Array.isArray(initialCategories) ? initialCategories : categories
   );
 
   useEffect(() => {
-    if (initialProducts && initialProducts.length > 0) {
+    if (Array.isArray(initialProducts)) {
       setLiveProducts(initialProducts);
     }
   }, [initialProducts]);
 
   useEffect(() => {
-    if (initialCategories && initialCategories.length > 0) {
+    if (Array.isArray(initialCategories)) {
       setLiveCategories(initialCategories);
     }
   }, [initialCategories]);
@@ -40,7 +40,7 @@ export default function Shop({ initialProducts, initialCategories }) {
     fetch('/api/categories')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data?.categories) && data.categories.length > 0) {
+        if (data?.success && Array.isArray(data?.categories)) {
           setLiveCategories(data.categories);
         }
       })
@@ -49,7 +49,7 @@ export default function Shop({ initialProducts, initialCategories }) {
     fetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data?.products) && data.products.length > 0) {
+        if (data?.success && Array.isArray(data?.products)) {
           setLiveProducts(data.products);
         }
       })

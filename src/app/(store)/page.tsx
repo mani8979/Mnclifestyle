@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export default async function HomePage() {
   const [products, categories] = await Promise.all([
-    getProducts({ limit: 12 }),
+    getProducts({ isBestseller: true, limit: 4 }),
     getCategories(),
   ]);
 

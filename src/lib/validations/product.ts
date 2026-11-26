@@ -50,20 +50,36 @@ export const ImageDetailSchema = z.object({
   height: z.number().optional(),
 });
 
-export const DimensionsSchema = z.object({
-  width: z.string().optional().default(''),
-  depth: z.string().optional().default(''),
-  height: z.string().optional().default(''),
-  seatHeight: z.string().optional().default(''),
-  bedBaseHeight: z.string().optional().default(''),
-  weight: z.string().optional().default(''),
+const DimensionsBaseSchema = z.object({
+  width: z.string().optional(),
+  depth: z.string().optional(),
+  height: z.string().optional(),
+  seatHeight: z.string().optional(),
+  bedBaseHeight: z.string().optional(),
+  weight: z.string().optional(),
 });
 
-export const SEOSchema = z.object({
-  title: z.string().optional().default(''),
-  description: z.string().optional().default(''),
-  keywords: z.array(z.string()).optional().default([]),
-  ogImage: z.string().optional().default(''),
+export const DimensionsSchema = DimensionsBaseSchema.extend({
+  width: DimensionsBaseSchema.shape.width.default(''),
+  depth: DimensionsBaseSchema.shape.depth.default(''),
+  height: DimensionsBaseSchema.shape.height.default(''),
+  seatHeight: DimensionsBaseSchema.shape.seatHeight.default(''),
+  bedBaseHeight: DimensionsBaseSchema.shape.bedBaseHeight.default(''),
+  weight: DimensionsBaseSchema.shape.weight.default(''),
+});
+
+const SEOBaseSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  ogImage: z.string().optional(),
+});
+
+export const SEOSchema = SEOBaseSchema.extend({
+  title: SEOBaseSchema.shape.title.default(''),
+  description: SEOBaseSchema.shape.description.default(''),
+  keywords: SEOBaseSchema.shape.keywords.default([]),
+  ogImage: SEOBaseSchema.shape.ogImage.default(''),
 });
 
 export const CustomSectionSchema = z.object({
@@ -73,7 +89,8 @@ export const CustomSectionSchema = z.object({
   icon: z.string().optional().default('check'),
 });
 
-export const ProductInputSchema = z.object({
+// Shared un-defaulted base schema so partial updates omit unprovided fields cleanly.
+const ProductCoreSchema = z.object({
   name: z.string().min(2, 'Product name must be at least 2 characters').max(150),
   slug: z
     .string()
@@ -89,28 +106,58 @@ export const ProductInputSchema = z.object({
     .optional(),
   category: z.string().min(1, 'Category is required'),
   categoryLabel: z.string().optional(),
-  subCategory: z.string().optional().default('General'),
+  subCategory: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be positive'),
-  originalPrice: z.coerce.number().min(0).optional().default(0),
-  badge: z.string().nullable().optional().default(null),
-  isBestseller: z.boolean().optional().default(false),
-  isFeatured: z.boolean().optional().default(false),
-  isActive: z.boolean().optional().default(true),
+  originalPrice: z.coerce.number().min(0).optional(),
+  badge: z.string().nullable().optional(),
+  isBestseller: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  stockQuantity: z.coerce.number().min(0, 'Stock cannot be negative').optional(),
+  reservedQuantity: z.coerce.number().min(0, 'Reserved stock cannot be negative').optional(),
+  lowStockThreshold: z.coerce.number().min(0).optional(),
+  trackInventory: z.boolean().optional(),
+  allowBackorders: z.boolean().optional(),
+  costPrice: z.coerce.number().min(0).optional(),
+  inStock: z.boolean().optional(),
+  shortDescription: z.string().optional(),
+  fullDescription: z.string().optional(),
+  dimensions: DimensionsBaseSchema.optional(),
+  materials: z.array(z.string()).optional(),
+  colors: z.array(ColorVariantSchema).optional(),
+  colorName: z.string().max(80).optional(),
+  colorHex: z.string().max(20).optional(),
+  linkedVariantIds: z.array(z.string()).optional(),
+  images: z.array(z.string().url('Each image must be a valid URL')).optional(),
+  imageDetails: z.array(ImageDetailSchema).optional(),
+  leadTime: z.string().optional(),
+  warranty: z.string().optional(),
+  customSections: z.array(CustomSectionSchema).optional(),
+  seoMeta: SEOBaseSchema.optional(),
+});
+
+const productCoreShape = ProductCoreSchema.shape;
+
+export const ProductInputSchema = ProductCoreSchema.extend({
+  subCategory: productCoreShape.subCategory.default('General'),
+  originalPrice: productCoreShape.originalPrice.default(0),
+  badge: productCoreShape.badge.default(null),
+  isBestseller: productCoreShape.isBestseller.default(false),
+  isFeatured: productCoreShape.isFeatured.default(false),
+  isActive: productCoreShape.isActive.default(true),
   stockQuantity: z.coerce.number().min(0, 'Stock cannot be negative').default(10),
-  reservedQuantity: z.coerce.number().min(0, 'Reserved stock cannot be negative').optional().default(0),
-  lowStockThreshold: z.coerce.number().min(0).optional().default(5),
-  trackInventory: z.boolean().optional().default(true),
-  allowBackorders: z.boolean().optional().default(false),
-  costPrice: z.coerce.number().min(0).optional().default(0),
-  inStock: z.boolean().optional().default(true),
-  shortDescription: z
-    .string()
-    .optional()
-    .default('Handcrafted premium furniture designed for contemporary living.'),
-  fullDescription: z
-    .string()
-    .optional()
-    .default('Handcrafted with premium materials, precision joinery, and tailored luxury aesthetics.'),
+  reservedQuantity: productCoreShape.reservedQuantity.default(0),
+  lowStockThreshold: productCoreShape.lowStockThreshold.default(5),
+  trackInventory: productCoreShape.trackInventory.default(true),
+  allowBackorders: productCoreShape.allowBackorders.default(false),
+  costPrice: productCoreShape.costPrice.default(0),
+  inStock: productCoreShape.inStock.default(true),
+  shortDescription: productCoreShape.shortDescription.default(
+    'Handcrafted premium furniture designed for contemporary living.'
+  ),
+  fullDescription: productCoreShape.fullDescription.default(
+    'Handcrafted with premium materials, precision joinery, and tailored luxury aesthetics.'
+  ),
   dimensions: DimensionsSchema.optional().default(() => ({
     width: '',
     depth: '',
@@ -119,19 +166,17 @@ export const ProductInputSchema = z.object({
     bedBaseHeight: '',
     weight: '',
   })),
-  materials: z.array(z.string()).optional().default(['Kiln-Dried Hardwood']),
-  colors: z.array(ColorVariantSchema).optional().default([]),
-  colorName: z.string().max(80).optional().default(''),
-  colorHex: z.string().max(20).optional().default(''),
-  linkedVariantIds: z.array(z.string()).optional(),
-  images: z
-    .array(z.string().url('Each image must be a valid URL'))
-    .optional()
-    .default([]),
-  imageDetails: z.array(ImageDetailSchema).optional().default([]),
-  leadTime: z.string().optional().default('Complimentary White-Glove In-Home Delivery across AP (3–7 Days)'),
-  warranty: z.string().optional().default('10-Year Structural Frame & Termite Warranty'),
-  customSections: z.array(CustomSectionSchema).optional().default([]),
+  materials: productCoreShape.materials.default(['Kiln-Dried Hardwood']),
+  colors: productCoreShape.colors.default([]),
+  colorName: productCoreShape.colorName.default(''),
+  colorHex: productCoreShape.colorHex.default(''),
+  images: productCoreShape.images.default([]),
+  imageDetails: productCoreShape.imageDetails.default([]),
+  leadTime: productCoreShape.leadTime.default(
+    'Complimentary White-Glove In-Home Delivery across AP (3–7 Days)'
+  ),
+  warranty: productCoreShape.warranty.default('10-Year Structural Frame & Termite Warranty'),
+  customSections: productCoreShape.customSections.default([]),
   seoMeta: SEOSchema.optional().default(() => ({
     title: '',
     description: '',
@@ -140,7 +185,9 @@ export const ProductInputSchema = z.object({
   })),
 });
 
-export const ProductUpdateSchema = ProductInputSchema.partial();
+export const ProductUpdateSchema = ProductCoreSchema.partial().extend({
+  isArchived: z.boolean().optional(),
+});
 
 export type ProductInput = z.infer<typeof ProductInputSchema>;
 export type ProductUpdateInput = z.infer<typeof ProductUpdateSchema>;

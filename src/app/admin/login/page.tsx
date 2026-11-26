@@ -5,10 +5,24 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
+function getSafeRedirectTarget(rawRedirect: string | null): string {
+  if (!rawRedirect) return '/admin/dashboard';
+  const trimmed = rawRedirect.trim();
+  if (
+    trimmed.startsWith('/admin') &&
+    !trimmed.startsWith('//') &&
+    !trimmed.includes('://') &&
+    !trimmed.includes('\\')
+  ) {
+    return trimmed;
+  }
+  return '/admin/dashboard';
+}
+
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTarget = searchParams.get('redirect') || '/admin/dashboard';
+  const redirectTarget = getSafeRedirectTarget(searchParams.get('redirect'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

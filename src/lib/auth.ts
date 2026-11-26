@@ -1,78 +1,41 @@
-import { SignJWT, jwtVerify } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { AdminRole } from '@/models/Admin';
+import { ZodError } from 'zod';
+import { connectDB } from '@/lib/mongodb';
+import { Admin, AdminRole } from '@/models/Admin';
+import { ColorVariantValidationError } from '@/lib/color-variants';
+import {
+  ADMIN_COOKIE_NAME,
+  SESSION_DURATION_SECONDS,
+  type AdminJWTPayload,
+  signAdminToken,
+  verifyAdminToken,
+  getAdminCookieOptions,
+} from '@/lib/auth-token';
 
-export const ADMIN_COOKIE_NAME = 'mnc_admin_session';
-export const SESSION_DURATION_SECONDS = 8 * 60 * 60; // 8 hours
+export {
+  ADMIN_COOKIE_NAME,
+  SESSION_DURATION_SECONDS,
+  signAdminToken,
+  verifyAdminToken,
+  getAdminCookieOptions,
+};
+export type { AdminJWTPayload };
 
-export interface AdminJWTPayload {
-  id: string;
-  email: string;
-  name: string;
-  role: AdminRole;
-  [key: string]: any;
-}
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('AUTH_SECRET environment variable must be set with at least 32 characters.');
-  }
-  return new TextEncoder().encode(secret);
-}
-
-/**
- * Sign an admin session JWT using jose (HS256)
- */
-export async function signAdminToken(payload: AdminJWTPayload): Promise<string> {
-  const secret = getJwtSecret();
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setSubject(payload.id)
-    .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
-    .sign(secret);
-}
-
-/**
- * Verify and decode an admin session JWT
- */
-export async function verifyAdminToken(token: string): Promise<AdminJWTPayload | null> {
-  try {
-    const secret = getJwtSecret();
-    const { payload } = await jwtVerify(token, secret, {
-      algorithms: ['HS256'],
-    });
-
-    if (!payload.id || !payload.email || !payload.role) {
-      return null;
-    }
-
-    return {
-      id: payload.id as string,
-      email: payload.email as string,
-      name: (payload.name as string) || '',
-      role: payload.role as AdminRole,
-    };
-  } catch (error) {
-    return null;
+export class AuthError extends Error {
+  status = 401;
+  constructor(message = 'Unauthorized') {
+    super(message);
+    this.name = 'AuthError';
   }
 }
 
-/**
- * Configure standard secure HTTP-only cookie options for admin session
- */
-export function getAdminCookieOptions() {
-  const isProd = process.env.NODE_ENV === 'production';
-  return {
-    name: ADMIN_COOKIE_NAME,
-    httpOnly: true,
-    secure: isProd,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAge: SESSION_DURATION_SECONDS,
-  };
+export class ForbiddenError extends Error {
+  status = 403;
+  constructor(message = 'Forbidden') {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
 }
 
 /**
@@ -97,8 +60,7 @@ export async function getAdminSession(request?: NextRequest): Promise<AdminJWTPa
 }
 
 /**
- * Enforce admin authentication on server actions and route handlers
- * Throws an Error or returns null if not authenticated
+ * Enforce active admin authentication and authorization verified against live MongoDB Admin record.
  */
 export async function requireAdminSession(
   allowedRoles?: AdminRole[],
@@ -107,54 +69,171 @@ export async function requireAdminSession(
   const session = await getAdminSession(request);
 
   if (!session) {
-    throw new Error('UNAUTHORIZED: No active admin session');
+    throw new AuthError('Unauthorized: No active admin session');
   }
 
-  if (allowedRoles && !allowedRoles.includes(session.role)) {
-    throw new Error('FORBIDDEN: Insufficient role permissions');
+  await connectDB();
+  const dbAdmin = await Admin.findById(session.id)
+    .select('_id email name role isActive')
+    .lean();
+
+  if (!dbAdmin || !dbAdmin.isActive) {
+    throw new AuthError('Unauthorized: Admin account is inactive or no longer valid');
   }
 
-  return session;
+  if (allowedRoles && !allowedRoles.includes(dbAdmin.role)) {
+    throw new ForbiddenError('Forbidden: Insufficient role permissions');
+  }
+
+  return {
+    id: (dbAdmin as any)._id.toString(),
+    email: dbAdmin.email,
+    name: dbAdmin.name || '',
+    role: dbAdmin.role,
+  };
 }
 
 /**
- * Request Origin / CSRF validator for state-changing POST/PUT/DELETE requests
+ * Request Origin / CSRF validator for state-changing POST/PATCH/DELETE requests
  */
 export function validateRequestOrigin(request: Request): boolean {
-  // Allow all in test or development if no origin header present
-  const origin = request.headers.get('origin');
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-
-  if (!origin || !host) {
-    // Standard direct API or same-host requests without origin
-    return true;
-  }
-
-  try {
-    const originHost = new URL(origin).host;
-    return originHost === host;
-  } catch {
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite === 'cross-site') {
     return false;
   }
+
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+
+  if (origin) {
+    if (!host) return false;
+    try {
+      return new URL(origin).host === host;
+    } catch {
+      return false;
+    }
+  }
+
+  if (referer && host) {
+    try {
+      return new URL(referer).host === host;
+    } catch {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function assertValidOrigin(request: Request): void {
+  if (!validateRequestOrigin(request)) {
+    throw new ForbiddenError('Invalid request origin');
+  }
+}
+
+/**
+ * Standardized safe API error serializer — never exposes internal DB/stack errors in 500 responses.
+ */
+export function handleApiError(
+  error: unknown,
+  fallbackMessage = 'Internal server error',
+  logContext = '[API Error]'
+) {
+  if (error instanceof AuthError) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (error instanceof ForbiddenError) {
+    return NextResponse.json({ success: false, message: error.message || 'Forbidden' }, { status: 403 });
+  }
+
+  if (error instanceof ColorVariantValidationError) {
+    return NextResponse.json({ success: false, message: error.message }, { status: error.status });
+  }
+
+  if (error instanceof ZodError) {
+    const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
+    return NextResponse.json(
+      {
+        success: false,
+        message: issues ? `Validation failed: ${issues}` : 'Invalid request payload',
+        errors: error.flatten().fieldErrors,
+      },
+      { status: 400 }
+    );
+  }
+
+  const errObj = error as any;
+
+  if (
+    errObj?.status === 401 ||
+    (typeof errObj?.message === 'string' &&
+      (errObj.message.startsWith('UNAUTHORIZED') || errObj.message.includes('Unauthorized')))
+  ) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (
+    errObj?.status === 403 ||
+    (typeof errObj?.message === 'string' && errObj.message.startsWith('FORBIDDEN'))
+  ) {
+    return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+  }
+
+  if (typeof errObj?.status === 'number' && errObj.status >= 400 && errObj.status < 500) {
+    return NextResponse.json(
+      { success: false, message: errObj.message || 'Invalid request' },
+      { status: errObj.status }
+    );
+  }
+
+  if (errObj?.name === 'CastError') {
+    return NextResponse.json({ success: false, message: 'Invalid identifier format' }, { status: 400 });
+  }
+
+  if (errObj?.name === 'ValidationError') {
+    return NextResponse.json({ success: false, message: 'Validation failed' }, { status: 400 });
+  }
+
+  if (errObj?.code === 11000) {
+    return NextResponse.json(
+      { success: false, message: 'A record with this unique value already exists' },
+      { status: 409 }
+    );
+  }
+
+  console.error(`${logContext}:`, error);
+  return NextResponse.json({ success: false, message: fallbackMessage }, { status: 500 });
 }
 
 /**
  * In-memory brute-force rate limiter for admin login attempts
- * Limits IP + Email combinations to 5 failed attempts per 15 minutes
+ * Limits IP + Email combinations to 5 failed attempts per 15-minute window, cleanly resetting after expiry.
  */
 interface RateLimitEntry {
   attempts: number;
+  firstAttemptAt: number;
   lockedUntil?: number;
 }
 
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
 const loginRateLimitMap = new Map<string, RateLimitEntry>();
+
+function pruneExpiredRateLimits(now: number) {
+  if (loginRateLimitMap.size <= 500) return;
+  for (const [key, entry] of loginRateLimitMap.entries()) {
+    const expiredWindow = now - entry.firstAttemptAt >= RATE_LIMIT_WINDOW_MS;
+    const unlocked = !entry.lockedUntil || entry.lockedUntil <= now;
+    if (expiredWindow && unlocked) {
+      loginRateLimitMap.delete(key);
+    }
+  }
+}
 
 export function checkLoginRateLimit(identifier: string): { allowed: boolean; retryAfterSeconds?: number } {
   const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 5;
-  const lockDurationMs = 15 * 60 * 1000;
-
   const entry = loginRateLimitMap.get(identifier);
 
   if (!entry) {
@@ -166,9 +245,15 @@ export function checkLoginRateLimit(identifier: string): { allowed: boolean; ret
     return { allowed: false, retryAfterSeconds };
   }
 
-  if (entry.attempts >= maxAttempts) {
-    entry.lockedUntil = now + lockDurationMs;
-    const retryAfterSeconds = Math.ceil(lockDurationMs / 1000);
+  // Reset expired lockouts or expired attempt windows cleanly (prevents permanent lockout)
+  if ((entry.lockedUntil && entry.lockedUntil <= now) || now - entry.firstAttemptAt >= RATE_LIMIT_WINDOW_MS) {
+    loginRateLimitMap.delete(identifier);
+    return { allowed: true };
+  }
+
+  if (entry.attempts >= RATE_LIMIT_MAX_ATTEMPTS) {
+    entry.lockedUntil = now + RATE_LIMIT_WINDOW_MS;
+    const retryAfterSeconds = Math.ceil(RATE_LIMIT_WINDOW_MS / 1000);
     return { allowed: false, retryAfterSeconds };
   }
 
@@ -176,11 +261,27 @@ export function checkLoginRateLimit(identifier: string): { allowed: boolean; ret
 }
 
 export function recordFailedLogin(identifier: string): void {
-  const entry = loginRateLimitMap.get(identifier) || { attempts: 0 };
-  entry.attempts += 1;
-  if (entry.attempts >= 5) {
-    entry.lockedUntil = Date.now() + 15 * 60 * 1000;
+  const now = Date.now();
+  pruneExpiredRateLimits(now);
+
+  const existing = loginRateLimitMap.get(identifier);
+  const shouldReset =
+    !existing ||
+    (existing.lockedUntil && existing.lockedUntil <= now) ||
+    now - existing.firstAttemptAt >= RATE_LIMIT_WINDOW_MS;
+
+  const entry: RateLimitEntry = shouldReset
+    ? { attempts: 1, firstAttemptAt: now }
+    : {
+        attempts: existing.attempts + 1,
+        firstAttemptAt: existing.firstAttemptAt,
+        lockedUntil: existing.lockedUntil,
+      };
+
+  if (entry.attempts >= RATE_LIMIT_MAX_ATTEMPTS) {
+    entry.lockedUntil = now + RATE_LIMIT_WINDOW_MS;
   }
+
   loginRateLimitMap.set(identifier, entry);
 }
 

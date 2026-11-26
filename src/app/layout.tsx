@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Playfair_Display, Inter } from 'next/font/google';
-import { CartProvider } from '@/context/CartContext';
-import { WishlistProvider } from '@/context/WishlistContext';
 import '@/index.css';
 
 const playfair = Playfair_Display({
@@ -29,7 +27,7 @@ export const metadata: Metadata = {
     template: '%s | MNC LifeStyle Visakhapatnam',
   },
   description:
-    'MNC LifeStyle offers luxury handcrafted solid teakwood and sheesham furniture in Visakhapatnam, Andhra Pradesh. Sofas, beds, dining sets, and recliners ordered directly through WhatsApp with white-glove placement.',
+    'MNC LifeStyle offers luxury handcrafted solid teakwood and sheesham furniture in Visakhapatnam, Andhra Pradesh. Browse sofas, beds, dining sets, and recliners and enquire directly via WhatsApp or showroom consultation.',
   keywords: [
     'MNC LifeStyle',
     'luxury furniture Visakhapatnam',
@@ -37,7 +35,7 @@ export const metadata: Metadata = {
     'designer sofa Vizag',
     'dining tables',
     'king beds',
-    'WhatsApp furniture order',
+    'WhatsApp furniture enquiry',
     'contemporary living India',
   ],
   icons: {
@@ -46,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'MNC LifeStyle — Premium Furniture & Contemporary Living',
     description:
-      'Elevate Your Space. Define Your Lifestyle. Solid Teak, Sheesham & Travertine furniture in Visakhapatnam, AP. Order directly via WhatsApp.',
+      'Elevate Your Space. Define Your Lifestyle. Solid Teak, Sheesham & Travertine furniture in Visakhapatnam, AP. Enquire directly via WhatsApp.',
     type: 'website',
     locale: 'en_IN',
     url: 'https://mnclifestyle.in',
@@ -83,7 +81,6 @@ const furnitureStoreJsonLd = {
   },
   priceRange: '₹₹₹',
   currenciesAccepted: 'INR',
-  paymentAccepted: 'WhatsApp Order Confirmation, Net Banking, UPI',
   openingHoursSpecification: [
     {
       '@type': 'OpeningHoursSpecification',
@@ -118,11 +115,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-[#F8F0E8] text-[#211A15] font-sans antialiased selection:bg-[#E9D8C5] selection:text-[#211710] min-h-screen">
-        <CartProvider>
-          <WishlistProvider>
-            {children}
-          </WishlistProvider>
-        </CartProvider>
+        {children}
       </body>
     </html>
   );

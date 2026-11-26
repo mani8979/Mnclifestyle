@@ -74,16 +74,18 @@ export async function getProducts(options: GetProductsOptions = {}) {
       }
 
       if (options.search) {
-        const q = options.search.trim();
-        andConditions.push({
-          $or: [
-            { name: { $regex: q, $options: 'i' } },
-            { shortDescription: { $regex: q, $options: 'i' } },
-            { categoryLabel: { $regex: q, $options: 'i' } },
-            { colorName: { $regex: q, $options: 'i' } },
-            { materials: { $elemMatch: { $regex: q, $options: 'i' } } },
-          ],
-        });
+        const q = escapeRegex(options.search.trim());
+        if (q) {
+          andConditions.push({
+            $or: [
+              { name: { $regex: q, $options: 'i' } },
+              { shortDescription: { $regex: q, $options: 'i' } },
+              { categoryLabel: { $regex: q, $options: 'i' } },
+              { colorName: { $regex: q, $options: 'i' } },
+              { materials: { $elemMatch: { $regex: q, $options: 'i' } } },
+            ],
+          });
+        }
       }
 
       const query: any = andConditions.length === 1 ? andConditions[0] : { $and: andConditions };
@@ -107,65 +109,67 @@ export async function getProducts(options: GetProductsOptions = {}) {
       }
 
       const docs = await mQuery.lean();
-
-      if (docs && docs.length > 0) {
-        const groupIds = Array.from(
-          new Set(
-            docs
-              .map((d: any) => (typeof d.colorGroupId === 'string' ? d.colorGroupId.trim() : ''))
-              .filter(Boolean)
-          )
-        );
-
-        const groupMembersMap = new Map<string, any[]>();
-        if (groupIds.length > 0) {
-          const allGroupDocs = await Product.find({
-            colorGroupId: { $in: groupIds },
-            isActive: true,
-            isArchived: { $ne: true },
-          })
-            .select(
-              '_id legacyId sku slug name colorName colorHex colorGroupId colors price originalPrice images inStock trackInventory allowBackorders availableQuantity stockQuantity isActive category subCategory createdAt'
-            )
-            .sort({ createdAt: 1 })
-            .lean();
-
-          for (const member of allGroupDocs as any[]) {
-            const gid = (member.colorGroupId || '').trim();
-            if (!gid) continue;
-            const list = groupMembersMap.get(gid) || [];
-            list.push(member);
-            groupMembersMap.set(gid, list);
-          }
-        }
-
-        return docs.map((doc: any) => {
-          const sanitized = sanitizeProduct(doc);
-          const gid = typeof doc.colorGroupId === 'string' ? doc.colorGroupId.trim() : '';
-          if (gid && groupMembersMap.has(gid)) {
-            const subLower = (doc.subCategory || '').trim().toLowerCase();
-            const catLower = (doc.category || '').trim().toLowerCase();
-            const matchingSiblings = (groupMembersMap.get(gid) || []).filter(
-              (m: any) =>
-                (m.category || '').trim().toLowerCase() === catLower &&
-                (m.subCategory || '').trim().toLowerCase() === subLower
-            );
-            sanitized.colorVariants =
-              matchingSiblings.length > 1
-                ? matchingSiblings.map(serializeColorVariantSummary)
-                : [];
-          } else {
-            sanitized.colorVariants = [];
-          }
-          return sanitized;
-        });
+      if (!docs || docs.length === 0) {
+        return [];
       }
+
+      const groupIds = Array.from(
+        new Set(
+          docs
+            .map((d: any) => (typeof d.colorGroupId === 'string' ? d.colorGroupId.trim() : ''))
+            .filter(Boolean)
+        )
+      );
+
+      const groupMembersMap = new Map<string, any[]>();
+      if (groupIds.length > 0) {
+        const allGroupDocs = await Product.find({
+          colorGroupId: { $in: groupIds },
+          isActive: true,
+          isArchived: { $ne: true },
+        })
+          .select(
+            '_id legacyId sku slug name colorName colorHex colorGroupId colors price originalPrice images inStock trackInventory allowBackorders availableQuantity stockQuantity isActive category subCategory createdAt'
+          )
+          .sort({ createdAt: 1 })
+          .lean();
+
+        for (const member of allGroupDocs as any[]) {
+          const gid = (member.colorGroupId || '').trim();
+          if (!gid) continue;
+          const list = groupMembersMap.get(gid) || [];
+          list.push(member);
+          groupMembersMap.set(gid, list);
+        }
+      }
+
+      return docs.map((doc: any) => {
+        const sanitized = sanitizeProduct(doc);
+        const gid = typeof doc.colorGroupId === 'string' ? doc.colorGroupId.trim() : '';
+        if (gid && groupMembersMap.has(gid)) {
+          const subLower = (doc.subCategory || '').trim().toLowerCase();
+          const catLower = (doc.category || '').trim().toLowerCase();
+          const matchingSiblings = (groupMembersMap.get(gid) || []).filter(
+            (m: any) =>
+              (m.category || '').trim().toLowerCase() === catLower &&
+              (m.subCategory || '').trim().toLowerCase() === subLower
+          );
+          sanitized.colorVariants =
+            matchingSiblings.length > 1
+              ? matchingSiblings.map(serializeColorVariantSummary)
+              : [];
+        } else {
+          sanitized.colorVariants = [];
+        }
+        return sanitized;
+      });
     } catch (error) {
-      console.error('[Database Error] MongoDB getProducts query failed. Falling back to static products:', error);
+      console.error('[Database Error] MongoDB getProducts query failed:', error);
+      throw error;
     }
   }
 
-  // Controlled static fallback
+  // Static fallback used ONLY when MONGODB_URI is unconfigured (offline mode)
   let list = [...staticProducts];
   if (options.category && options.category !== 'all') {
     list = list.filter((p) => p.category === options.category);
@@ -196,28 +200,35 @@ export async function getProductByIdOrSlug(idOrSlug: string) {
   if (process.env.MONGODB_URI) {
     try {
       await connectDB();
+      const orClauses: any[] = [
+        { slug: idOrSlug },
+        { legacyId: idOrSlug },
+        { sku: idOrSlug.toUpperCase() },
+      ];
+      if (/^[a-fA-F0-9]{24}$/.test(idOrSlug)) {
+        orClauses.unshift({ _id: idOrSlug });
+      }
       const doc = await Product.findOne({
-        $or: [
-          { slug: idOrSlug },
-          { legacyId: idOrSlug },
-          { sku: idOrSlug.toUpperCase() },
-        ],
+        $or: orClauses,
         isActive: true,
         isArchived: { $ne: true },
       })
         .select('-__v')
         .lean();
 
-      if (doc) {
-        const sanitized = sanitizeProduct(doc);
-        sanitized.colorVariants = await getColorVariantsForProduct(sanitized);
-        return sanitized;
+      if (!doc) {
+        return null;
       }
+
+      const sanitized = sanitizeProduct(doc);
+      sanitized.colorVariants = await getColorVariantsForProduct(sanitized);
+      return sanitized;
     } catch (error) {
-      console.error(`[Database Error] MongoDB getProductByIdOrSlug('${idOrSlug}') failed. Falling back to static products:`, error);
+      console.error(`[Database Error] MongoDB getProductByIdOrSlug('${idOrSlug}') failed:`, error);
+      throw error;
     }
   }
 
-  // Controlled static fallback
+  // Static fallback used ONLY when MONGODB_URI is unconfigured
   return findStaticProductById(idOrSlug) || null;
 }

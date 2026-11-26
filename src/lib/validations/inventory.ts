@@ -12,6 +12,8 @@ export const ADJUSTMENT_TYPES = [
   'Reservation Release',
 ] as const;
 
+export type AdjustmentType = (typeof ADJUSTMENT_TYPES)[number];
+
 export const StockAdjustmentSchema = z.object({
   adjustmentType: z.enum([
     'Stock Received',
@@ -24,22 +26,22 @@ export const StockAdjustmentSchema = z.object({
     'Reservation',
     'Reservation Release',
   ]),
-  quantity: z.coerce.number().min(0, 'Adjustment quantity cannot be negative'),
-  reason: z.string().min(2, 'Adjustment reason must be at least 2 characters').max(200),
-  notes: z.string().max(500).optional().default(''),
+  quantity: z.coerce.number().int('Quantity must be a whole number').min(0, 'Adjustment quantity cannot be negative'),
+  reason: z.string().trim().min(2, 'Adjustment reason must be at least 2 characters').max(200),
+  notes: z.string().trim().max(500).optional().default(''),
 });
 
 export const StockReservationSchema = z.object({
-  quantity: z.coerce.number().int().min(1, 'Reservation quantity must be at least 1 unit'),
-  reason: z.string().min(2, 'Reservation reason must be specified').max(200),
-  notes: z.string().max(500).optional().default(''),
+  quantity: z.coerce.number().int('Quantity must be a whole number').min(1, 'Reservation quantity must be at least 1 unit'),
+  reason: z.string().trim().min(2, 'Reservation reason must be specified').max(200),
+  notes: z.string().trim().max(500).optional().default(''),
 });
 
 export const StockReleaseSchema = z.object({
-  quantity: z.coerce.number().int().min(1, 'Release quantity must be at least 1 unit'),
+  quantity: z.coerce.number().int('Quantity must be a whole number').min(1, 'Release quantity must be at least 1 unit'),
   isSold: z.boolean().optional().default(false),
-  reason: z.string().max(200).optional().default(''),
-  notes: z.string().max(500).optional().default(''),
+  reason: z.string().trim().max(200).optional().default(''),
+  notes: z.string().trim().max(500).optional().default(''),
 });
 
 export const InventorySettingsSchema = z.object({

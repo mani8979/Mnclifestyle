@@ -1,6 +1,6 @@
 /**
  * WhatsApp Integration Utility for MNC LifeStyle
- * Generates pre-filled, professional WhatsApp links for direct ordering and customer enquiries.
+ * Generates pre-filled, professional WhatsApp links for direct product and concierge enquiries.
  * Target Business Phone: +91 87909 43457 (Raw: 918790943457 / Display: 8790943457)
  */
 
@@ -20,32 +20,7 @@ export const buildWhatsAppUrl = (message) => {
 };
 
 /**
- * Pre-filled message when a customer clicks "Order Through WhatsApp"
- */
-export const getWhatsAppOrderUrl = ({ product, selectedColor, quantity = 1 }) => {
-  if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
-
-  const currentUrl = `https://mnclifestyle.in/product/${product.slug || slugify(product.name)}`;
-  const price = formatINR(product.price);
-  const variant = selectedColor || 'Standard';
-
-  const message = `Hello MNC LifeStyle,
-
-I am interested in ordering the following furniture:
-
-Product: ${product.name}
-Price: ${price}
-Quantity: ${quantity}
-Finish/Fabric: ${variant}
-Product Link: ${currentUrl}
-
-Please share availability and delivery details.`;
-
-  return buildWhatsAppUrl(message);
-};
-
-/**
- * Pre-filled message when a customer clicks "Ask About This Product" or "Enquire on WhatsApp"
+ * Pre-filled message when a customer clicks "Enquire Now" or "WhatsApp Enquiry"
  */
 export const getWhatsAppInquiryUrl = ({ product, selectedColor, topic = 'Product Enquiry' }) => {
   if (!product) return `https://wa.me/${WHATSAPP_PHONE_NUMBER}`;
@@ -65,7 +40,7 @@ I have an enquiry regarding ${product.name}:
 • Topic: ${topic}
 • Product Link: ${currentUrl}
 
-Could you please share more information regarding wood finish, fabric samples, custom dimensions, and delivery lead time?
+Could you please share more information regarding wood finish, fabric samples, custom dimensions, availability, and delivery lead time?
 
 Looking forward to your assistance.`;
 
@@ -88,42 +63,4 @@ Thank you!`;
 
   return buildWhatsAppUrl(message);
 };
-
-/**
- * Pre-filled message when a customer places an order from their shopping bag / cart
- */
-export const getWhatsAppCartOrderUrl = (items = [], subtotal = 0) => {
-  if (!items || items.length === 0) {
-    return `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
-      'Hello MNC LifeStyle, I would like to enquire about your furniture collections.'
-    )}`;
-  }
-
-  const itemsList = items
-    .map(
-      (item, idx) =>
-        `${idx + 1}. ${item.product.name}
-   • Finish/Fabric: ${item.selectedColor || 'Standard'}
-   • Quantity: ${item.quantity}
-   • Price: ${formatINR(item.product.price * item.quantity)}`
-    )
-    .join('\n\n');
-
-  const message = `Hello MNC LifeStyle,
-
-I would like to place an order for the following curated furniture selection:
-
-${itemsList}
-
-----------------------------------------
-Estimated Subtotal: ${formatINR(subtotal)}
-(Includes GST & Complimentary White-Glove Placement in Andhra Pradesh)
-
-Please confirm piece availability, delivery lead time for my pin code, and payment options.
-
-Thank you!`;
-
-  return buildWhatsAppUrl(message);
-};
-
 

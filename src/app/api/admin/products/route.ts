@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 import { Category } from '@/models/Category';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { ProductInputSchema, getCategoryLabel, slugify } from '@/lib/validations/product';
-import { escapeRegex } from '@/lib/category-cleanup';
+import { escapeRegex, revalidateCatalogPaths, syncCategoryItemCounts } from '@/lib/category-cleanup';
 import {
   ColorVariantValidationError,
   getCategoryKeySet,
   syncProductColorGroup,
   validateLinkedVariantCandidates,
 } from '@/lib/color-variants';
-import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,19 +32,20 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')?.trim() || 'all'; // all, published, draft
     const stock = searchParams.get('stock')?.trim() || 'all'; // all, in-stock, out-of-stock
     const sort = searchParams.get('sort')?.trim() || 'updated-desc';
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10) || 10));
 
-    const andConditions: any[] = [{ isArchived: { $ne: true } }];
+    const andConditions: any[] = [];
 
     // Search filter (matches name, SKU, legacyId, or colorName)
     if (search) {
+      const safeSearch = escapeRegex(search);
       andConditions.push({
         $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { sku: { $regex: search, $options: 'i' } },
-          { legacyId: { $regex: search, $options: 'i' } },
-          { colorName: { $regex: search, $options: 'i' } },
+          { name: { $regex: safeSearch, $options: 'i' } },
+          { sku: { $regex: safeSearch, $options: 'i' } },
+          { legacyId: { $regex: safeSearch, $options: 'i' } },
+          { colorName: { $regex: safeSearch, $options: 'i' } },
         ],
       });
     }
@@ -69,11 +68,16 @@ export async function GET(request: NextRequest) {
       andConditions.push({ _id: { $ne: new mongoose.Types.ObjectId(excludeId) } });
     }
 
-    // Status filter
-    if (status === 'published') {
-      andConditions.push({ isActive: true });
-    } else if (status === 'draft') {
-      andConditions.push({ isActive: false });
+    // Status filter (archived queries isArchived=true; all/published/draft exclude archived)
+    if (status === 'archived') {
+      andConditions.push({ isArchived: true });
+    } else {
+      andConditions.push({ isArchived: { $ne: true } });
+      if (status === 'published') {
+        andConditions.push({ isActive: true });
+      } else if (status === 'draft') {
+        andConditions.push({ isActive: false });
+      }
     }
 
     // Stock filter
@@ -141,15 +145,8 @@ export async function GET(request: NextRequest) {
       totalPages,
       products: enrichedProducts,
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('[Admin Products GET Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to fetch products' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch products', '[Admin Products GET Error]');
   }
 }
 
@@ -159,24 +156,42 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
     const body = await request.json().catch(() => null);
-    if (!body) {
+    if (!body || typeof body !== 'object') {
       return NextResponse.json(
         { success: false, message: 'Invalid JSON request payload' },
         { status: 400 }
       );
     }
 
-    // Query category to get proper label and subcategories if needed
-    const catDoc = await Category.findOne({
-      $or: [{ slug: body.category }, { legacyId: body.category }],
-    }).lean();
+    const rawCategory = typeof body.category === 'string' ? body.category.trim() : '';
+    const catDoc = rawCategory
+      ? await Category.findOne({
+        $or: [
+          { slug: rawCategory },
+          { slug: rawCategory.toLowerCase() },
+          { legacyId: rawCategory },
+        ],
+      }).lean()
+      : null;
 
+    if (!catDoc) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Referenced category "${rawCategory || '(empty)'}" does not exist. Choose an existing category.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    body.category = catDoc.slug;
     if (!body.categoryLabel) {
-      body.categoryLabel = catDoc?.name || getCategoryLabel(body.category || 'furniture');
+      body.categoryLabel = catDoc.name || getCategoryLabel(catDoc.slug);
     }
 
     if (!body.subCategory || !body.subCategory.trim()) {
@@ -252,23 +267,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Auto-derive slug from product name if not supplied or ensure uniqueness
-    let targetSlug = productFields.slug || slugify(productFields.name);
-    let slugSuffix = 1;
-    let existingSlug = await Product.findOne({ slug: targetSlug });
-    while (existingSlug) {
-      slugSuffix++;
-      targetSlug = `${productFields.slug || slugify(productFields.name)}-${slugSuffix}`;
-      existingSlug = await Product.findOne({ slug: targetSlug });
+    // Validate uniqueness of explicitly supplied slug/SKU (allow variant slug suffixing only when distinct colorName uses default name slug)
+    const baseDerivedSlug = slugify(productFields.name);
+    let targetSlug = productFields.slug || baseDerivedSlug;
+    let existingSlug = await Product.findOne({ slug: targetSlug }).select('_id').lean();
+    if (existingSlug) {
+      const isColorVariantAutoSlug =
+        Boolean(productFields.colorName?.trim()) &&
+        (!productFields.slug || productFields.slug === baseDerivedSlug);
+
+      if (productFields.slug && !isColorVariantAutoSlug) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `A product with slug "${productFields.slug}" already exists.`,
+          },
+          { status: 409 }
+        );
+      }
+
+      let slugSuffix = 1;
+      while (existingSlug) {
+        slugSuffix++;
+        targetSlug = `${baseDerivedSlug}-${slugSuffix}`;
+        existingSlug = await Product.findOne({ slug: targetSlug }).select('_id').lean();
+      }
     }
     productFields.slug = targetSlug;
 
-    // Auto-derive SKU if not supplied or ensure uniqueness
-    let targetSku = productFields.sku || `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    let existingSku = await Product.findOne({ sku: targetSku });
-    while (existingSku) {
+    // Enforce uniqueness on explicitly submitted SKUs; auto-derive only when omitted
+    let targetSku = productFields.sku || '';
+    if (targetSku) {
+      const existingSku = await Product.findOne({ sku: targetSku }).select('_id').lean();
+      if (existingSku) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `A product with SKU "${targetSku}" already exists.`,
+          },
+          { status: 409 }
+        );
+      }
+    } else {
       targetSku = `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      existingSku = await Product.findOne({ sku: targetSku });
+      let existingSku = await Product.findOne({ sku: targetSku }).select('_id').lean();
+      while (existingSku) {
+        targetSku = `FUR-${targetSlug.slice(0, 10).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        existingSku = await Product.findOne({ sku: targetSku }).select('_id').lean();
+      }
     }
     productFields.sku = targetSku;
 
@@ -287,30 +333,20 @@ export async function POST(request: NextRequest) {
       linkedVariantIds,
     });
 
-    // Automatically sync subcategory to Category document in MongoDB
+    // Automatically sync subcategory to Category document & update itemCount
     if (productFields.subCategory && catDoc) {
       await Category.updateOne(
         { _id: catDoc._id },
         { $addToSet: { subcategories: productFields.subCategory.trim() } }
       );
     }
+    await syncCategoryItemCounts();
 
-    // Revalidate public storefront caches
-    try {
-      revalidatePath('/');
-      revalidatePath('/shop');
-      revalidatePath('/collections');
-      revalidatePath('/admin/products');
-      revalidatePath('/admin/categories');
-      revalidatePath('/admin/inventory');
-      revalidatePath(`/category/${productFields.category}`);
-      revalidatePath(`/product/${productFields.slug}`);
-      for (const relSlug of affectedSlugs) {
-        revalidatePath(`/product/${relSlug}`);
-      }
-    } catch (e) {
-      // Revalidation warning non-blocking
-    }
+    // Revalidate public storefront caches including /search & root layout
+    revalidateCatalogPaths(
+      [productFields.category],
+      [productFields.slug, ...affectedSlugs]
+    );
 
     return NextResponse.json(
       {
@@ -320,24 +356,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    if (error instanceof ColorVariantValidationError) {
-      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
-    }
-    if (error instanceof ZodError) {
-      const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
-      return NextResponse.json(
-        { success: false, message: `Validation failed: ${issues}` },
-        { status: 400 }
-      );
-    }
-    console.error('[Admin Products POST Error]:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to create product' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to create product', '[Admin Products POST Error]');
   }
 }

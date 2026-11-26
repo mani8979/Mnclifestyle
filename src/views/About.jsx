@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React from 'react';
 import Image from 'next/image';
 import { Link } from '@/lib/router-bridge';
@@ -6,7 +6,7 @@ import SectionHeading from '../components/SectionHeading';
 import ScrollReveal from '../components/ScrollReveal';
 import { businessConfig } from '../data/businessConfig';
 import { getWhatsAppConsultationUrl } from '../utils/whatsapp';
-import { ShieldCheck, Compass, Sparkles, Check, ArrowRight, Award, Heart, MessageCircle } from 'lucide-react';
+import { ShieldCheck, Compass, Sparkles, Check, ArrowRight, Award, MessageCircle } from 'lucide-react';
 
 export default function About() {
   const whatsappUrl = getWhatsAppConsultationUrl('About Page Studio Consultation');

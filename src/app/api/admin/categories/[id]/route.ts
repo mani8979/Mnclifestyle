@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Category } from '@/models/Category';
 import { Product } from '@/models/Product';
-import { requireAdminSession } from '@/lib/auth';
+import { Collection } from '@/models/Collection';
+import { requireAdminSession, assertValidOrigin, handleApiError } from '@/lib/auth';
 import { slugify } from '@/lib/validations/product';
 import {
+  CategoryDeleteBodySchema,
+  CategoryUpdateSchema,
+  normalizeSubcategoriesInput,
+} from '@/lib/validations/category';
+import {
+  archiveProductsAndCleanupRefs,
   buildCategoryLookupQuery,
   buildCategoryProductQuery,
-  deleteProductsAndCleanupRefs,
+  escapeRegex,
   findAffectedProducts,
   reindexCategoriesSequentially,
   revalidateCatalogPaths,
+  syncCategoryItemCounts,
 } from '@/lib/category-cleanup';
 
 export const dynamic = 'force-dynamic';
@@ -40,14 +48,8 @@ export async function GET(
         id: (category as any)._id.toString(),
       },
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to fetch category' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch category', '[Admin Category GET Error]');
   }
 }
 
@@ -56,11 +58,20 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
     const { id } = await context.params;
-    const body = await request.json();
+    const rawBody = await request.json().catch(() => null);
+    if (!rawBody || typeof rawBody !== 'object') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid JSON request payload' },
+        { status: 400 }
+      );
+    }
+
+    const validated = CategoryUpdateSchema.parse(rawBody);
 
     const category = await Category.findOne(buildCategoryLookupQuery(id));
     if (!category) {
@@ -70,47 +81,63 @@ export async function PATCH(
       );
     }
 
-    if (body.name !== undefined) category.name = body.name.trim();
-    if (body.title !== undefined) category.title = body.title.trim();
-    if (body.description !== undefined) category.description = body.description.trim();
-    if (body.image !== undefined) category.image = body.image.trim();
-    if (body.imageKey !== undefined) category.imageKey = body.imageKey.trim();
-    if (body.orderIndex !== undefined) category.orderIndex = Number(body.orderIndex);
-    if (body.isActive !== undefined) category.isActive = Boolean(body.isActive);
+    if (validated.name !== undefined) {
+      const duplicateName = await Category.findOne({
+        name: new RegExp(`^${escapeRegex(validated.name)}$`, 'i'),
+        _id: { $ne: category._id },
+      }).lean();
+      if (duplicateName) {
+        return NextResponse.json(
+          { success: false, message: `Another category named "${duplicateName.name}" already exists.` },
+          { status: 409 }
+        );
+      }
+      category.name = validated.name;
+    }
 
-    // Slug management: preserve existing slug if conflict exists so editing category never throws 409
-    if (body.slug && typeof body.slug === 'string') {
-      const cleanSlug = slugify(body.slug);
+    if (validated.title !== undefined) category.title = validated.title;
+    if (validated.description !== undefined) category.description = validated.description;
+    if (validated.image !== undefined) category.image = validated.image;
+    if (validated.imageKey !== undefined) category.imageKey = validated.imageKey;
+    if (validated.orderIndex !== undefined) category.orderIndex = validated.orderIndex;
+    if (validated.isActive !== undefined) category.isActive = validated.isActive;
+
+    const oldSlug = category.slug;
+
+    if (validated.slug) {
+      const cleanSlug = slugify(validated.slug);
       if (cleanSlug && cleanSlug !== category.slug) {
         const conflict = await Category.findOne({ slug: cleanSlug, _id: { $ne: category._id } });
-        if (!conflict) {
-          const oldSlug = category.slug;
-          category.slug = cleanSlug;
-          try {
-            await Product.updateMany(
-              { category: oldSlug },
-              { $set: { category: cleanSlug, categoryLabel: category.name } }
-            );
-          } catch (e) {
-            console.error('Failed to sync products category:', e);
-          }
+        if (conflict) {
+          return NextResponse.json(
+            { success: false, message: `Slug "${cleanSlug}" is already used by another category.` },
+            { status: 409 }
+          );
         }
+        category.slug = cleanSlug;
+        const legacyMatchQuery = buildCategoryProductQuery({
+          slug: oldSlug,
+          legacyId: category.legacyId,
+          name: category.name,
+        });
+        await Product.updateMany(legacyMatchQuery, {
+          $set: { category: cleanSlug, categoryLabel: category.name },
+        });
+        await Collection.updateMany(
+          { category: oldSlug },
+          { $set: { category: cleanSlug } }
+        );
       }
     }
 
-    if (body.subcategories !== undefined) {
-      const cleanSubcategories = Array.isArray(body.subcategories)
-        ? body.subcategories.map((s: string) => s.trim()).filter(Boolean)
-        : typeof body.subcategories === 'string'
-        ? body.subcategories.split(',').map((s: string) => s.trim()).filter(Boolean)
-        : [];
-
-      const nextSet = new Set(cleanSubcategories.map((s: string) => s.toLowerCase()));
+    if (validated.subcategories !== undefined) {
+      const cleanSubcategories = normalizeSubcategoriesInput(validated.subcategories);
+      const nextSet = new Set(cleanSubcategories.map((s) => s.toLowerCase()));
       const removedSubcategories = (category.subcategories || []).filter(
         (existingSub: string) => !nextSet.has(existingSub.toLowerCase())
       );
 
-      if (removedSubcategories.length > 0 && !body.forceRemoveSubcategories) {
+      if (removedSubcategories.length > 0 && !validated.forceRemoveSubcategories) {
         for (const removedSub of removedSubcategories) {
           const affected = await findAffectedProducts(category, removedSub);
           if (affected.length > 0) {
@@ -131,22 +158,15 @@ export async function PATCH(
       category.subcategories = cleanSubcategories;
     }
 
-    // Keep categoryLabel synced on existing products if category name was edited
-    if (body.name !== undefined) {
-      const catKeys = [category.slug, category.legacyId].filter(
-        (v): v is string => typeof v === 'string' && v.trim().length > 0
-      );
-      if (catKeys.length > 0) {
-        await Product.updateMany(
-          { category: { $in: catKeys } },
-          { $set: { categoryLabel: category.name } }
-        );
-      }
+    if (validated.name !== undefined) {
+      await Product.updateMany(buildCategoryProductQuery(category), {
+        $set: { categoryLabel: category.name },
+      });
     }
 
     await category.save();
-
-    revalidateCatalogPaths([category.slug]);
+    await syncCategoryItemCounts();
+    revalidateCatalogPaths([oldSlug, category.slug]);
 
     return NextResponse.json({
       success: true,
@@ -156,15 +176,8 @@ export async function PATCH(
         id: category._id.toString(),
       },
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('PATCH /api/admin/categories/[id] error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to update category' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to update category', '[Admin Category PATCH Error]');
   }
 }
 
@@ -173,6 +186,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    assertValidOrigin(request);
     await requireAdminSession(undefined, request);
     await connectDB();
 
@@ -186,24 +200,32 @@ export async function DELETE(
       );
     }
 
-    const body = await request.json().catch(() => ({}));
+    const rawBody = await request.json().catch(() => ({}));
+    const parsedBody = CategoryDeleteBodySchema.safeParse(rawBody && typeof rawBody === 'object' ? rawBody : {});
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid delete request payload' },
+        { status: 400 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const action = (body?.action || searchParams.get('action') || undefined) as
+    const action = (parsedBody.data.action || searchParams.get('action') || undefined) as
       | 'transfer'
       | 'delete-all'
       | undefined;
     const targetCategoryId =
-      (typeof body?.targetCategoryId === 'string' && body.targetCategoryId.trim()) ||
+      parsedBody.data.targetCategoryId ||
       searchParams.get('targetCategoryId')?.trim() ||
       '';
     const targetSubCategory =
-      (typeof body?.targetSubCategory === 'string' && body.targetSubCategory.trim()) ||
+      parsedBody.data.targetSubCategory ||
       searchParams.get('targetSubCategory')?.trim() ||
       '';
 
     const affectedProducts = await findAffectedProducts(category);
     let transferredCount = 0;
-    let deletedCount = 0;
+    let archivedCount = 0;
     let targetCategorySlug = '';
 
     if (affectedProducts.length > 0) {
@@ -244,8 +266,13 @@ export async function DELETE(
             { $addToSet: { subcategories: targetSubCategory } }
           );
         }
+
+        await Collection.updateMany(
+          { category: category.slug },
+          { $set: { category: targetCategory.slug } }
+        );
       } else if (action === 'delete-all') {
-        deletedCount = await deleteProductsAndCleanupRefs(affectedProducts);
+        archivedCount = await archiveProductsAndCleanupRefs(affectedProducts);
       } else {
         return NextResponse.json(
           {
@@ -264,30 +291,25 @@ export async function DELETE(
       }
     }
 
+    // Refuse removing category if any Collection still references this category slug (transfer updated it above)
     await Category.deleteOne({ _id: category._id });
     await reindexCategoriesSequentially();
+    await syncCategoryItemCounts();
 
     revalidateCatalogPaths([category.slug, targetCategorySlug]);
 
     return NextResponse.json({
       success: true,
       transferredCount,
-      deletedCount,
+      deletedCount: archivedCount,
       message:
         transferredCount > 0
           ? `Category "${category.name}" removed and ${transferredCount} product(s) transferred`
-          : deletedCount > 0
-          ? `Category "${category.name}" and ${deletedCount} product(s) deleted`
-          : `Category "${category.name}" removed successfully`,
+          : archivedCount > 0
+            ? `Category "${category.name}" removed and ${archivedCount} product(s) archived safely`
+            : `Category "${category.name}" removed successfully`,
     });
-  } catch (error: any) {
-    if (error.message?.startsWith('UNAUTHORIZED')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-    console.error('DELETE /api/admin/categories/[id] error:', error);
-    return NextResponse.json(
-      { success: false, message: error.message || 'Failed to delete category' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to delete category', '[Admin Category DELETE Error]');
   }
 }

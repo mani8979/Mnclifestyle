@@ -5,6 +5,7 @@ import { connectDB } from '../lib/mongodb';
 import { Product } from '../models/Product';
 import { Collection } from '../models/Collection';
 import { Admin } from '../models/Admin';
+import { syncCategoryItemCounts } from '../lib/category-cleanup';
 import { signAdminToken, ADMIN_COOKIE_NAME } from '../lib/auth';
 import {
   generateUploadSignature,
@@ -211,8 +212,8 @@ async function runCloudinaryTests() {
       name: 'Valen Cloudinary Masterpiece Sofa',
       slug: testProductSlug,
       sku: testProductSku,
-      category: 'sofas',
-      subCategory: 'Curved Sofas',
+      category: 'sectional-sofas',
+      subCategory: '3-Seater Sofas',
       price: 185000,
       originalPrice: 210000,
       badge: 'Masterpiece',
@@ -253,15 +254,17 @@ async function runCloudinaryTests() {
     results.push({ id: 9, title: 'Product creation with Cloudinary image & metadata', passed: false, notes: e.message });
   }
 
-  // 10. Existing Image Preservation (Unsplash URLs continue working)
+  // 10. Existing Image Preservation (CDN URLs continue working)
   try {
-    const existing = await Product.findOne({ sku: 'MNC-SOF-001' }).lean();
-    const hasUnsplash = existing?.images?.some((img: string) => img.includes('unsplash.com'));
+    const existing = await Product.findOne({ isActive: true, isArchived: { $ne: true } }).lean();
+    const hasCdnImage = existing?.images?.some(
+      (img: string) => img.startsWith('https://') && (img.includes('cloudinary.com') || img.includes('unsplash.com'))
+    );
     results.push({
       id: 10,
-      title: 'Existing image preservation (Unsplash URLs)',
-      passed: Boolean(hasUnsplash),
-      notes: `Existing piece "${existing?.name}" preserves original imagery: ${hasUnsplash}`,
+      title: 'Existing image preservation (Catalog URLs)',
+      passed: Boolean(hasCdnImage),
+      notes: `Existing piece "${existing?.name}" preserves CDN imagery: ${hasCdnImage}`,
     });
   } catch (e: any) {
     results.push({ id: 10, title: 'Existing image preservation (Unsplash URLs)', passed: false, notes: e.message });
@@ -356,6 +359,7 @@ async function runCloudinaryTests() {
 
     // Test 14: Delete testProduct first, then safely destroy from Cloudinary
     await Product.deleteMany({ sku: testProductSku });
+    await syncCategoryItemCounts();
 
     const safeDelRes = await fetch(`${BASE_URL}/api/admin/uploads`, {
       method: 'DELETE',
@@ -400,14 +404,20 @@ async function runCloudinaryTests() {
 
   // 17. Legacy Image Compatibility
   try {
-    const res = await fetch(`${BASE_URL}/product/aura-curved-boucle-sofa`);
+    const activeSample = await Product.findOne({ isActive: true, isArchived: { $ne: true } })
+      .select('slug name')
+      .lean();
+    if (!activeSample?.slug) {
+      throw new Error('No active catalog product found for detail page image compatibility test.');
+    }
+    const res = await fetch(`${BASE_URL}/product/${activeSample.slug}`);
     const text = await res.text();
-    const legacyProductHealthy = res.status === 200 && text.includes('Aura Curved');
+    const legacyProductHealthy = res.status === 200 && text.includes(activeSample.name);
     results.push({
       id: 17,
-      title: 'Legacy image compatibility (Detail Pages)',
+      title: 'Catalog image compatibility (Detail Pages)',
       passed: legacyProductHealthy,
-      notes: `HTTP ${res.status}, legacy product detail renders without image errors`,
+      notes: `HTTP ${res.status}, active product detail (${activeSample.slug}) renders cleanly`,
     });
   } catch (e: any) {
     results.push({ id: 17, title: 'Legacy image compatibility (Detail Pages)', passed: false, notes: e.message });
@@ -432,6 +442,7 @@ async function runCloudinaryTests() {
   await Product.deleteMany({
     $or: [{ sku: testProductSku }, { slug: testProductSlug }],
   });
+  await syncCategoryItemCounts();
 
   // Print scorecard
   console.log('\n================================================================');
