@@ -13,7 +13,6 @@ import {
   Trash2,
   MoveUp,
   MoveDown,
-  Sparkles,
   Image as ImageIcon,
   Layers,
   Tags,
@@ -81,7 +80,6 @@ interface ProductFormProps {
   isEdit?: boolean;
   initialCategories?: CategoryOption[];
   initialLinkedVariants?: MappedVariantItem[];
-  isColorVariantClone?: boolean;
 }
 
 export default function ProductForm({
@@ -89,7 +87,6 @@ export default function ProductForm({
   isEdit = false,
   initialCategories = [],
   initialLinkedVariants = [],
-  isColorVariantClone = false,
 }: ProductFormProps) {
   const router = useRouter();
 
@@ -221,14 +218,10 @@ export default function ProductForm({
 
   // Primary Product Color + Linked Sibling Variants (Same Category & Subcategory)
   const [colorName, setColorName] = useState(
-    isColorVariantClone
-      ? ''
-      : initialProduct?.colorName || initialProduct?.colors?.[0]?.name || ''
+    initialProduct?.colorName || initialProduct?.colors?.[0]?.name || ''
   );
   const [colorHex, setColorHex] = useState(
-    isColorVariantClone
-      ? '#211710'
-      : initialProduct?.colorHex || initialProduct?.colors?.[0]?.hex || '#211710'
+    initialProduct?.colorHex || initialProduct?.colors?.[0]?.hex || '#211710'
   );
   const [linkedVariants, setLinkedVariants] = useState<MappedVariantItem[]>(
     Array.isArray(initialLinkedVariants) ? initialLinkedVariants : []
@@ -245,7 +238,7 @@ export default function ProductForm({
       originalPrice?: number;
     }>
   >(
-    !isColorVariantClone && Array.isArray(initialProduct?.colors) && initialProduct.colors.length > 0
+    Array.isArray(initialProduct?.colors) && initialProduct.colors.length > 0
       ? initialProduct.colors
       : []
   );
@@ -329,6 +322,7 @@ export default function ProductForm({
 
   // Submission
   const handleSubmit = async (publishStatus?: boolean) => {
+    if (isSubmitting) return;
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -543,15 +537,6 @@ export default function ProductForm({
 
         {/* Action Buttons Top */}
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          {isEdit && initialProduct && (
-            <Link
-              href={`/admin/products/new?variantOf=${encodeURIComponent(initialProduct._id || initialProduct.id)}`}
-              className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Another Color</span>
-            </Link>
-          )}
           <button
             type="button"
             disabled={isSubmitting}
@@ -580,21 +565,6 @@ export default function ProductForm({
           </button>
         </div>
       </div>
-
-      {/* Variant Clone Info Banner */}
-      {isColorVariantClone && (
-        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-3">
-          <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold">
-              Adding a New Color Variant in {activeCategoryObj?.name || category} → {subCategory || 'General'}
-            </p>
-            <p className="text-blue-700 mt-0.5">
-              Specifications, Category, and Subcategory have been copied and sibling colors are pre-linked. Upload the new color&apos;s photos, set its Color Name &amp; Price, and publish.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Notifications */}
       {errorMessage && (

@@ -70,7 +70,7 @@ function toMappedVariant(p: any): MappedVariantItem {
       (typeof firstColor?.name === 'string' && firstColor.name.trim()) ||
       inferColorNameFromHex(
         (typeof p.colorHex === 'string' && p.colorHex.trim()) ||
-          (typeof firstColor?.hex === 'string' && firstColor.hex.trim())
+        (typeof firstColor?.hex === 'string' && firstColor.hex.trim())
       ) ||
       'Standard',
     colorHex:
@@ -352,7 +352,7 @@ export default function ProductColorVariantMapper({
               No other products found in {categoryLabel || category} → {effectiveSubCategory || 'General'}.
             </p>
             <p className="text-[11px] text-slate-500">
-              Create another color product with this same Category &amp; Subcategory, then map them together here (or use &quot;+ Add Another Color Variant&quot; after saving).
+              Create a separate product in this same Category &amp; Subcategory, then map them together here.
             </p>
           </div>
         ) : (
