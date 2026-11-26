@@ -4,7 +4,7 @@ import { NavLink, Link, useLocation } from '@/lib/router-bridge';
 import { Search, Menu, X, ChevronDown, ArrowRight, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { businessConfig } from '../data/businessConfig';
 
-export default function Header({ onOpenSearch, categories: initialCategories }) {
+export default function Header({ categories: initialCategories }) {
   const [categoriesList, setCategoriesList] = useState(initialCategories || []);
 
   useEffect(() => {
@@ -364,15 +364,21 @@ export default function Header({ onOpenSearch, categories: initialCategories }) 
 
         {/* Right Actions: Search */}
         <div className="flex items-center gap-0.5 min-[375px]:gap-1 sm:gap-2 shrink-0">
-          {/* Search Trigger */}
-          <button
-            onClick={onOpenSearch}
+          {/* Search Page Link */}
+          <Link
+            to="/search"
+            data-testid="header-search-link"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsMobileShopOpen(false);
+              closeShopDropdown();
+            }}
             className="p-1.5 sm:p-2 text-[#211A15] hover:text-[#D69A4B] focus-visible:ring-2 focus-visible:ring-[#D69A4B] transition-colors rounded-full hover:bg-black/5 cursor-pointer"
             title="Search furniture pieces"
             aria-label="Search furniture"
           >
             <Search className="w-4.5 h-4.5 sm:w-5 sm:h-5 stroke-[2]" />
-          </button>
+          </Link>
         </div>
 
       </div>

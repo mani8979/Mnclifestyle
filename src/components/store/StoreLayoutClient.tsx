@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import AnnouncementBar from '../AnnouncementBar';
 import Header from '../Header';
 import Footer from '../Footer';
-import SearchModal from '../SearchModal';
 import ProductQuickViewModal from '../ProductQuickViewModal';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
 import { useCart } from '../../context/CartContext';
@@ -16,7 +15,6 @@ export default function StoreLayoutClient({
   children: React.ReactNode;
   categories?: any[];
 }) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { quickViewProduct, closeQuickView } = useCart();
   const { pathname, hash } = useLocation();
 
@@ -46,7 +44,7 @@ export default function StoreLayoutClient({
       <AnnouncementBar />
 
       {/* 2. Main Header Navigation */}
-      <Header onOpenSearch={() => setIsSearchOpen(true)} categories={categories} />
+      <Header categories={categories} />
 
       {/* 3. Page Content */}
       <main className="flex-1">
@@ -57,7 +55,6 @@ export default function StoreLayoutClient({
       <Footer categories={categories} />
 
       {/* 5. Modals */}
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <ProductQuickViewModal
         product={quickViewProduct}
         isOpen={Boolean(quickViewProduct)}
