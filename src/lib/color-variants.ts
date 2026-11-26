@@ -234,42 +234,34 @@ export async function syncProductColorGroup({
   const candidateIdStrings = new Set(candidates.map((c: any) => c._id.toString()));
   candidates.forEach((c: any) => c.slug && affectedSlugs.add(c.slug));
 
-  const targetGroupId =
-    oldGroupId ||
-    candidates.find((c: any) => typeof c.colorGroupId === 'string' && c.colorGroupId.trim())
-      ?.colorGroupId ||
-    `cg-${product._id.toString()}`;
+  // Always own/use this product's group id (never inherit another group's stale members)
+  const targetGroupId = oldGroupId || `cg-${product._id.toString()}`;
 
   const oldGroupIdsToCheck = new Set<string>();
-  if (oldGroupId && oldGroupId !== targetGroupId) {
-    oldGroupIdsToCheck.add(oldGroupId);
-  }
   for (const c of candidates as any[]) {
     if (c.colorGroupId && c.colorGroupId !== targetGroupId) {
       oldGroupIdsToCheck.add(c.colorGroupId);
     }
   }
 
-  // Detach any siblings that previously shared targetGroupId with this product but were unchecked
-  if (oldGroupId === targetGroupId) {
-    const previouslyInGroup = await Product.find({
-      colorGroupId: targetGroupId,
-      _id: { $ne: product._id },
-      isArchived: { $ne: true },
-    })
-      .select('_id slug')
-      .lean();
+  // Detach any products currently in targetGroupId that were NOT selected
+  const previouslyInGroup = await Product.find({
+    colorGroupId: targetGroupId,
+    _id: { $ne: product._id },
+    isArchived: { $ne: true },
+  })
+    .select('_id slug')
+    .lean();
 
-    const toDetachIds: any[] = [];
-    for (const prev of previouslyInGroup as any[]) {
-      if (!candidateIdStrings.has(prev._id.toString())) {
-        toDetachIds.push(prev._id);
-        if (prev.slug) affectedSlugs.add(prev.slug);
-      }
+  const toDetachIds: any[] = [];
+  for (const prev of previouslyInGroup as any[]) {
+    if (!candidateIdStrings.has(prev._id.toString())) {
+      toDetachIds.push(prev._id);
+      if (prev.slug) affectedSlugs.add(prev.slug);
     }
-    if (toDetachIds.length > 0) {
-      await Product.updateMany({ _id: { $in: toDetachIds } }, { $set: { colorGroupId: '' } });
-    }
+  }
+  if (toDetachIds.length > 0) {
+    await Product.updateMany({ _id: { $in: toDetachIds } }, { $set: { colorGroupId: '' } });
   }
 
   // Assign targetGroupId to product + all linked candidates

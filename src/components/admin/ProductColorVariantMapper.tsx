@@ -227,18 +227,7 @@ export default function ProductColorVariantMapper({
       return;
     }
 
-    // Also include any same-scope group members when selecting an already grouped product so groups stay cohesive
-    const nextList = [...selectedVariants, item];
-    if (item.colorGroupId) {
-      const siblingGroupMembers = allOptions.filter(
-        (opt) =>
-          opt.colorGroupId === item.colorGroupId &&
-          opt._id !== item._id &&
-          !nextList.some((existing) => existing._id === opt._id)
-      );
-      nextList.push(...siblingGroupMembers);
-    }
-    onSelectedVariantsChange(nextList);
+    onSelectedVariantsChange([...selectedVariants, item]);
   };
 
   const previewCurrentLabel = colorName.trim() || previewProduct.name || 'This Product';
