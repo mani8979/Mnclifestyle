@@ -5,7 +5,6 @@ import Header from '../Header';
 import Footer from '../Footer';
 import SearchModal from '../SearchModal';
 import ProductQuickViewModal from '../ProductQuickViewModal';
-import CartDrawer from '../CartDrawer';
 import WhatsAppFloatingButton from '../WhatsAppFloatingButton';
 import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../lib/router-bridge';
@@ -57,14 +56,13 @@ export default function StoreLayoutClient({
       {/* 4. Footer */}
       <Footer categories={categories} />
 
-      {/* 5. Modals & Cart Drawer */}
+      {/* 5. Modals */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <ProductQuickViewModal
         product={quickViewProduct}
         isOpen={Boolean(quickViewProduct)}
         onClose={closeQuickView}
       />
-      <CartDrawer />
 
       {/* 6. WhatsApp Floating Quick Order / Chat Button */}
       <WhatsAppFloatingButton />

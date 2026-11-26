@@ -8,7 +8,6 @@ import { formatINR, calculateDiscount } from '../utils/currency';
 import { getWhatsAppOrderUrl, getWhatsAppInquiryUrl } from '../utils/whatsapp';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../utils/colors';
-import { useCart } from '../context/CartContext';
 import ColorVariantSelector from '../components/ColorVariantSelector';
 import FormattedTitle from '../components/shared/FormattedTitle';
 import WhatsAppIcon from '../components/shared/WhatsAppIcon';
@@ -28,8 +27,7 @@ import {
   CheckCircle2,
   Minus,
   Plus,
-  Sparkles,
-  ShoppingBag
+  Sparkles
 } from 'lucide-react';
 
 export default function ProductDetails({ initialProduct, initialRelatedProducts }) {
@@ -42,7 +40,6 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     notFound();
   }
 
-  const { addToCart } = useCart();
   const initialPrimaryColor = getProductPrimaryColor(product);
   const currentProductKey = product?.id || product?.slug || '';
   const [trackedProductKey, setTrackedProductKey] = useState(currentProductKey);
@@ -385,18 +382,6 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                   )}
                 </a>
               </div>
-
-              {/* Add to Selection Bag + Quick Inquiry & Showroom Links */}
-              <button
-                type="button"
-                data-testid="pdp-add-to-cart"
-                disabled={isOutOfStock}
-                onClick={() => addToCart(activeProductForCart, quantity, selectedColor)}
-                className="w-full h-11 px-4 bg-[#211710] hover:bg-[#D69A4B] hover:text-[#211710] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span>{isOutOfStock ? 'Currently Out of Stock' : 'Add to Selection Bag'}</span>
-              </button>
 
               {/* Quick Inquiry & Showroom Links */}
               <div className="flex gap-2 pt-0.5">
