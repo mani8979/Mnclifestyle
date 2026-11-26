@@ -6,7 +6,6 @@ import {
   Info,
   Link2,
   Loader2,
-  Palette,
   Search,
   Sparkles,
   X,
@@ -52,19 +51,6 @@ interface ProductColorVariantMapperProps {
   };
 }
 
-const QUICK_COLOR_PRESETS = [
-  { name: 'Oatmeal Bouclé', hex: '#EDE8E1' },
-  { name: 'Warm Charcoal', hex: '#343332' },
-  { name: 'Teak Walnut', hex: '#5C3A21' },
-  { name: 'Natural Honey', hex: '#C68E53' },
-  { name: 'Toy Red', hex: '#DC2626' },
-  { name: 'Jet Black', hex: '#171717' },
-  { name: 'Royal Navy', hex: '#1E3A8A' },
-  { name: 'Sage Olive', hex: '#6B7A68' },
-  { name: 'Terra Cotta', hex: '#9E6756' },
-  { name: 'Mustard Gold', hex: '#D97706' },
-];
-
 function toMappedVariant(p: any): MappedVariantItem {
   const firstColor = Array.isArray(p.colors) && p.colors[0] ? p.colors[0] : null;
   const img =
@@ -106,8 +92,6 @@ export default function ProductColorVariantMapper({
   subCategory,
   colorName,
   colorHex,
-  onColorNameChange,
-  onColorHexChange,
   selectedVariants,
   onSelectedVariantsChange,
   previewProduct,
@@ -257,87 +241,7 @@ export default function ProductColorVariantMapper({
 
   return (
     <div className="space-y-5">
-      {/* 1. Primary Product Color Identity */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-800 flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-blue-600" />
-              <span>This Product&apos;s Color Label</span>
-            </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Displayed above the colour thumbnail cards (e.g. <strong>Colour: TOY RED</strong>) and used for storefront Category &amp; Shop color filters.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-          <div className="sm:col-span-6">
-            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-600 mb-1">
-              Color Name
-            </label>
-            <input
-              type="text"
-              value={colorName}
-              onChange={(e) => onColorNameChange(e.target.value)}
-              placeholder="e.g. TOY RED, Jet Black, Oatmeal Bouclé"
-              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600"
-            />
-          </div>
-
-          <div className="sm:col-span-6">
-            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-600 mb-1">
-              Color Swatch Hex
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={/^#[0-9A-Fa-f]{6}$/.test(colorHex) ? colorHex : '#211710'}
-                onChange={(e) => onColorHexChange(e.target.value.toUpperCase())}
-                aria-label="Pick product color swatch hex"
-                className="w-9 h-9 rounded-lg border border-slate-200 bg-white cursor-pointer p-0.5 shrink-0"
-              />
-              <input
-                type="text"
-                value={colorHex}
-                onChange={(e) => onColorHexChange(e.target.value)}
-                placeholder="#DC2626"
-                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-600"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Preset Chips */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <span className="text-[10px] text-slate-400 font-medium mr-1">Quick Presets:</span>
-          {QUICK_COLOR_PRESETS.map((preset) => {
-            const active = colorName.trim().toLowerCase() === preset.name.toLowerCase();
-            return (
-              <button
-                key={preset.name}
-                type="button"
-                onClick={() => {
-                  onColorNameChange(preset.name);
-                  onColorHexChange(preset.hex);
-                }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-colors cursor-pointer ${active
-                  ? 'bg-blue-50 border-blue-400 text-blue-700 font-semibold'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
-                  }`}
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
-                  style={{ backgroundColor: preset.hex }}
-                />
-                <span>{preset.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Link Same Category & Subcategory Color Products */}
+      {/* Link Same Category & Subcategory Color Products */}
       <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div>
