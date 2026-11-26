@@ -20,6 +20,7 @@ import {
   Tags,
   Eye,
   ShieldCheck,
+  Palette,
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
 import { formatINR, calculateDiscount } from '@/utils/currency';
@@ -1061,8 +1062,18 @@ export default function ProductForm({
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900"
             />
           </div>
+        </div>
 
-          {/* Amazon-Style Color Identity & Same-Category/Subcategory Variant Mapping */}
+        {/* SECTION 5: Color Variant Mapping */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
+          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+            <Palette className="w-4 h-4 text-blue-600" />
+            <h2 className="font-serif text-lg text-slate-900 font-normal">
+              5. Color Variant Mapping
+            </h2>
+          </div>
+
+          {/* Same-Category/Subcategory Variant Mapping */}
           <ProductColorVariantMapper
             currentProductId={isEdit ? (initialProduct?._id || initialProduct?.id) : undefined}
             category={category}
@@ -1184,14 +1195,14 @@ export default function ProductForm({
           </div>
         </div>
 
-        {/* SECTION 5: Architectural Integrity & Specifications Accordions */}
+        {/* SECTION 6: Architectural Integrity & Specifications Accordions */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-600" />
               <div>
                 <h2 className="font-serif text-lg text-slate-900 font-normal">
-                  5. Architectural Integrity & Specifications Accordions
+                  6. Architectural Integrity & Specifications Accordions
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Customize the 5 standard accordion sections or add new custom sections for this piece.
@@ -1302,12 +1313,12 @@ export default function ProductForm({
           </div>
         </div>
 
-        {/* SECTION 6: Warranty, Delivery & SEO */}
+        {/* SECTION 7: Warranty, Delivery & SEO */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
           <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
             <ShieldCheck className="w-4 h-4 text-blue-600" />
             <h2 className="font-serif text-lg text-slate-900 font-normal">
-              6. Assurance, Delivery & SEO Metadata
+              7. Assurance, Delivery & SEO Metadata
             </h2>
           </div>
 
