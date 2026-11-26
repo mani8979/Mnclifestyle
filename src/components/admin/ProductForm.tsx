@@ -19,7 +19,6 @@ import {
   Ruler,
   Tags,
   Eye,
-  ShieldCheck,
   Palette,
 } from 'lucide-react';
 import { slugify } from '@/lib/validations/product';
@@ -261,13 +260,11 @@ export default function ProductForm({
   const [inStock, setInStock] = useState(initialProduct?.inStock ?? true);
   const [badge, setBadge] = useState(initialProduct?.badge || '');
 
-  // Warranty & Delivery
-  const [warranty, setWarranty] = useState(
-    initialProduct?.warranty || '10-Year Structural Frame & Termite Warranty'
-  );
-  const [leadTime, setLeadTime] = useState(
-    initialProduct?.leadTime || 'Complimentary White-Glove In-Home Delivery across AP (3–7 Days)'
-  );
+  // Warranty & Delivery (preserved / defaulted on save)
+  const warranty =
+    initialProduct?.warranty || '10-Year Structural Frame & Termite Warranty';
+  const leadTime =
+    initialProduct?.leadTime || 'Complimentary White-Glove In-Home Delivery across AP (3–7 Days)';
 
   // Custom Architectural Accordion Sections
   const [customSections, setCustomSections] = useState<Array<{ title: string; content: string; icon: string }>>(
@@ -315,12 +312,12 @@ export default function ProductForm({
     setCustomSections(DEFAULT_SECTIONS);
   };
 
-  // SEO
-  const [seoTitle, setSeoTitle] = useState(initialProduct?.seoMeta?.title || '');
-  const [seoDescription, setSeoDescription] = useState(initialProduct?.seoMeta?.description || '');
-  const [seoKeywords, setSeoKeywords] = useState(
-    Array.isArray(initialProduct?.seoMeta?.keywords) ? initialProduct.seoMeta.keywords.join(', ') : ''
-  );
+  // SEO (preserved / defaulted on save)
+  const seoTitle = initialProduct?.seoMeta?.title || '';
+  const seoDescription = initialProduct?.seoMeta?.description || '';
+  const seoKeywords = Array.isArray(initialProduct?.seoMeta?.keywords)
+    ? initialProduct.seoMeta.keywords.join(', ')
+    : '';
 
   // Status
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1220,68 +1217,6 @@ export default function ProductForm({
                 No specification sections configured. Click "Reset Standard 5" or "Add Section" to create accordion items.
               </div>
             )}
-          </div>
-        </div>
-
-        {/* SECTION 7: Warranty, Delivery & SEO */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
-            <ShieldCheck className="w-4 h-4 text-blue-600" />
-            <h2 className="font-serif text-lg text-slate-900 font-normal">
-              7. Assurance, Delivery & SEO Metadata
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                Warranty Terms
-              </label>
-              <input
-                type="text"
-                value={warranty}
-                onChange={(e) => setWarranty(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                Delivery / Lead Time
-              </label>
-              <input
-                type="text"
-                value={leadTime}
-                onChange={(e) => setLeadTime(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900"
-              />
-            </div>
-
-            <div className="sm:col-span-2 pt-2">
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                SEO Meta Title (Optional)
-              </label>
-              <input
-                type="text"
-                value={seoTitle}
-                onChange={(e) => setSeoTitle(e.target.value)}
-                placeholder="Defaults to product name if empty"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-900"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs uppercase tracking-wider text-slate-700 font-medium mb-2">
-                SEO Meta Description (Optional)
-              </label>
-              <input
-                type="text"
-                value={seoDescription}
-                onChange={(e) => setSeoDescription(e.target.value)}
-                placeholder="Defaults to short description if empty"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-900"
-              />
-            </div>
           </div>
         </div>
 
