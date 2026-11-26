@@ -49,9 +49,8 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
     initialPrimaryColor?.name || product.colors?.[0]?.name || 'Standard'
   );
   const [quantity, setQuantity] = useState(1);
-  const [openAccordion, setOpenAccordion] = useState(
-    Array.isArray(product.customSections) && product.customSections.length > 0 ? 'sec_0' : 'details'
-  );
+  const [openAccordion, setOpenAccordion] = useState('details');
+  const [collapsedCustomSections, setCollapsedCustomSections] = useState({});
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   if (trackedProductKey !== currentProductKey) {
@@ -150,6 +149,13 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
 
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
+  };
+
+  const toggleCustomSection = (sectionKey) => {
+    setCollapsedCustomSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }));
   };
 
   // Verified Customer Reviews
@@ -560,13 +566,13 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 };
                 const IconComponent = iconMap[sec.icon] || CheckCircle2;
                 const sectionKey = `sec_${idx}`;
-                const isOpen = openAccordion === sectionKey;
+                const isOpen = !collapsedCustomSections[sectionKey];
 
                 return (
                   <div key={idx} className="border border-[#E9D8C5] rounded-xl overflow-hidden shadow-2xs">
                     <button
                       type="button"
-                      onClick={() => toggleAccordion(sectionKey)}
+                      onClick={() => toggleCustomSection(sectionKey)}
                       className="w-full px-4 sm:px-5 py-3.5 flex items-center justify-between text-left font-semibold text-xs sm:text-sm text-[#211710] bg-[#F8F0E8]/60 hover:bg-[#F8F0E8] transition-colors cursor-pointer"
                       aria-expanded={isOpen}
                     >
