@@ -398,43 +398,39 @@ export async function DELETE(
     // PERMANENT DELETION BRANCH (?permanent=true)
     // =========================================================================
     if (isPermanent) {
-      // 1. Strict backend safeguard: ONLY archived products can be permanently deleted!
-      if (!product.isArchived) {
-        const currentStatus = product.isActive ? 'active' : 'draft';
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Only archived products can be permanently deleted. This product is currently in ${currentStatus} status and cannot be permanently deleted.`,
-            status: currentStatus,
-          },
-          { status: 409 }
-        );
-      }
-
-      // 2. Validate confirmation name if provided in body or query
+      // 1. Validate confirmation phrase or name if provided in body or query
       let body: any = null;
       try {
         body = await request.json();
       } catch {
         // body is optional
       }
-      const confirmationName = body?.confirmationName ?? searchParams.get('confirmationName');
-      if (confirmationName !== null && confirmationName !== undefined) {
-        if (typeof confirmationName !== 'string' || confirmationName.trim() !== product.name.trim()) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: 'Confirmation product name does not match the product name.',
-            },
-            { status: 400 }
-          );
-        }
+      const submittedPhrase = (
+        body?.confirmationPhrase ??
+        body?.confirmationName ??
+        searchParams.get('confirmationPhrase') ??
+        searchParams.get('confirmationName') ??
+        ''
+      ).toString().trim();
+
+      const expectedPhrase = `DELETE ${product.name.trim()}`;
+      const isValidMatch =
+        submittedPhrase.toUpperCase() === expectedPhrase.toUpperCase() ||
+        submittedPhrase.toUpperCase() === product.name.trim().toUpperCase();
+
+      if (!isValidMatch) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Confirmation phrase does not match. Expected: "${expectedPhrase}".`,
+          },
+          { status: 400 }
+        );
       }
 
-      // 3. Atomic conditional deletion: findOneAndDelete with isArchived: true
+      // 2. Atomic deletion
       const deletedProduct = await Product.findOneAndDelete({
         _id: product._id,
-        isArchived: true,
       });
 
       if (!deletedProduct) {
@@ -447,7 +443,7 @@ export async function DELETE(
         );
       }
 
-      // 4. Prune dangling references from collections (collections themselves preserved)
+      // 3. Prune dangling references from collections (collections themselves preserved)
       const archiveRefs = [
         deletedProduct._id.toString(),
         deletedProduct.legacyId,
@@ -462,16 +458,16 @@ export async function DELETE(
         );
       }
 
-      // 5. Clean up singleton color variant group if orphaned
+      // 4. Clean up singleton color variant group if orphaned
       let cleanedGroupSlugs: string[] = [];
       if (deletedProduct.colorGroupId) {
         cleanedGroupSlugs = await cleanupSingletonColorGroup(deletedProduct.colorGroupId);
       }
 
-      // 6. Automatically sync category item counts (categories preserved)
+      // 5. Automatically sync category item counts (categories preserved)
       await syncCategoryItemCounts();
 
-      // 7. Revalidate storefront & admin caches
+      // 6. Revalidate storefront & admin caches
       revalidateCatalogPaths(
         [deletedProduct.category],
         [deletedProduct.slug, ...cleanedGroupSlugs]
@@ -489,7 +485,7 @@ export async function DELETE(
     }
 
     // =========================================================================
-    // DEFAULT SOFT-DELETE / ARCHIVE BRANCH
+    // DEFAULT SOFT-DELETE / MOVE TO DRAFT BRANCH
     // =========================================================================
     const archiveRefs = [product._id.toString(), product.legacyId, product.slug, product.sku].filter(Boolean);
 
@@ -500,9 +496,9 @@ export async function DELETE(
       .select('title slug')
       .lean();
 
-    // Perform soft deletion / archive and detach from any color variant group & collections
+    // Perform soft unpublish / move to draft and detach from any color variant group & collections
     const previousGroupId = product.colorGroupId;
-    product.isArchived = true;
+    product.isArchived = false;
     product.isActive = false;
     product.colorGroupId = '';
     await product.save();
@@ -522,12 +518,12 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: `Product "${product.name}" (${product.sku}) was archived successfully.`,
+      message: `Product "${product.name}" (${product.sku}) was moved to Draft.`,
       collectionNotice:
         referencedCollections.length > 0
-          ? `Removed archived reference from ${referencedCollections.length} curated collection(s): ${referencedCollections.map((c) => c.title).join(', ')}.`
+          ? `Removed reference from ${referencedCollections.length} curated collection(s): ${referencedCollections.map((c) => c.title).join(', ')}.`
           : null,
-      archived: true,
+      draft: true,
     });
   } catch (error) {
     return handleApiError(error, 'Failed to process product deletion', '[Admin Product DELETE Error]');

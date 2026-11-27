@@ -13,11 +13,12 @@ import { cleanupSingletonColorGroup } from '@/lib/color-variants';
 export const dynamic = 'force-dynamic';
 
 /**
- * Common handler for bulk permanent deletion of archived products.
- * Requires authenticated admin, validates all IDs, checks existence,
- * strictly enforces that EVERY product is archived (all-or-nothing),
- * checks the confirmation phrase, atomically deletes, prunes collection refs,
- * cleans singleton color groups, syncs category counts, and revalidates cache.
+ * Common handler for bulk permanent deletion of products (Published or Draft).
+ * Requires authenticated admin session and valid origin.
+ * Validates all IDs, checks existence of EVERY product (all-or-nothing),
+ * checks the mandatory confirmation phrase "DELETE <N> PRODUCTS",
+ * atomically deletes, prunes collection refs, cleans singleton color groups,
+ * syncs category counts, and revalidates cache.
  */
 async function handleBulkPermanentDelete(request: NextRequest) {
   try {
@@ -62,7 +63,7 @@ async function handleBulkPermanentDelete(request: NextRequest) {
       );
     }
 
-    // Maximum batch size guard
+    // Maximum batch size guard (100 products)
     if (uniqueIds.length > 100) {
       return NextResponse.json(
         { success: false, message: 'Cannot bulk delete more than 100 products in a single operation.' },
@@ -80,8 +81,7 @@ async function handleBulkPermanentDelete(request: NextRequest) {
       }
     }
 
-    // 2. Validate confirmation phrase
-    // Expected: "DELETE <count> PRODUCTS" (or "DELETE 1 PRODUCT")
+    // 2. Validate confirmation phrase: "DELETE <N> PRODUCTS" (or "DELETE 1 PRODUCT")
     const count = uniqueIds.length;
     const expectedPhrase = `DELETE ${count} PRODUCT${count > 1 ? 'S' : ''}`;
     const validPhrases = [
@@ -122,24 +122,9 @@ async function handleBulkPermanentDelete(request: NextRequest) {
       );
     }
 
-    // 5. Verify that EVERY product is currently ARCHIVED (isArchived === true)
-    // NEVER allow deletion of active or draft products (Strict All-or-Nothing)
-    const ineligibleProducts = foundProducts.filter((p: any) => !p.isArchived);
-    if (ineligibleProducts.length > 0) {
-      const names = ineligibleProducts.map((p: any) => `"${p.name}" (${p.sku || p._id})`);
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Bulk deletion aborted: ${ineligibleProducts.length} product(s) are active or draft and cannot be permanently deleted: [${names.join(', ')}]. Only archived products can be permanently deleted. No products were deleted.`,
-        },
-        { status: 409 }
-      );
-    }
-
-    // 6. Atomic deletion of verified archived products
+    // 5. Atomic deletion of verified products
     const deleteResult = await Product.deleteMany({
       _id: { $in: objectIds },
-      isArchived: true,
     });
 
     if (!deleteResult || deleteResult.deletedCount === 0) {
@@ -152,7 +137,7 @@ async function handleBulkPermanentDelete(request: NextRequest) {
       );
     }
 
-    // 7. Cascading cleanup for references (Audit & Related Data Protected):
+    // 6. Cascading cleanup for references (Audit & Related Data Protected):
     // - NEVER delete InventoryMovement
     // - NEVER delete Category or Collection
     // - NEVER delete Cloudinary images
@@ -195,7 +180,7 @@ async function handleBulkPermanentDelete(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully permanently deleted ${deleteResult.deletedCount} archived product(s).`,
+      message: `Successfully permanently deleted ${deleteResult.deletedCount} product(s).`,
       deletedCount: deleteResult.deletedCount,
       deletedIds: uniqueIds,
     });

@@ -555,7 +555,7 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
       )}
 
       {/* Top Header Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
             <Link href="/admin/dashboard" className="hover:text-blue-600 transition-colors">
@@ -564,8 +564,8 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
             <span>/</span>
             <span className="text-blue-600 font-medium">Categories & Subcategories</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <FolderTree className="w-6 h-6 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <FolderTree className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 shrink-0" />
             <span>Categories ({categories.length})</span>
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -573,33 +573,33 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {hasOrderChanges && (
             <button
               type="button"
               onClick={handleSaveOrder}
               disabled={isSavingOrder}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer animate-pulse"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer animate-pulse"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 shrink-0" />
               <span>{isSavingOrder ? 'Saving Order...' : 'Save Order Changes'}</span>
             </button>
           )}
           <button
             type="button"
             onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Add New Category</span>
           </button>
         </div>
       </div>
 
       {/* Search and Stats Row */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={search}
@@ -608,16 +608,16 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
             className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs"
           />
         </div>
-        <div className="text-xs text-slate-500 flex items-center gap-3">
+        <div className="text-xs text-slate-500 flex items-center justify-between sm:justify-end gap-3">
           <span>Showing {filteredCategories.length} of {categories.length} categories</span>
         </div>
       </div>
 
       {/* Unsaved Order Changes Alert Banner */}
       {hasOrderChanges && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-200">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 text-xs font-medium text-amber-900">
-            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
             <span>You have modified category display order. Click &quot;Save Order Changes&quot; to apply this order to the website.</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -635,16 +635,213 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
               disabled={isSavingOrder}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
             >
-              <Save className="w-3.5 h-3.5" />
+              <Save className="w-3.5 h-3.5 shrink-0" />
               <span>{isSavingOrder ? 'Saving...' : 'Save Order Changes'}</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Categories List Table */}
+      {/* Categories Content Container (Dual Layout: Mobile Cards < md, Desktop Table >= md) */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
+        {/* =================================================================== */}
+        {/* 1. MOBILE CATEGORY CARDS (< 768px)                                  */}
+        {/* =================================================================== */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredCategories.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 px-4">
+              No categories found matching &quot;{search}&quot;.
+            </div>
+          ) : (
+            filteredCategories.map((cat) => {
+              const actualIndex = categories.findIndex((c) => (c.id || c.slug) === (cat.id || cat.slug));
+              const isFirst = actualIndex === 0;
+              const isLast = actualIndex === categories.length - 1;
+              const displayOrder = cat.orderIndex ?? (actualIndex + 1);
+
+              return (
+                <div key={cat.id || cat.slug} className="p-4 sm:p-5 space-y-3.5">
+                  {/* Top Section: Photo + Name + Slug + Actions */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
+                        {cat.image && cat.image !== '/hero-bg.webp' ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={cat.image}
+                            alt={cat.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-5 h-5 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-slate-900 text-sm leading-snug break-words">
+                            {cat.name}
+                          </h3>
+                          <Link
+                            href={`/category/${cat.slug}`}
+                            target="_blank"
+                            className="text-slate-400 hover:text-blue-600 transition-colors p-0.5 shrink-0"
+                            title="View storefront category"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                        {cat.title && cat.title !== cat.name && (
+                          <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                            {cat.title}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400 font-medium flex-wrap">
+                          <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                            /{cat.slug}
+                          </span>
+                          {typeof cat.itemCount === 'number' && (
+                            <span>• {cat.itemCount} {cat.itemCount === 1 ? 'piece' : 'pieces'}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top-Right Quick Actions: Edit & Delete */}
+                    <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(cat)}
+                        className="p-2 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 bg-white transition-colors cursor-pointer shadow-2xs"
+                        title="Edit Category & Subcategories"
+                        aria-label={`Edit category ${cat.name}`}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 border border-slate-200 bg-white transition-colors cursor-pointer shadow-2xs"
+                        title="Delete Category"
+                        aria-label={`Delete category ${cat.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Description (if present) */}
+                  {cat.description && (
+                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                      {cat.description}
+                    </p>
+                  )}
+
+                  {/* Subcategories Section */}
+                  <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                      <span className="flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Subcategories ({cat.subcategories?.length || 0})</span>
+                      </span>
+                    </div>
+
+                    {/* Chips Container */}
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      {(!cat.subcategories || cat.subcategories.length === 0) ? (
+                        <span className="text-[11px] text-slate-400 italic">No subcategories defined</span>
+                      ) : (
+                        cat.subcategories.map((sub) => (
+                          <span
+                            key={sub}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white text-blue-700 border border-blue-200 shadow-2xs break-all"
+                          >
+                            <span>{sub}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleInlineRemoveSubcategory(cat, sub)}
+                              className="text-blue-400 hover:text-blue-700 rounded p-0.5 cursor-pointer"
+                              title={`Remove "${sub}"`}
+                              aria-label={`Remove subcategory ${sub}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Inline Add Subcategory input on mobile */}
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <input
+                        type="text"
+                        value={inlineSubcatInputs[cat.id] || ''}
+                        onChange={(e) =>
+                          setInlineSubcatInputs({ ...inlineSubcatInputs, [cat.id]: e.target.value })
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleInlineAddSubcategory(cat);
+                          }
+                        }}
+                        placeholder="+ Add subcategory..."
+                        className="flex-1 min-w-0 px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleInlineAddSubcategory(cat)}
+                        disabled={savingInlineId === cat.id || !inlineSubcatInputs[cat.id]?.trim()}
+                        className="px-3 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-blue-600 disabled:opacity-40 text-white rounded-lg transition-colors cursor-pointer shrink-0"
+                      >
+                        {savingInlineId === cat.id ? 'Adding...' : 'Add'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Footer Row: Display Sequence Stepper */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Display Sequence
+                    </span>
+
+                    <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1 shadow-2xs">
+                      <span className="font-mono text-xs font-bold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded min-w-[28px] text-center">
+                        #{displayOrder}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveCategory(cat.id || cat.slug, 'up')}
+                          disabled={isFirst}
+                          className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                          title={isFirst ? 'First category' : 'Move category up'}
+                          aria-label="Move category up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveCategory(cat.id || cat.slug, 'down')}
+                          disabled={isLast}
+                          className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                          title={isLast ? 'Last category' : 'Move category down'}
+                          aria-label="Move category down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* =================================================================== */}
+        {/* 2. DESKTOP CATEGORIES TABLE (>= 768px)                               */}
+        {/* =================================================================== */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase tracking-wider text-[11px] font-semibold">
               <tr>
@@ -820,16 +1017,17 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
 
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-4 sm:p-6 my-auto max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1131,18 +1329,18 @@ export default function CategoryManagerClient({ initialCategories }: CategoryMan
               </div>
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer text-center"
                 >
                   {isSubmitting ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
                 </button>

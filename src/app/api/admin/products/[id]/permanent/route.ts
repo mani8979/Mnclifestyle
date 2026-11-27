@@ -27,7 +27,8 @@ function getLookupQuery(id: string) {
 
 /**
  * DELETE /api/admin/products/[id]/permanent
- * Dedicated endpoint to permanently delete an ARCHIVED product.
+ * Dedicated endpoint to permanently delete a product (Active or Draft)
+ * with mandatory confirmation phrase "DELETE <PRODUCT NAME>".
  */
 export async function DELETE(
   request: NextRequest,
@@ -57,44 +58,40 @@ export async function DELETE(
       );
     }
 
-    // 1. Strict backend safeguard: ONLY archived products can be permanently deleted!
-    if (!product.isArchived) {
-      const currentStatus = product.isActive ? 'active' : 'draft';
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Only archived products can be permanently deleted. This product is currently in ${currentStatus} status and cannot be permanently deleted.`,
-          status: currentStatus,
-        },
-        { status: 409 }
-      );
-    }
-
-    // 2. Validate confirmation name if provided
+    // 1. Validate mandatory confirmation phrase: "DELETE <EXACT PRODUCT NAME>"
     let body: any = null;
     try {
       body = await request.json();
     } catch {
-      // body is optional
+      // body optional if passed via query
     }
     const { searchParams } = new URL(request.url);
-    const confirmationName = body?.confirmationName ?? searchParams.get('confirmationName');
-    if (confirmationName !== null && confirmationName !== undefined) {
-      if (typeof confirmationName !== 'string' || confirmationName.trim() !== product.name.trim()) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'Confirmation product name does not match the product name.',
-          },
-          { status: 400 }
-        );
-      }
+    const submittedPhrase = (
+      body?.confirmationPhrase ??
+      body?.confirmationName ??
+      searchParams.get('confirmationPhrase') ??
+      searchParams.get('confirmationName') ??
+      ''
+    ).toString().trim();
+
+    const expectedPhrase = `DELETE ${product.name.trim()}`;
+    const isValidMatch =
+      submittedPhrase.toUpperCase() === expectedPhrase.toUpperCase() ||
+      submittedPhrase.toUpperCase() === product.name.trim().toUpperCase();
+
+    if (!isValidMatch) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Confirmation phrase does not match. Expected: "${expectedPhrase}".`,
+        },
+        { status: 400 }
+      );
     }
 
-    // 3. Atomic conditional deletion: findOneAndDelete with isArchived: true
+    // 2. Atomic deletion
     const deletedProduct = await Product.findOneAndDelete({
       _id: product._id,
-      isArchived: true,
     });
 
     if (!deletedProduct) {
@@ -107,31 +104,31 @@ export async function DELETE(
       );
     }
 
-    // 4. Prune dangling references from collections (collections themselves preserved)
-    const archiveRefs = [
+    // 3. Prune dangling references from collections (collections themselves preserved)
+    const refKeys = [
       deletedProduct._id.toString(),
       deletedProduct.legacyId,
       deletedProduct.slug,
       deletedProduct.sku,
     ].filter(Boolean);
 
-    if (archiveRefs.length > 0) {
+    if (refKeys.length > 0) {
       await Collection.updateMany(
         {},
-        { $pull: { featuredProductIds: { $in: archiveRefs } } }
+        { $pull: { featuredProductIds: { $in: refKeys } } }
       );
     }
 
-    // 5. Clean up singleton color variant group if orphaned
+    // 4. Clean up singleton color variant group if orphaned
     let cleanedGroupSlugs: string[] = [];
     if (deletedProduct.colorGroupId) {
       cleanedGroupSlugs = await cleanupSingletonColorGroup(deletedProduct.colorGroupId);
     }
 
-    // 6. Automatically sync category item counts (categories preserved)
+    // 5. Automatically sync category item counts (categories preserved)
     await syncCategoryItemCounts();
 
-    // 7. Revalidate storefront & admin caches
+    // 6. Revalidate storefront & admin caches
     revalidateCatalogPaths(
       [deletedProduct.category],
       [deletedProduct.slug, ...cleanedGroupSlugs]
@@ -139,7 +136,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Product permanently deleted.',
+      message: `Product "${deletedProduct.name}" permanently deleted.`,
       deletedProduct: {
         id: deletedProduct._id.toString(),
         name: deletedProduct.name,

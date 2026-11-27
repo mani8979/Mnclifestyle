@@ -304,8 +304,8 @@ export default function CategoryRemovalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-xl w-full p-6 animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-[60] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-xl w-full p-4 sm:p-6 my-auto max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
           <div className="flex items-start gap-3">
@@ -554,12 +554,12 @@ export default function CategoryRemovalModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
             disabled={isProcessing}
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
           >
             Cancel
           </button>
@@ -567,7 +567,7 @@ export default function CategoryRemovalModal({
             type="button"
             disabled={isLoadingImpact || Boolean(impactError) || isProcessing}
             onClick={handleConfirm}
-            className={`px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 text-center ${
               affectedProducts.length > 0 && action === 'delete-all'
                 ? 'bg-red-600 hover:bg-red-700'
                 : 'bg-blue-600 hover:bg-blue-700'
