@@ -159,19 +159,6 @@ export async function POST(request: NextRequest) {
       updateFields = { isArchived: true, isActive: false };
       successMessage = `Successfully archived ${uniqueIds.length} ${uniqueIds.length === 1 ? 'product' : 'products'}.`;
     } else if (action === 'draft') {
-      // Archived products cannot be drafted directly without unarchiving/restoring
-      const archivedProducts = (foundProducts as any[]).filter((p) => p.isArchived);
-      if (archivedProducts.length > 0) {
-        const names = archivedProducts.map((p) => `"${p.name}" (${p.sku || p._id})`);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Bulk move to draft aborted: ${archivedProducts.length} product(s) are archived: [${names.join(', ')}]. Archived products must be restored first before drafting. No products were modified.`,
-          },
-          { status: 409 }
-        );
-      }
-
       // Check if all selected products are already in draft status
       const alreadyDraft = (foundProducts as any[]).filter((p) => !p.isActive && !p.isArchived);
       if (alreadyDraft.length === foundProducts.length) {
@@ -187,19 +174,6 @@ export async function POST(request: NextRequest) {
       updateFields = { isActive: false, isArchived: false };
       successMessage = `Successfully moved ${uniqueIds.length} ${uniqueIds.length === 1 ? 'product' : 'products'} to Draft.`;
     } else if (action === 'publish') {
-      // Archived products cannot be published directly without restoring
-      const archivedProducts = (foundProducts as any[]).filter((p) => p.isArchived);
-      if (archivedProducts.length > 0) {
-        const names = archivedProducts.map((p) => `"${p.name}" (${p.sku || p._id})`);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Bulk publish aborted: ${archivedProducts.length} product(s) are archived: [${names.join(', ')}]. Archived products must be restored first before publishing. No products were modified.`,
-          },
-          { status: 409 }
-        );
-      }
-
       // Check if all selected products are already published
       const alreadyPublished = (foundProducts as any[]).filter((p) => p.isActive && !p.isArchived);
       if (alreadyPublished.length === foundProducts.length) {

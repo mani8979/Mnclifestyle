@@ -10,7 +10,6 @@ import {
   Edit3,
   ExternalLink,
   Trash2,
-  RotateCcw,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
@@ -18,8 +17,8 @@ import {
   Loader2,
   X,
   SlidersHorizontal,
-  Archive,
   FileEdit,
+  Send,
 } from 'lucide-react';
 import { formatINR } from '@/utils/currency';
 
@@ -101,9 +100,6 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
   const [bulkConfirmPhraseInput, setBulkConfirmPhraseInput] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
-  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
-
   const [showBulkDraftModal, setShowBulkDraftModal] = useState(false);
   const [isBulkDrafting, setIsBulkDrafting] = useState(false);
 
@@ -179,14 +175,12 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
     setSelectedProductIds([]); // Clear selection when switching away or changing status
   };
 
-  // Archival & Restore modal state
-  const [deleteModalProduct, setDeleteModalProduct] = useState<ProductItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [restoreModalProduct, setRestoreModalProduct] = useState<ProductItem | null>(null);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [permanentDeleteProduct, setPermanentDeleteProduct] = useState<ProductItem | null>(null);
-  const [confirmNameInput, setConfirmNameInput] = useState('');
-  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
+  // Individual delete action dialog state (Option A: Move to Draft, Option B: Permanently Delete)
+  const [deleteActionProduct, setDeleteActionProduct] = useState<ProductItem | null>(null);
+  const [deleteConfirmPhraseInput, setDeleteConfirmPhraseInput] = useState('');
+  const [isMovingToDraft, setIsMovingToDraft] = useState(false);
+  const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
+  const [isPublishingSingleId, setIsPublishingSingleId] = useState<string | null>(null);
 
   // Notification state
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -241,99 +235,113 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
     return () => abortRef.current?.abort();
   }, []);
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteModalProduct) return;
-    setIsDeleting(true);
-
+  const handleMoveSingleToDraft = async (product: ProductItem) => {
+    setIsMovingToDraft(true);
     try {
-      const res = await fetch(`/api/admin/products/${deleteModalProduct._id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setNotification({
-          type: 'success',
-          message: data.collectionNotice
-            ? `${data.message} ${data.collectionNotice}`
-            : data.message || 'Product archived successfully',
-        });
-        setDeleteModalProduct(null);
-        fetchProducts();
-      } else {
-        setNotification({ type: 'error', message: data.message || 'Failed to archive product' });
-      }
-    } catch {
-      setNotification({ type: 'error', message: 'Failed to archive product' });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleRestoreConfirm = async () => {
-    if (!restoreModalProduct) return;
-    setIsRestoring(true);
-
-    try {
-      const res = await fetch(`/api/admin/products/${restoreModalProduct._id}`, {
+      const res = await fetch(`/api/admin/products/${product._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isArchived: false, isActive: true }),
+        body: JSON.stringify({ isActive: false, isArchived: false }),
       });
       const data = await res.json();
-
       if (res.ok && data.success) {
         setNotification({
           type: 'success',
-          message: `Product "${restoreModalProduct.name}" restored and published to storefront.`,
+          message: `Product "${product.name}" moved to Draft.`,
         });
-        setRestoreModalProduct(null);
+        setDeleteActionProduct(null);
+        setDeleteConfirmPhraseInput('');
         fetchProducts();
       } else {
-        setNotification({ type: 'error', message: data.message || 'Failed to restore product' });
-        setRestoreModalProduct(null);
+        setNotification({
+          type: 'error',
+          message: data.message || 'Failed to move product to Draft.',
+        });
       }
     } catch {
-      setNotification({ type: 'error', message: 'Network error restoring product' });
+      setNotification({
+        type: 'error',
+        message: 'Network error moving product to Draft.',
+      });
     } finally {
-      setIsRestoring(false);
+      setIsMovingToDraft(false);
     }
   };
 
-  const handlePermanentDeleteConfirm = async () => {
-    if (!permanentDeleteProduct) return;
-    if (confirmNameInput.trim() !== permanentDeleteProduct.name.trim()) return;
-    setIsPermanentDeleting(true);
+  const handlePublishSingle = async (product: ProductItem) => {
+    setIsPublishingSingleId(product._id);
+    try {
+      const res = await fetch(`/api/admin/products/${product._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true, isArchived: false }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNotification({
+          type: 'success',
+          message: `Product "${product.name}" published to storefront.`,
+        });
+        fetchProducts();
+      } else {
+        setNotification({
+          type: 'error',
+          message: data.message || 'Failed to publish product.',
+        });
+      }
+    } catch {
+      setNotification({
+        type: 'error',
+        message: 'Network error publishing product.',
+      });
+    } finally {
+      setIsPublishingSingleId(null);
+    }
+  };
+
+  const handlePermanentDeleteSingleConfirm = async () => {
+    if (!deleteActionProduct) return;
+    const expectedPhrase = `DELETE ${deleteActionProduct.name.trim()}`;
+    const isPhraseMatch =
+      deleteConfirmPhraseInput.trim().toUpperCase() === expectedPhrase.toUpperCase() ||
+      deleteConfirmPhraseInput.trim().toUpperCase() === deleteActionProduct.name.trim().toUpperCase();
+
+    if (!isPhraseMatch) return;
+    setIsPermanentlyDeleting(true);
 
     try {
-      const res = await fetch(`/api/admin/products/${permanentDeleteProduct._id}?permanent=true`, {
+      const res = await fetch(`/api/admin/products/${deleteActionProduct._id}/permanent`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmationName: confirmNameInput.trim() }),
+        body: JSON.stringify({
+          confirmationPhrase: deleteConfirmPhraseInput.trim(),
+          confirmationName: deleteActionProduct.name.trim(),
+        }),
       });
       const data = await res.json();
 
       if (res.ok && data.success) {
         setNotification({
           type: 'success',
-          message: 'Product permanently deleted.',
+          message: data.message || `Product "${deleteActionProduct.name}" permanently deleted.`,
         });
-        // Remove from selection if present
-        setSelectedProductIds((prev) => prev.filter((id) => id !== permanentDeleteProduct._id));
-        setPermanentDeleteProduct(null);
-        setConfirmNameInput('');
+        setSelectedProductIds((prev) => prev.filter((id) => id !== deleteActionProduct._id));
+        setDeleteActionProduct(null);
+        setDeleteConfirmPhraseInput('');
         fetchProducts();
       } else {
-        const errorMsg =
-          res.status === 409
-            ? data.message || 'Only archived products can be permanently deleted.'
-            : data.message || 'Unable to delete this product. Please try again.';
-        setNotification({ type: 'error', message: errorMsg });
+        setNotification({
+          type: 'error',
+          message: data.message || 'Unable to delete product. Please try again.',
+        });
       }
     } catch {
-      setNotification({ type: 'error', message: 'Unable to delete this product. Please try again.' });
+      setNotification({
+        type: 'error',
+        message: 'Network error deleting product. Please try again.',
+      });
     } finally {
-      setIsPermanentDeleting(false);
+      setIsPermanentlyDeleting(false);
     }
   };
 
@@ -380,11 +388,10 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
     }
   };
 
-  const handleBulkStatusAction = async (action: 'archive' | 'draft' | 'publish') => {
+  const handleBulkStatusAction = async (action: 'draft' | 'publish') => {
     if (selectedProductIds.length === 0) return;
 
-    if (action === 'archive') setIsBulkArchiving(true);
-    else if (action === 'draft') setIsBulkDrafting(true);
+    if (action === 'draft') setIsBulkDrafting(true);
     else if (action === 'publish') setIsBulkPublishing(true);
 
     try {
@@ -404,7 +411,6 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
           message: data.message || `Successfully processed ${selectedProductIds.length} products.`,
         });
         setSelectedProductIds([]);
-        setShowBulkArchiveModal(false);
         setShowBulkDraftModal(false);
         setShowBulkPublishModal(false);
         fetchProducts();
@@ -420,8 +426,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         message: `Network error processing bulk ${action}.`,
       });
     } finally {
-      if (action === 'archive') setIsBulkArchiving(false);
-      else if (action === 'draft') setIsBulkDrafting(false);
+      if (action === 'draft') setIsBulkDrafting(false);
       else if (action === 'publish') setIsBulkPublishing(false);
     }
   };
@@ -447,15 +452,11 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
   }, [products, selectedProductIds]);
 
   const selectedPublishedCount = useMemo(() => {
-    return selectedProductsList.filter((p) => p.isActive && !p.isArchived).length;
+    return selectedProductsList.filter((p) => p.isActive).length;
   }, [selectedProductsList]);
 
   const selectedDraftCount = useMemo(() => {
-    return selectedProductsList.filter((p) => !p.isActive && !p.isArchived).length;
-  }, [selectedProductsList]);
-
-  const _selectedArchivedCount = useMemo(() => {
-    return selectedProductsList.filter((p) => p.isArchived).length;
+    return selectedProductsList.filter((p) => !p.isActive).length;
   }, [selectedProductsList]);
 
   return (
@@ -581,10 +582,9 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               aria-label="Filter products by publication status"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition-colors"
             >
-              <option value="all">All Active & Drafts</option>
+              <option value="all">All Products (Published & Drafts)</option>
               <option value="published">Published</option>
               <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
             </select>
           </div>
         </div>
@@ -638,13 +638,9 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               {selectedProductIds.length} {selectedProductIds.length === 1 ? 'product' : 'products'} selected
             </span>
             <span className="text-slate-400 text-[11px]">
-              ({selectedStatus === 'archived'
-                ? 'Archived'
-                : selectedStatus === 'published'
-                ? 'Published'
-                : selectedStatus === 'draft'
-                ? 'Draft'
-                : 'Active & Drafts'})
+              ({selectedPublishedCount > 0 && `${selectedPublishedCount} published`}
+              {selectedPublishedCount > 0 && selectedDraftCount > 0 && ', '}
+              {selectedDraftCount > 0 && `${selectedDraftCount} draft`})
             </span>
           </div>
 
@@ -657,90 +653,42 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               Clear Selection
             </button>
 
-            {/* When viewing Archived products: show Permanent Delete */}
-            {selectedStatus === 'archived' ? (
+            {/* Publish Selected (if any drafts selected) */}
+            {selectedDraftCount > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  setShowBulkDeleteModal(true);
-                  setBulkConfirmPhraseInput('');
-                }}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                onClick={() => setShowBulkPublishModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
               >
-                <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                <span>Permanently Delete ({selectedProductIds.length})</span>
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Publish Selected ({selectedDraftCount})</span>
               </button>
-            ) : selectedStatus === 'draft' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkPublishModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Publish Selected ({selectedProductIds.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkArchiveModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <Archive className="w-3.5 h-3.5 shrink-0" />
-                  <span>Archive Selected ({selectedProductIds.length})</span>
-                </button>
-              </>
-            ) : selectedStatus === 'published' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkDraftModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <FileEdit className="w-3.5 h-3.5 shrink-0" />
-                  <span>Move to Draft ({selectedProductIds.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowBulkArchiveModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <Archive className="w-3.5 h-3.5 shrink-0" />
-                  <span>Archive Selected ({selectedProductIds.length})</span>
-                </button>
-              </>
-            ) : (
-              /* 'all' Active & Drafts */
-              <>
-                {selectedDraftCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowBulkPublishModal(true)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Publish Drafts ({selectedDraftCount})</span>
-                  </button>
-                )}
-                {selectedPublishedCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowBulkDraftModal(true)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                  >
-                    <FileEdit className="w-3.5 h-3.5 shrink-0" />
-                    <span>Move to Draft ({selectedPublishedCount})</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowBulkArchiveModal(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-                >
-                  <Archive className="w-3.5 h-3.5 shrink-0" />
-                  <span>Archive Selected ({selectedProductIds.length})</span>
-                </button>
-              </>
             )}
+
+            {/* Move Selected to Draft (if any published products selected) */}
+            {selectedPublishedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowBulkDraftModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+              >
+                <FileEdit className="w-3.5 h-3.5 shrink-0" />
+                <span>Move Selected to Draft ({selectedPublishedCount})</span>
+              </button>
+            )}
+
+            {/* Permanently Delete Selected */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowBulkDeleteModal(true);
+                setBulkConfirmPhraseInput('');
+              }}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+            >
+              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Permanently Delete Selected ({selectedProductIds.length})</span>
+            </button>
           </div>
         </div>
       )}
@@ -936,11 +884,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                       </div>
 
                       <div className="shrink-0">
-                        {p.isArchived ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
-                            Archived
-                          </span>
-                        ) : p.isActive ? (
+                        {p.isActive ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Published
                           </span>
@@ -955,8 +899,8 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                     {/* Bottom Row: Actions */}
                     <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
                       <div className="flex items-center gap-1.5">
-                        {/* View on Storefront (if not archived) */}
-                        {!p.isArchived && (
+                        {/* View on Storefront (if published) */}
+                        {p.isActive && (
                           <Link
                             href={`/product/${p.slug || slugify(p.name)}`}
                             target="_blank"
@@ -980,41 +924,37 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                        {p.isArchived ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setRestoreModalProduct(p)}
-                              title="Restore product"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold transition-colors cursor-pointer"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Restore</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPermanentDeleteProduct(p);
-                                setConfirmNameInput('');
-                              }}
-                              title="Delete Permanently"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:border-red-300 text-xs font-semibold transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                              <span>Delete Permanently</span>
-                            </button>
-                          </>
-                        ) : (
+                        {/* If Draft, show direct Publish button */}
+                        {!p.isActive && (
                           <button
                             type="button"
-                            onClick={() => setDeleteModalProduct(p)}
-                            title="Archive product"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 text-xs font-medium transition-colors cursor-pointer"
+                            disabled={isPublishingSingleId === p._id}
+                            onClick={() => handlePublishSingle(p)}
+                            title="Publish product to storefront"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Archive</span>
+                            {isPublishingSingleId === p._id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Send className="w-3.5 h-3.5" />
+                            )}
+                            <span>Publish</span>
                           </button>
                         )}
+
+                        {/* Delete / Move to Draft dialog trigger */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteActionProduct(p);
+                            setDeleteConfirmPhraseInput('');
+                          }}
+                          title="Delete / Move to Draft"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 text-xs font-medium transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1155,11 +1095,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
 
                         {/* Status */}
                         <td className="py-3.5 px-4">
-                          {p.isArchived ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
-                              Archived
-                            </span>
-                          ) : p.isActive ? (
+                          {p.isActive ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                               Published
                             </span>
@@ -1173,8 +1109,26 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {/* View on Storefront (active/non-archived) */}
-                            {!p.isArchived && (
+                            {/* If Draft: direct Publish button */}
+                            {!p.isActive && (
+                              <button
+                                type="button"
+                                disabled={isPublishingSingleId === p._id}
+                                onClick={() => handlePublishSingle(p)}
+                                title="Publish product to storefront"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
+                              >
+                                {isPublishingSingleId === p._id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Send className="w-3 h-3" />
+                                )}
+                                <span>Publish</span>
+                              </button>
+                            )}
+
+                            {/* View on Storefront (if published) */}
+                            {p.isActive && (
                               <Link
                                 href={`/product/${p.slug || slugify(p.name)}`}
                                 target="_blank"
@@ -1194,40 +1148,18 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                               <Edit3 className="w-3.5 h-3.5" />
                             </Link>
 
-                            {p.isArchived ? (
-                              <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                <button
-                                  type="button"
-                                  onClick={() => setRestoreModalProduct(p)}
-                                  title="Restore product"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-[11px] font-semibold transition-colors cursor-pointer"
-                                >
-                                  <RotateCcw className="w-3 h-3" />
-                                  <span>Restore</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setPermanentDeleteProduct(p);
-                                    setConfirmNameInput('');
-                                  }}
-                                  title="Delete Permanently"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:border-red-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                                >
-                                  <Trash2 className="w-3 h-3 text-red-600" />
-                                  <span>Delete Permanently</span>
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setDeleteModalProduct(p)}
-                                title="Archive / Delete product"
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                            {/* Delete Button (opens Delete Dialog) */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeleteActionProduct(p);
+                                setDeleteConfirmPhraseInput('');
+                              }}
+                              title="Delete product"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1277,118 +1209,20 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         )}
       </div>
 
-      {/* Delete / Archive Confirmation Modal */}
-      {deleteModalProduct && (
+      {/* Individual Product Delete & Draft Management Modal */}
+      {deleteActionProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center mb-4">
-              <Trash2 className="w-6 h-6" />
-            </div>
-
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Archive Product?
-            </h3>
-
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Are you sure you want to archive <strong className="text-slate-900">&quot;{deleteModalProduct.name}&quot;</strong>?
-            </p>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 mb-6">
-              This performs a safe archival: the product will be unlisted immediately from the customer storefront and public APIs while preserving historical data.
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => setDeleteModalProduct(null)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleDeleteConfirm}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-60 text-center"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Archiving...</span>
-                  </>
-                ) : (
-                  <span>Confirm Archive</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Restore Confirmation Modal */}
-      {restoreModalProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-              <RotateCcw className="w-6 h-6" />
-            </div>
-
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Restore Product?
-            </h3>
-
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Are you sure you want to restore <strong className="text-slate-900">&quot;{restoreModalProduct.name}&quot;</strong> back to the active catalog?
-            </p>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 mb-6">
-              This will publish the product again, re-sync its category item count and storefront routes, and restore public visibility across Search, Shop, and Category pages.
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
-              <button
-                type="button"
-                disabled={isRestoring}
-                onClick={() => setRestoreModalProduct(null)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isRestoring}
-                onClick={handleRestoreConfirm}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-60 text-center"
-              >
-                {isRestoring ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Restoring...</span>
-                  </>
-                ) : (
-                  <span>Confirm Restore</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Individual Permanent Delete Confirmation Modal */}
-      {permanentDeleteProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-4 sm:p-7 shadow-2xl relative text-left">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative text-left">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center">
-                <Trash2 className="w-6 h-6" />
+              <div className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
               </div>
               <button
                 type="button"
-                disabled={isPermanentDeleting}
+                disabled={isMovingToDraft || isPermanentlyDeleting}
                 onClick={() => {
-                  setPermanentDeleteProduct(null);
-                  setConfirmNameInput('');
+                  setDeleteActionProduct(null);
+                  setDeleteConfirmPhraseInput('');
                 }}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
@@ -1396,91 +1230,149 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               </button>
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Permanently Delete Product?
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+              Delete Product
             </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Choose how you want to handle <strong className="text-slate-800">&quot;{deleteActionProduct.name}&quot;</strong>.
+            </p>
 
-            {/* Clear Warning */}
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 font-medium mb-4 flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <span>This action permanently deletes this archived product. It cannot be restored.</span>
-            </div>
-
-            {/* Product Details Display */}
-            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4 flex items-center gap-2.5 sm:gap-3">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0 relative">
+            {/* Product Summary Preview */}
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-5 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0 relative">
                 <img
-                  src={permanentDeleteProduct.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80'}
-                  alt={permanentDeleteProduct.name}
+                  src={deleteActionProduct.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80'}
+                  alt={deleteActionProduct.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="min-w-0 flex-1 text-xs">
-                <div className="font-bold text-slate-900 truncate">
-                  {permanentDeleteProduct.name}
-                </div>
+                <div className="font-bold text-slate-900 truncate">{deleteActionProduct.name}</div>
                 <div className="text-slate-500 text-[11px] mt-0.5 truncate">
-                  SKU: <span className="font-mono font-medium text-slate-700">{permanentDeleteProduct.sku || permanentDeleteProduct.legacyId || 'N/A'}</span>
-                </div>
-                <div className="text-slate-500 text-[11px] truncate">
-                  Category: <span className="capitalize font-medium text-slate-700">{permanentDeleteProduct.categoryLabel || permanentDeleteProduct.category}</span>
+                  SKU: <span className="font-mono text-slate-700">{deleteActionProduct.sku || deleteActionProduct.legacyId || 'N/A'}</span> • {deleteActionProduct.categoryLabel || deleteActionProduct.category}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold bg-slate-200 text-slate-700">
-                  Archived
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                  deleteActionProduct.isActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
+                  {deleteActionProduct.isActive ? 'Published' : 'Draft'}
                 </span>
                 <div className="font-bold text-slate-900 text-xs mt-1">
-                  {formatINR(permanentDeleteProduct.price)}
+                  {formatINR(deleteActionProduct.price)}
                 </div>
               </div>
             </div>
 
-            {/* Confirmation Field */}
-            <div className="space-y-2 mb-6">
-              <label className="block text-xs font-semibold text-slate-700">
-                To confirm, type <strong className="text-slate-900 font-mono select-all bg-slate-100 px-1 py-0.5 rounded border border-slate-200">&quot;{permanentDeleteProduct.name}&quot;</strong> below:
-              </label>
-              <input
-                type="text"
-                placeholder="Type product name exactly..."
-                value={confirmNameInput}
-                onChange={(e) => setConfirmNameInput(e.target.value)}
-                disabled={isPermanentDeleting}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 focus:bg-white transition-colors"
-              />
+            <div className="space-y-4">
+              {/* Option A: Move to Draft (Safe & Non-destructive) */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <FileEdit className="w-4 h-4 text-slate-700" />
+                      <span>Option A — Move to Draft (Recommended)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                      Immediately unpublishes this product from the customer-facing website while keeping all images, specifications, and pricing safely stored. You can republish it anytime.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                  {deleteActionProduct.isActive ? (
+                    <button
+                      type="button"
+                      disabled={isMovingToDraft || isPermanentlyDeleting}
+                      onClick={() => handleMoveSingleToDraft(deleteActionProduct)}
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isMovingToDraft ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Moving to Draft...</span>
+                        </>
+                      ) : (
+                        <span>Move to Draft</span>
+                      )}
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      Product is already in Draft status
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Option B: Permanently Delete (Irreversible removal) */}
+              <div className="p-4 rounded-xl border border-red-200 bg-red-50/40">
+                <div className="text-xs font-bold text-red-900 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span>Option B — Permanently Delete</span>
+                </div>
+                <p className="text-[11px] text-red-800 mt-1 leading-relaxed">
+                  Irreversible action. All product data, images, and pricing will be permanently removed from the database.
+                </p>
+
+                {/* Exact phrase confirmation input */}
+                {(() => {
+                  const requiredPhrase = `DELETE ${deleteActionProduct.name.trim()}`;
+                  const isMatch =
+                    deleteConfirmPhraseInput.trim().toUpperCase() === requiredPhrase.toUpperCase() ||
+                    deleteConfirmPhraseInput.trim().toUpperCase() === deleteActionProduct.name.trim().toUpperCase();
+
+                  return (
+                    <div className="mt-3 pt-3 border-t border-red-200/60 space-y-2">
+                      <label className="block text-[11px] font-semibold text-slate-700">
+                        To confirm permanent deletion, type <strong className="text-red-900 font-mono select-all bg-white px-1 py-0.5 rounded border border-red-200">&quot;{requiredPhrase}&quot;</strong> below:
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          placeholder={`Type "${requiredPhrase}"...`}
+                          value={deleteConfirmPhraseInput}
+                          onChange={(e) => setDeleteConfirmPhraseInput(e.target.value)}
+                          disabled={isPermanentlyDeleting || isMovingToDraft}
+                          className="flex-1 bg-white border border-red-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600"
+                        />
+                        <button
+                          type="button"
+                          disabled={!isMatch || isPermanentlyDeleting || isMovingToDraft}
+                          onClick={handlePermanentDeleteSingleConfirm}
+                          className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {isPermanentlyDeleting ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Deleting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Permanently Delete</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <div className="mt-5 pt-3 border-t border-slate-100 flex justify-end">
               <button
                 type="button"
-                disabled={isPermanentDeleting}
+                disabled={isMovingToDraft || isPermanentlyDeleting}
                 onClick={() => {
-                  setPermanentDeleteProduct(null);
-                  setConfirmNameInput('');
+                  setDeleteActionProduct(null);
+                  setDeleteConfirmPhraseInput('');
                 }}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                disabled={confirmNameInput.trim() !== permanentDeleteProduct.name.trim() || isPermanentDeleting}
-                onClick={handlePermanentDeleteConfirm}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-center"
-              >
-                {isPermanentDeleting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Permanently Deleting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Permanently Delete Product</span>
-                  </>
-                )}
               </button>
             </div>
           </div>
@@ -1516,7 +1408,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
             <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 font-medium mb-4 flex items-start gap-2.5 shrink-0">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <span>
-                This action permanently deletes {selectedProductIds.length} archived product(s). This action cannot be undone.
+                This action permanently deletes {selectedProductIds.length} product(s) from the database. This action cannot be undone.
               </span>
             </div>
 
@@ -1632,60 +1524,8 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         </div>
       )}
 
-      {/* Bulk Archive Modal */}
-      {showBulkArchiveModal && selectedProductIds.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mb-4">
-              <Archive className="w-6 h-6" />
-            </div>
 
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Archive {selectedProductIds.length} {selectedProductIds.length === 1 ? 'Product' : 'Products'}?
-            </h3>
 
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Are you sure you want to archive the <strong className="text-slate-900">{selectedProductIds.length}</strong> selected products?
-            </p>
-
-            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 mb-6 space-y-1.5">
-              <div className="font-semibold flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Safe Archival (Not Permanent Deletion)</span>
-              </div>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                These products will be moved to the <strong>Archived</strong> tab and removed from the active storefront catalogue. All product specifications, images, and inventory movement records will remain intact. You can restore them anytime.
-              </p>
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
-              <button
-                type="button"
-                disabled={isBulkArchiving}
-                onClick={() => setShowBulkArchiveModal(false)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer text-center"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isBulkArchiving}
-                onClick={() => handleBulkStatusAction('archive')}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 text-center"
-              >
-                {isBulkArchiving ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Archiving...</span>
-                  </>
-                ) : (
-                  <span>Confirm Archive ({selectedProductIds.length})</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Bulk Move to Draft Modal */}
       {showBulkDraftModal && selectedProductIds.length > 0 && (
