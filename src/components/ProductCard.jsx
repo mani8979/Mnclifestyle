@@ -8,6 +8,7 @@ import { slugify } from '../data/products';
 import { getSafeImageSrc, shouldUnoptimizeImage } from '../utils/image';
 import { getProductDisplaySwatches } from '../utils/colors';
 import FormattedTitle from './shared/FormattedTitle';
+import ShareProductButton from './ShareProductButton';
 
 export default function ProductCard({ product, index }) {
   // Subtle stagger based on grid position (0ms, 80ms, 160ms, 240ms)
@@ -53,6 +54,11 @@ export default function ProductCard({ product, index }) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
+
+        {/* Quick Share Action Button */}
+        <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity">
+          <ShareProductButton product={product} variant="card" />
+        </div>
 
         {/* Mobile Badge Overlay (Bottom-Right, compact) */}
         {product.badge && (
