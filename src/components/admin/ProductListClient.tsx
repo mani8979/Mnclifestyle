@@ -18,6 +18,8 @@ import {
   Loader2,
   X,
   SlidersHorizontal,
+  Archive,
+  FileEdit,
 } from 'lucide-react';
 import { formatINR } from '@/utils/currency';
 
@@ -93,11 +95,20 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
   const abortRef = useRef<AbortController | null>(null);
   const reqSeqRef = useRef(0);
 
-  // Checkbox selection & bulk action states (Archived products only)
+  // Checkbox selection & bulk action states
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkConfirmPhraseInput, setBulkConfirmPhraseInput] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
+
+  const [showBulkDraftModal, setShowBulkDraftModal] = useState(false);
+  const [isBulkDrafting, setIsBulkDrafting] = useState(false);
+
+  const [showBulkPublishModal, setShowBulkPublishModal] = useState(false);
+  const [isBulkPublishing, setIsBulkPublishing] = useState(false);
 
   useEffect(() => {
     if (!search) {
@@ -369,24 +380,83 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
     }
   };
 
-  // Eligible archived products on the current page
-  const pageArchivedProducts = useMemo(() => {
-    return products.filter((p) => p.isArchived);
-  }, [products]);
+  const handleBulkStatusAction = async (action: 'archive' | 'draft' | 'publish') => {
+    if (selectedProductIds.length === 0) return;
 
+    if (action === 'archive') setIsBulkArchiving(true);
+    else if (action === 'draft') setIsBulkDrafting(true);
+    else if (action === 'publish') setIsBulkPublishing(true);
+
+    try {
+      const res = await fetch('/api/admin/products/bulk-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: selectedProductIds,
+          action,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNotification({
+          type: 'success',
+          message: data.message || `Successfully processed ${selectedProductIds.length} products.`,
+        });
+        setSelectedProductIds([]);
+        setShowBulkArchiveModal(false);
+        setShowBulkDraftModal(false);
+        setShowBulkPublishModal(false);
+        fetchProducts();
+      } else {
+        setNotification({
+          type: 'error',
+          message: data.message || `Failed to process bulk ${action}.`,
+        });
+      }
+    } catch {
+      setNotification({
+        type: 'error',
+        message: `Network error processing bulk ${action}.`,
+      });
+    } finally {
+      if (action === 'archive') setIsBulkArchiving(false);
+      else if (action === 'draft') setIsBulkDrafting(false);
+      else if (action === 'publish') setIsBulkPublishing(false);
+    }
+  };
+
+  // Products on current page selection helpers
   const isAllCurrentPageSelected = useMemo(() => {
     return (
-      pageArchivedProducts.length > 0 &&
-      pageArchivedProducts.every((p) => selectedProductIds.includes(p._id))
+      products.length > 0 &&
+      products.every((p) => selectedProductIds.includes(p._id))
     );
-  }, [pageArchivedProducts, selectedProductIds]);
+  }, [products, selectedProductIds]);
 
   const isSomeCurrentPageSelected = useMemo(() => {
     return (
-      pageArchivedProducts.some((p) => selectedProductIds.includes(p._id)) &&
+      products.some((p) => selectedProductIds.includes(p._id)) &&
       !isAllCurrentPageSelected
     );
-  }, [pageArchivedProducts, selectedProductIds, isAllCurrentPageSelected]);
+  }, [products, selectedProductIds, isAllCurrentPageSelected]);
+
+  // Composition breakdown of selected products
+  const selectedProductsList = useMemo(() => {
+    return products.filter((p) => selectedProductIds.includes(p._id));
+  }, [products, selectedProductIds]);
+
+  const selectedPublishedCount = useMemo(() => {
+    return selectedProductsList.filter((p) => p.isActive && !p.isArchived).length;
+  }, [selectedProductsList]);
+
+  const selectedDraftCount = useMemo(() => {
+    return selectedProductsList.filter((p) => !p.isActive && !p.isArchived).length;
+  }, [selectedProductsList]);
+
+  const _selectedArchivedCount = useMemo(() => {
+    return selectedProductsList.filter((p) => p.isArchived).length;
+  }, [selectedProductsList]);
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto w-full min-w-0">
@@ -557,8 +627,8 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
         </div>
       </div>
 
-      {/* Bulk Action Toolbar (Displayed only when products are selected under Archived status) */}
-      {selectedStatus === 'archived' && selectedProductIds.length > 0 && (
+      {/* Bulk Action Toolbar (Displayed whenever products are selected) */}
+      {selectedProductIds.length > 0 && (
         <div className="bg-slate-900 text-white rounded-2xl p-3 sm:px-5 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg border border-slate-800 animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 text-xs">
             <span className="inline-flex items-center justify-center min-w-6 h-6 px-1.5 rounded-full bg-blue-600 text-white font-bold text-[11px]">
@@ -568,29 +638,109 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               {selectedProductIds.length} {selectedProductIds.length === 1 ? 'product' : 'products'} selected
             </span>
             <span className="text-slate-400 text-[11px]">
-              (Archived)
+              ({selectedStatus === 'archived'
+                ? 'Archived'
+                : selectedStatus === 'published'
+                ? 'Published'
+                : selectedStatus === 'draft'
+                ? 'Draft'
+                : 'Active & Drafts'})
             </span>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
             <button
               type="button"
               onClick={() => setSelectedProductIds([])}
-              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer text-center"
+              className="px-3 py-2 sm:py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer text-center"
             >
               Clear Selection
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowBulkDeleteModal(true);
-                setBulkConfirmPhraseInput('');
-              }}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
-            >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
-              <span>Delete Selected ({selectedProductIds.length})</span>
-            </button>
+
+            {/* When viewing Archived products: show Permanent Delete */}
+            {selectedStatus === 'archived' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBulkDeleteModal(true);
+                  setBulkConfirmPhraseInput('');
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+              >
+                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Permanently Delete ({selectedProductIds.length})</span>
+              </button>
+            ) : selectedStatus === 'draft' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkPublishModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Publish Selected ({selectedProductIds.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkArchiveModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                >
+                  <Archive className="w-3.5 h-3.5 shrink-0" />
+                  <span>Archive Selected ({selectedProductIds.length})</span>
+                </button>
+              </>
+            ) : selectedStatus === 'published' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkDraftModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                >
+                  <FileEdit className="w-3.5 h-3.5 shrink-0" />
+                  <span>Move to Draft ({selectedProductIds.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkArchiveModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                >
+                  <Archive className="w-3.5 h-3.5 shrink-0" />
+                  <span>Archive Selected ({selectedProductIds.length})</span>
+                </button>
+              </>
+            ) : (
+              /* 'all' Active & Drafts */
+              <>
+                {selectedDraftCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkPublishModal(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Publish Drafts ({selectedDraftCount})</span>
+                  </button>
+                )}
+                {selectedPublishedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkDraftModal(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                  >
+                    <FileEdit className="w-3.5 h-3.5 shrink-0" />
+                    <span>Move to Draft ({selectedPublishedCount})</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowBulkArchiveModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                >
+                  <Archive className="w-3.5 h-3.5 shrink-0" />
+                  <span>Archive Selected ({selectedProductIds.length})</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -623,46 +773,44 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
           </div>
         ) : (
           <>
-            {/* Mobile Select All Toolbar (Visible only on mobile < md when status is archived) */}
-            {selectedStatus === 'archived' && (
-              <div className="md:hidden p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all displayed archived products on this page"
-                    checked={isAllCurrentPageSelected}
-                    ref={(el) => {
-                      if (el) {
-                        el.indeterminate = isSomeCurrentPageSelected;
-                      }
-                    }}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        const newIds = new Set([
-                          ...selectedProductIds,
-                          ...pageArchivedProducts.map((p) => p._id),
-                        ]);
-                        setSelectedProductIds(Array.from(newIds));
-                      } else {
-                        const pageIdSet = new Set(pageArchivedProducts.map((p) => p._id));
-                        setSelectedProductIds(
-                          selectedProductIds.filter((id) => !pageIdSet.has(id))
-                        );
-                      }
-                    }}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="font-semibold text-slate-700 text-xs">
-                    Select All ({pageArchivedProducts.length}) on this page
-                  </span>
-                </label>
-                {selectedProductIds.length > 0 && (
-                  <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                    {selectedProductIds.length} selected
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Mobile Select All Toolbar (Visible on mobile < md) */}
+            <div className="md:hidden p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  aria-label="Select all displayed products on this page"
+                  checked={isAllCurrentPageSelected}
+                  ref={(el) => {
+                    if (el) {
+                      el.indeterminate = isSomeCurrentPageSelected;
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      const newIds = new Set([
+                        ...selectedProductIds,
+                        ...products.map((p) => p._id),
+                      ]);
+                      setSelectedProductIds(Array.from(newIds));
+                    } else {
+                      const pageIdSet = new Set(products.map((p) => p._id));
+                      setSelectedProductIds(
+                        selectedProductIds.filter((id) => !pageIdSet.has(id))
+                      );
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="font-semibold text-slate-700 text-xs">
+                  Select All ({products.length}) on this page
+                </span>
+              </label>
+              {selectedProductIds.length > 0 && (
+                <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                  {selectedProductIds.length} selected
+                </span>
+              )}
+            </div>
 
             {/* Mobile Product Card Layout (< 768px) */}
             <div className="md:hidden divide-y divide-slate-100">
@@ -677,32 +825,28 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                     className={`p-3.5 sm:p-4 transition-colors ${isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/50'
                       }`}
                   >
-                    {/* Top Row: Checkbox (archived) + Thumbnail + Product Info */}
+                    {/* Top Row: Checkbox + Thumbnail + Product Info */}
                     <div className="flex items-start gap-3">
-                      {/* Checkbox (archived only) */}
-                      {selectedStatus === 'archived' && (
-                        <div className="pt-0.5 shrink-0">
-                          {p.isArchived ? (
-                            <input
-                              type="checkbox"
-                              aria-label={`Select product ${p.name}`}
-                              checked={isSelected}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedProductIds((prev) =>
-                                    Array.from(new Set([...prev, p._id]))
-                                  );
-                                } else {
-                                  setSelectedProductIds((prev) =>
-                                    prev.filter((id) => id !== p._id)
-                                  );
-                                }
-                              }}
-                              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            />
-                          ) : null}
-                        </div>
-                      )}
+                      {/* Checkbox */}
+                      <div className="pt-0.5 shrink-0">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select product ${p.name}`}
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedProductIds((prev) =>
+                                Array.from(new Set([...prev, p._id]))
+                              );
+                            } else {
+                              setSelectedProductIds((prev) =>
+                                prev.filter((id) => id !== p._id)
+                              );
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </div>
 
                       {/* Product Thumbnail */}
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 relative">
@@ -883,35 +1027,33 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 uppercase tracking-wider text-[11px] font-semibold">
                   <tr>
-                    {selectedStatus === 'archived' && (
-                      <th className="py-3.5 px-3 w-10 text-center">
-                        <input
-                          type="checkbox"
-                          aria-label="Select all displayed archived products on this page"
-                          checked={isAllCurrentPageSelected}
-                          ref={(el) => {
-                            if (el) {
-                              el.indeterminate = isSomeCurrentPageSelected;
-                            }
-                          }}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const newIds = new Set([
-                                ...selectedProductIds,
-                                ...pageArchivedProducts.map((p) => p._id),
-                              ]);
-                              setSelectedProductIds(Array.from(newIds));
-                            } else {
-                              const pageIdSet = new Set(pageArchivedProducts.map((p) => p._id));
-                              setSelectedProductIds(
-                                selectedProductIds.filter((id) => !pageIdSet.has(id))
-                              );
-                            }
-                          }}
-                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                      </th>
-                    )}
+                    <th className="py-3.5 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all displayed products on this page"
+                        checked={isAllCurrentPageSelected}
+                        ref={(el) => {
+                          if (el) {
+                            el.indeterminate = isSomeCurrentPageSelected;
+                          }
+                        }}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const newIds = new Set([
+                              ...selectedProductIds,
+                              ...products.map((p) => p._id),
+                            ]);
+                            setSelectedProductIds(Array.from(newIds));
+                          } else {
+                            const pageIdSet = new Set(products.map((p) => p._id));
+                            setSelectedProductIds(
+                              selectedProductIds.filter((id) => !pageIdSet.has(id))
+                            );
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3.5 px-4">Product</th>
                     <th className="py-3.5 px-4">Category</th>
                     <th className="py-3.5 px-4">Price</th>
@@ -931,30 +1073,26 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                         className={`hover:bg-slate-50/70 transition-colors group ${isSelected ? 'bg-blue-50/40' : ''
                           }`}
                       >
-                        {/* Checkbox Column (Archived Only) */}
-                        {selectedStatus === 'archived' && (
-                          <td className="py-3.5 px-3 text-center">
-                            {p.isArchived ? (
-                              <input
-                                type="checkbox"
-                                aria-label={`Select product ${p.name}`}
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedProductIds((prev) =>
-                                      Array.from(new Set([...prev, p._id]))
-                                    );
-                                  } else {
-                                    setSelectedProductIds((prev) =>
-                                      prev.filter((id) => id !== p._id)
-                                    );
-                                  }
-                                }}
-                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                              />
-                            ) : null}
-                          </td>
-                        )}
+                        {/* Checkbox Column */}
+                        <td className="py-3.5 px-3 text-center">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select product ${p.name}`}
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedProductIds((prev) =>
+                                  Array.from(new Set([...prev, p._id]))
+                                );
+                              } else {
+                                setSelectedProductIds((prev) =>
+                                  prev.filter((id) => id !== p._id)
+                                );
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
 
                         {/* Thumbnail & Name */}
                         <td className="py-3.5 px-4">
@@ -1114,6 +1252,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               <button
                 disabled={page <= 1}
                 onClick={() => {
+                  setSelectedProductIds([]);
                   setPage(page - 1);
                 }}
                 className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-2xs"
@@ -1126,6 +1265,7 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
               <button
                 disabled={page >= totalPages}
                 onClick={() => {
+                  setSelectedProductIds([]);
                   setPage(page + 1);
                 }}
                 className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-2xs"
@@ -1488,6 +1628,171 @@ export default function ProductListClient({ initialCategories = [] }: ProductLis
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Archive Modal */}
+      {showBulkArchiveModal && selectedProductIds.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mb-4">
+              <Archive className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Archive {selectedProductIds.length} {selectedProductIds.length === 1 ? 'Product' : 'Products'}?
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to archive the <strong className="text-slate-900">{selectedProductIds.length}</strong> selected products?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 mb-6 space-y-1.5">
+              <div className="font-semibold flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Safe Archival (Not Permanent Deletion)</span>
+              </div>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                These products will be moved to the <strong>Archived</strong> tab and removed from the active storefront catalogue. All product specifications, images, and inventory movement records will remain intact. You can restore them anytime.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                disabled={isBulkArchiving}
+                onClick={() => setShowBulkArchiveModal(false)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isBulkArchiving}
+                onClick={() => handleBulkStatusAction('archive')}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 text-center"
+              >
+                {isBulkArchiving ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Archiving...</span>
+                  </>
+                ) : (
+                  <span>Confirm Archive ({selectedProductIds.length})</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Move to Draft Modal */}
+      {showBulkDraftModal && selectedProductIds.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center mb-4">
+              <FileEdit className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Move {selectedProductIds.length} {selectedProductIds.length === 1 ? 'Product' : 'Products'} to Draft?
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to move the <strong className="text-slate-900">{selectedProductIds.length}</strong> selected products to Draft status?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 mb-6 space-y-1.5">
+              <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-slate-600 shrink-0" />
+                <span>Unpublished from Storefront</span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                These products will immediately stop appearing as published items on the customer storefront. They will remain in your catalog under <strong>Draft</strong> status and can be republished whenever you are ready.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                disabled={isBulkDrafting}
+                onClick={() => setShowBulkDraftModal(false)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isBulkDrafting}
+                onClick={() => handleBulkStatusAction('draft')}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-[0.99] text-white font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 text-center"
+              >
+                {isBulkDrafting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Moving to Draft...</span>
+                  </>
+                ) : (
+                  <span>Confirm Move to Draft ({selectedProductIds.length})</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Publish Modal */}
+      {showBulkPublishModal && selectedProductIds.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative text-left">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              Publish {selectedProductIds.length} {selectedProductIds.length === 1 ? 'Product' : 'Products'}?
+            </h3>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to publish the <strong className="text-slate-900">{selectedProductIds.length}</strong> selected products?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 mb-6 space-y-1.5">
+              <div className="font-semibold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Publish to Storefront Catalogue</span>
+              </div>
+              <p className="text-[11px] text-emerald-800 leading-relaxed">
+                These products will immediately be marked as <strong>Published</strong> and become visible to customers across the live website catalog, category pages, and search.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                disabled={isBulkPublishing}
+                onClick={() => setShowBulkPublishModal(false)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isBulkPublishing}
+                onClick={() => handleBulkStatusAction('publish')}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 text-center"
+              >
+                {isBulkPublishing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  <span>Confirm Publish ({selectedProductIds.length})</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
