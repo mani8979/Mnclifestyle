@@ -11,6 +11,7 @@ import { getProductPrimaryColor, buildSingleProductSwatchVariants } from '../uti
 import ColorVariantSelector from '../components/ColorVariantSelector';
 import FormattedTitle from '../components/shared/FormattedTitle';
 import WhatsAppIcon from '../components/shared/WhatsAppIcon';
+import ShareProductButton from '../components/ShareProductButton';
 import ScrollReveal from '../components/ScrollReveal';
 import {
   Star,
@@ -280,10 +281,13 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
               )}
             </div>
 
-            {/* 2. Product Title — Balanced typography with normal upright & */}
-            <h1 className="font-serif text-2xl sm:text-[26px] lg:text-[28px] text-[#211710] font-normal tracking-tight leading-[1.25] mb-2 [text-wrap:balance] hyphens-none [font-variant-numeric:lining-nums]">
-              <FormattedTitle text={formatBalancedTitle(product.name)} />
-            </h1>
+            {/* 2. Product Title & Quick Share Button */}
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h1 className="font-serif text-2xl sm:text-[26px] lg:text-[28px] text-[#211710] font-normal tracking-tight leading-[1.25] [text-wrap:balance] hyphens-none [font-variant-numeric:lining-nums]">
+                <FormattedTitle text={formatBalancedTitle(product.name)} />
+              </h1>
+              <ShareProductButton product={product} variant="icon" className="shrink-0 mt-0.5" />
+            </div>
 
             {/* 3. Rating and Customer Reviews */}
             <div className="flex items-center gap-2 text-xs text-[#766B61] mb-2 sm:mb-2.5">
@@ -379,24 +383,25 @@ export default function ProductDetails({ initialProduct, initialRelatedProducts 
                 </a>
               </div>
 
-              {/* Quick Enquiry & Showroom Links */}
-              <div className="flex gap-2 pt-0.5">
+              {/* Quick Enquiry, Showroom Visit & Share Product */}
+              <div className="flex flex-wrap gap-2 pt-0.5">
                 <a
                   href={whatsappInquiryUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-10 px-3 bg-[#F8F0E8] hover:bg-[#E9D8C5] border border-[#E9D8C5] text-[#211710] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 min-w-[130px] h-10 px-3 bg-[#F8F0E8] hover:bg-[#E9D8C5] border border-[#E9D8C5] text-[#211710] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-[#D69A4B] shrink-0 stroke-[2]" />
-                  <span>Ask About Customization</span>
+                  <span>Ask Customization</span>
                 </a>
                 <Link
                   to="/contact"
-                  className="h-10 px-4 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors shrink-0"
+                  className="h-10 px-3.5 bg-white hover:bg-[#F8F0E8] border border-[#E9D8C5] text-[#211710] rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors shrink-0"
                 >
                   <PhoneCall className="w-3.5 h-3.5 text-[#D69A4B] shrink-0 stroke-[2]" />
-                  <span>Book a Showroom Visit</span>
+                  <span>Showroom Visit</span>
                 </Link>
+                <ShareProductButton product={product} variant="button" />
               </div>
             </div>
 
